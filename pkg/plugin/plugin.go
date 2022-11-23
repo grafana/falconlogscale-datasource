@@ -41,60 +41,7 @@ func client(accessToken string, baseURL string) (*humioAPI.Client, error) {
 	return humioAPI.NewClient(config), nil
 }
 
-// func (ds *Datasource) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
-// 	// TODO: add a filter to the jql or use anther query type
-// 	q := `{ "jql": "" }`
-// 	request := []byte(q)
-
-// 	query := backend.DataQuery{JSON: request, QueryType: "issues"}
-// 	query.QueryType = "issues"
-// 	res := jq.NewQueryHandler(*ds.Client, query, ds.Version).Query(ctx)
-
-// 	if res.Error != nil {
-// 		return &backend.CheckHealthResult{
-// 			Status:  backend.HealthStatusError,
-// 			Message: res.Error.Error(),
-// 		}, nil
-// 	}
-
-// 	return &backend.CheckHealthResult{
-// 		Status:  backend.HealthStatusOk,
-// 		Message: "Data source is working",
-// 	}, nil
-// }
-
 func (h *Handler) Dispose() {
 	// Called before creating a new instance to allow plugin authors
 	// to cleanup.
 }
-
-// func NewDataSourceInstance(settings backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
-// 	datasourceSettings, err := LoadSettings(settings)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	config := humioAPI.DefaultConfig()
-// 	config.Address, err = url.Parse(datasourceSettings.BaseURL)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	config.Token = datasourceSettings.AccessToken
-
-// 	return &Datasource{
-// 		Client: *humioAPI.NewClient(config),
-// 	}, nil
-// }
-
-// NewDataSourceInstance ...
-// func NewDataSourceInstance(settings backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
-// 	api := NewResourceAPI()
-// 	queryDatasource := NewQueryDatasource(api)
-// 	datasource := &splunkds.SplunkDataSource{
-// 		API:               api,
-// 		HealthDiagnostics: &splunkds.HealthDiagnostics{},
-// 		QueryAPI:          queryDatasource,
-// 	}
-// 	datasource.InitResourceHandler()
-// 	return datasource, nil
-// }
