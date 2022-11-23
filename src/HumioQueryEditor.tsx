@@ -61,15 +61,16 @@ export class QueryEditor extends PureComponent<Props, State> {
 
   onChangeQuery = (value: string, override?: boolean) => {
     // Send text change to parent
-    const { query, onChange, onRunQuery } = this.props;
-    if (onChange) {
-      const nextQuery = { ...query, humioQuery: value };
-      onChange(nextQuery);
+    // const { query, onChange, onRunQuery } = this.props;
+    // if (onChange) {
+    //   const nextQuery = { ...query, humioQuery: value };
+    //   onChange(nextQuery);
 
-      if (override && onRunQuery) {
-        onRunQuery();
-      }
-    }
+    //   if (override && onRunQuery) {
+    //     onRunQuery();
+    //   }
+    // }
+    this.props.onRunQuery();
   };
 
   onChangeRepo = (value: string | undefined, override?: boolean) => {

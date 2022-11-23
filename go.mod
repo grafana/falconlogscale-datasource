@@ -1,4 +1,4 @@
-module github.com/grafana/grafana-starter-datasource-backend
+module github.com/grafana/falconlogscale-datasource-backend
 
 go 1.16
 

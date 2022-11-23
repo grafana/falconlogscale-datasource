@@ -1,7 +1,4 @@
-import { Observable, of } from 'rxjs';
 import {
-  DataQueryRequest,
-  DataQueryResponse,
   DataSourceInstanceSettings,
   DataQuery,
   MetricFindValue,
@@ -32,14 +29,14 @@ export class HumioDataSource extends DataSourceWithBackend<HumioQuery, HumioOpti
     return [];
   }
 
-  query(request: DataQueryRequest<HumioQuery>): Observable<DataQueryResponse> {
-    request.targets = request.targets.filter((t) => !t.hide);
-    if (request.targets.length <= 0) {
-      return of({ data: [] });
-    }
-    //return runQuery(this)(request);
-    return of({ data: [] });
-  }
+  // query(request: DataQueryRequest<HumioQuery>): Observable<DataQueryResponse> {
+  //   request.targets = request.targets.filter((t) => !t.hide);
+  //   if (request.targets.length <= 0) {
+  //     return of({ data: [] });
+  //   }
+  //   //return runQuery(this)(request);
+  //   return of({ data: [] });
+  // }
 
   // Formats $var strings in queries. Uses regexes when using multiple selected vars, which right now only works for some kind of filtering, such as host=$hostname
   formatting(vars: any) {
