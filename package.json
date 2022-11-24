@@ -1,12 +1,12 @@
 {
   "name": "simple-datasource-backend",
-  "version": "1.0.0",
-  "description": "Grafana Data Source Backend Plugin Template",
+  "version": "0.0.0",
+  "description": "Falcon LogScale data source plugin for Grafana",
   "scripts": {
-    "build": "grafana-toolkit plugin:build",
-    "test": "grafana-toolkit plugin:test",
-    "dev": "grafana-toolkit plugin:dev",
-    "watch": "grafana-toolkit plugin:dev --watch",
+     "build": "rm -rf node_modules/@grafana/data/node_modules; grafana-toolkit plugin:build",
+    "test": "rm -rf node_modules/@grafana/data/node_modules; grafana-toolkit plugin:test",
+    "dev": "rm -rf node_modules/@grafana/data/node_modules; grafana-toolkit plugin:dev",
+    "watch": "rm -rf node_modules/@grafana/data/node_modules; grafana-toolkit plugin:dev --watch",
     "sign": "grafana-toolkit plugin:sign",
     "start": "yarn watch"
   },
@@ -14,12 +14,13 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@grafana/toolkit": "latest",
-    "@types/lodash": "latest"
+    "@types/lodash": "latest",
+    "jest-mock-extended": "^1.0.10"
   },
   "dependencies": {
-    "@grafana/data": "latest",
-    "@grafana/runtime": "latest",
-    "@grafana/ui": "latest",
+    "@grafana/data": "8.4.7",
+    "@grafana/runtime": "8.4.7",
+    "@grafana/ui": "8.4.7",
     "react": "17.0.2",
     "react-dom": "17.0.2"
   },

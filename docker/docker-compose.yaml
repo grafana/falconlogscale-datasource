@@ -1,0 +1,23 @@
+version: "3"
+
+services:
+  humio:
+    image: humio/humio
+    hostname: humio
+    environment:
+      env-file: ./humio.conf
+    volumes:
+      - ./mounts/data:/data
+      - ./mounts/data/kafka-data:/data/kafka-data
+      - ./mounts/humio:/etc/humio:ro
+    ports:
+      - "8080:8080"
+
+# docker run -v $HOST_DATA_DIR:/data  \
+#        -v $HOST_KAFKA_DATA_DIR:/data/kafka-data  \
+#        -v $PATH_TO_READONLY_FILES:/etc/humio:ro  \
+#        --net=host \
+#    --name=humio \
+#    --ulimit="nofile=8192:8192"  \
+#    --stop-timeout 300 \
+#        --env-file=$PATH_TO_CONFIG_FILE humio/humio

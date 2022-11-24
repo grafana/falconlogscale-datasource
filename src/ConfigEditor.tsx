@@ -1,83 +1,98 @@
-import React, { ChangeEvent, PureComponent } from 'react';
-import { LegacyForms } from '@grafana/ui';
+import React, { PureComponent } from 'react';
 import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
-import { MyDataSourceOptions, MySecureJsonData } from './types';
+import { DataSourceHttpSettings, LegacyForms } from '@grafana/ui';
 
-const { SecretFormField, FormField } = LegacyForms;
+const { SecretFormField } = LegacyForms;
 
-interface Props extends DataSourcePluginOptionsEditorProps<MyDataSourceOptions> {}
+import { HumioOptions, SecretHumioOptions } from './types';
 
-interface State {}
+interface Props extends DataSourcePluginOptionsEditorProps<HumioOptions, SecretHumioOptions> {}
+
+interface State {
+  props: any;
+}
 
 export class ConfigEditor extends PureComponent<Props, State> {
-  onPathChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { onOptionsChange, options } = this.props;
-    const jsonData = {
-      ...options.jsonData,
-      path: event.target.value,
+  constructor(props: Props) {
+    super(props);
+
+    props.options.jsonData = { ...props.options.jsonData };
+
+    this.state = {
+      props: props,
     };
-    onOptionsChange({ ...options, jsonData });
-  };
+  }
 
-  // Secure field (only sent to the backend)
-  onAPIKeyChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { onOptionsChange, options } = this.props;
+  componentDidMount() {}
+
+  onPasswordReset = () => {
+    const { options, onOptionsChange } = this.props;
     onOptionsChange({
       ...options,
-      secureJsonData: {
-        apiKey: event.target.value,
-      },
+      jsonData: { ...options.jsonData, authenticateWithToken: false },
+      secureJsonData: undefined,
+      secureJsonFields: {},
     });
   };
 
-  onResetAPIKey = () => {
-    const { onOptionsChange, options } = this.props;
-    onOptionsChange({
-      ...options,
-      secureJsonFields: {
-        ...options.secureJsonFields,
-        apiKey: false,
-      },
-      secureJsonData: {
-        ...options.secureJsonData,
-        apiKey: '',
-      },
-    });
-  };
-
-  render() {
-    const { options } = this.props;
-    const { jsonData, secureJsonFields } = options;
-    const secureJsonData = (options.secureJsonData || {}) as MySecureJsonData;
-
+  body() {
+    const { options, onOptionsChange } = this.props;
     return (
-      <div className="gf-form-group">
-        <div className="gf-form">
-          <FormField
-            label="Path"
-            labelWidth={6}
-            inputWidth={20}
-            onChange={this.onPathChange}
-            value={jsonData.path || ''}
-            placeholder="json field returned to frontend"
-          />
-        </div>
+      <>
+        <p>
+          To authenticate against Humio, you may either use the standard authentication methods as provided by Grafana
+          under <b>Auth</b>, or use a Humio token under <b>Humio Token Authentication</b>. There should be no reason to
+          mix these two methods for authentication, so be mindfuld not to configure both.
+        </p>
 
-        <div className="gf-form-inline">
-          <div className="gf-form">
+        <DataSourceHttpSettings
+          defaultUrl={'https://cloud.humio.com'}
+          dataSourceConfig={options}
+          showAccessOptions={false}
+          onChange={(newValue) =>
+            onOptionsChange({
+              ...newValue,
+              jsonData: {
+                ...newValue.jsonData,
+                baseUrl: newValue.url,
+                authenticateWithToken: options.jsonData.authenticateWithToken,
+              },
+            })
+          }
+        />
+        <div className="gf-form-group">
+          <h5> Humio Token Authentication </h5>
+          <p>
+            {' '}
+            If you wish to authenticate using a personal Humio token copy and paste it into the field below. <br></br>
+          </p>
+          <div className="gf-form max-width-25">
             <SecretFormField
-              isConfigured={(secureJsonFields && secureJsonFields.apiKey) as boolean}
-              value={secureJsonData.apiKey || ''}
-              label="API Key"
-              placeholder="secure json field (backend only)"
-              labelWidth={6}
-              inputWidth={20}
-              onReset={this.onResetAPIKey}
-              onChange={this.onAPIKeyChange}
+              labelWidth={10}
+              inputWidth={15}
+              label="Token"
+              value={options.secureJsonData?.accessToken}
+              onChange={(newValue) =>
+                onOptionsChange({
+                  ...options,
+                  jsonData: {
+                    baseUrl: options.jsonData.baseUrl,
+                    authenticateWithToken: true,
+                  },
+                  secureJsonData: { accessToken: newValue.currentTarget.value },
+                })
+              }
+              isConfigured={options.jsonData.authenticateWithToken}
+              onReset={this.onPasswordReset}
+              required={false}
             />
           </div>
         </div>
-      </div>
+      </>
     );
+  }
+
+  render() {
+    return <>{this.body()}</>;
   }
 }

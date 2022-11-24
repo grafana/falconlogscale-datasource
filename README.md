@@ -12,7 +12,7 @@ A more up-to-date version of examples is available here: https://github.com/graf
 
 # Grafana Data Source Backend Plugin Template
 
-[![Build](https://github.com/grafana/grafana-starter-datasource-backend/workflows/CI/badge.svg)](https://github.com/grafana/grafana-datasource-backend/actions?query=workflow%3A%22CI%22)
+[![Build](https://github.com/grafana/falconlogscale-datasource-backend/workflows/CI/badge.svg)](https://github.com/grafana/grafana-datasource-backend/actions?query=workflow%3A%22CI%22)
 
 This template is a starting point for building Grafana Data Source Backend Plugins
 

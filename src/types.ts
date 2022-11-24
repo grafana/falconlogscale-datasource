@@ -1,26 +1,23 @@
 import { DataQuery, DataSourceJsonData } from '@grafana/data';
 
-export interface MyQuery extends DataQuery {
-  queryText?: string;
-  constant: number;
-  withStreaming: boolean;
+export interface HumioOptions extends DataSourceJsonData {
+  baseUrl?: string;
+  authenticateWithToken: boolean;
 }
 
-export const defaultQuery: Partial<MyQuery> = {
-  constant: 6.5,
-  withStreaming: false,
-};
-
-/**
- * These are options configured for each DataSource instance.
- */
-export interface MyDataSourceOptions extends DataSourceJsonData {
-  path?: string;
+export interface SecretHumioOptions extends DataSourceJsonData {
+  accessToken?: string;
 }
 
-/**
- * Value that is used in the backend, but never sent over HTTP to the frontend
- */
-export interface MySecureJsonData {
-  apiKey?: string;
+export interface VariableQueryData {
+  query: string;
+  repo?: string;
+  repositories: any;
+  dataField: string;
+}
+
+export interface HumioQuery extends DataQuery {
+  repository: string;
+  queryString: string;
+  live?: boolean;
 }
