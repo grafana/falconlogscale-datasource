@@ -55,28 +55,17 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 	return response, nil
 }
 
-type grafanaQuery struct {
-	DatasetSlug string      `json:"dataset"`
-	IntervalMS  int64       `json:"intervalMs"`
-	Query       humio.Query `json:"humioQuery"`
-}
-
-func (h *Handler) queryRequest(q backend.DataQuery) (humio.QueryRequest, error) {
-	var gr grafanaQuery
+func (h *Handler) queryRequest(q backend.DataQuery) (humio.Query, error) {
+	var gr humio.Query
 	if err := json.Unmarshal(q.JSON, &gr); err != nil {
-		return humio.QueryRequest{}, err
+		return humio.Query{}, err
 	}
 
 	startTime := "10y" //q.TimeRange.From.String()
 	endTime := ""      //q.TimeRange.To.String()
 
-	qr := humio.QueryRequest{}
-	qr.DatasetSlug = gr.DatasetSlug
-	qr.Query = gr.Query
-	qr.Query.Repository = gr.Query.Repository
-	qr.Query.QueryString = gr.Query.QueryString
-	qr.Query.Start = startTime
-	qr.Query.End = endTime
+	gr.Start = startTime
+	gr.End = endTime
 
-	return qr, nil
+	return gr, nil
 }

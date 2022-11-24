@@ -11,7 +11,7 @@ type humioClient interface {
 }
 
 type queryRunner interface {
-	Run(humio.QueryRequest) ([]humio.QueryResult, error)
+	Run(humio.Query) ([]humio.QueryResult, error)
 }
 
 // Handler encapsulates the lifecycle management of the handler components.

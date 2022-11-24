@@ -30,10 +30,9 @@ func NewQueryRunner(c humio.Client, opts ...QueryRunnerOption) *QueryRunner {
 	return qr
 }
 
-func (qj *QueryRunner) Run(qr QueryRequest) ([]QueryResult, error) {
-	query := qr.Query
+func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
 	client := qj.client
-	repository := "humio-organization-fdr-demo" //query.Repository
+	repository := query.Repository
 	// 	queryString := `#cid = "56879ccf959c4afc96dd17e8bb1dcbb5"
 	// | ComputerName = * AND AgentIdString = "f5ea7013e8c24bceb5e9715f2cde8c0a" | "Event_DetectionSummaryEvent"
 	// | top(Technique)` //qj.context.Model.Query

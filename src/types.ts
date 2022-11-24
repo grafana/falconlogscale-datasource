@@ -1,4 +1,4 @@
-import { DataSourceJsonData } from '@grafana/data';
+import { DataQuery, DataSourceJsonData } from '@grafana/data';
 
 export interface HumioOptions extends DataSourceJsonData {
   baseUrl?: string;
@@ -14,4 +14,10 @@ export interface VariableQueryData {
   repo?: string;
   repositories: any;
   dataField: string;
+}
+
+export interface HumioQuery extends DataQuery {
+  repository: string;
+  queryString: string;
+  live?: boolean;
 }

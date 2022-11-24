@@ -14,9 +14,3 @@ type QueryResult struct {
 	Done      bool                     `json:"done"`
 	Events    []map[string]interface{} `json:"events"`
 }
-
-// QueryRequest encapsulates the data needed for the query runner to make a request
-type QueryRequest struct {
-	DatasetSlug string `json:"dataset"`
-	Query       Query  `json:"query"`
-}
