@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"github.com/grafana/falconlogscale-datasource-backend/pkg/humio"
+	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/grafana/grafana-plugin-sdk-go/data/framestruct"
 )
@@ -18,6 +19,7 @@ type queryRunner interface {
 type Handler struct {
 	Client          humioClient
 	QueryRunner     queryRunner
+	ResourceHandler backend.CallResourceHandler
 	FrameMarshaller func(string, interface{}, ...framestruct.FramestructOption) (*data.Frame, error)
 	Settings        Settings
 }
@@ -29,6 +31,7 @@ type HandlerOption func(h *Handler)
 func NewHandler(
 	client humioClient,
 	runner queryRunner,
+	resourceHandler backend.CallResourceHandler,
 	marshaller func(string, interface{}, ...framestruct.FramestructOption) (*data.Frame, error),
 	settings Settings,
 	opts ...HandlerOption,
@@ -36,6 +39,7 @@ func NewHandler(
 	h := &Handler{
 		Client:          client,
 		QueryRunner:     runner,
+		ResourceHandler: resourceHandler,
 		FrameMarshaller: marshaller,
 		Settings:        settings,
 	}
