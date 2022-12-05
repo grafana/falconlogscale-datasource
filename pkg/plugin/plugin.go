@@ -6,6 +6,7 @@ import (
 	"github.com/grafana/falconlogscale-datasource-backend/pkg/humio"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
 	"github.com/grafana/grafana-plugin-sdk-go/data/framestruct"
 	humioAPI "github.com/humio/cli/api"
 )
@@ -20,10 +21,12 @@ func NewDataSourceInstance(settings backend.DataSourceInstanceSettings) (instanc
 	if err != nil {
 		return nil, err
 	}
+	resourceHandler := ResourceHandler(client)
 
 	return NewHandler(
 		client,
 		humio.NewQueryRunner(*client),
+		httpadapter.New(resourceHandler),
 		framestruct.ToDataFrame,
 		s,
 	), nil
