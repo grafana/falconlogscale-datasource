@@ -6,21 +6,22 @@ import { HumioOptions, HumioQuery } from './types';
 import _ from 'lodash';
 
 type Props = QueryEditorProps<HumioDataSource, HumioQuery, HumioOptions>;
+type Repository = {
+  Name: string
+};
 
 export function QueryEditor(props: Props) {
   const { datasource } = props;
   const [repositories, setRepositories] = useState(Array<SelectableValue<string>>);
   
   useEffect(() => {
-    datasource.getResource('/repositories').then(result => {
-      console.log('RESULT: ', result);
-      setRepositories(prevRepositories => [...prevRepositories, ...result])
-    });
-  }, []);
+    datasource.getResource('/repositories').then((result: Repository[]) => {
+      const repositories = result.map(({ Name }) => ({ value: Name, label: Name }));
 
-  // const reposTemp: Array<SelectableValue<string>> = [
-  //   { value: 'humio-organization-fdr-demo', label: 'humio-organization-fdr-demo' },
-  // ];
+      setRepositories(prevRepositories => [...prevRepositories, ...repositories])
+    });
+  }, [datasource]);
+
     return (
       <div className="query-editor-row" can-collapse="true">
         <div className="gf-form gf-form--grow flex-shrink-1 min-width-15 explore-input-margin">
