@@ -2,7 +2,7 @@ import { DataSourcePlugin } from '@grafana/data';
 
 import { HumioDataSource } from './HumioDataSource';
 import { ConfigEditor } from './ConfigEditor';
-import { QueryEditor } from './HumioQueryEditor';
+import { QueryEditor } from './QueryEditor';
 import { VariableQueryEditor } from './VariableQueryEditor';
 import { HumioOptions, HumioQuery } from './types';
 import { HumioAnnotationQueryEditor } from './AnnotationQueryEditor';
