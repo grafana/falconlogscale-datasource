@@ -1,7 +1,4 @@
-## ⚠️ Deprecated!
-
-**This repository is deprecated.** <br />
-A more up-to-date version of examples is available here: https://github.com/grafana/grafana-plugin-examples
+## Falcon Logscale grafana data source plugin
 
 **Available examples:**
 - [datasource-basic](https://github.com/grafana/grafana-plugin-examples/blob/master/examples/datasource-basic) - demonstrates how to build a basic data source plugin with a backend

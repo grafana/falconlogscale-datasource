@@ -1,3 +1,9 @@
+describe('sample test', () => {
+  it('sample test', () => {
+    expect(1).toBe(1);
+  });
+});
+
 // import { HumioDataSource, HumioQuery } from './HumioDataSource';
 // import { HumioOptions } from './types';
 // import { AnnotationQueryRequest, CoreApp, DataQueryRequest, DataSourceInstanceSettings, dateTime } from '@grafana/data';
