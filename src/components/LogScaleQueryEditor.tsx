@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { SelectableValue } from '@grafana/data';
 import { Select, QueryField } from '@grafana/ui';
-import { HumioDataSource } from './../HumioDataSource';
-import { HumioQuery } from './../types';
+import { DataSource } from '../DataSource';
+import { LogScaleQuery } from './../types';
 
 type Props = {
-  datasource: HumioDataSource;
-  onChange: (q: HumioQuery) => void;
+  datasource: DataSource;
+  onChange: (q: LogScaleQuery) => void;
   runQuery: () => void;
-  query: HumioQuery;
+  query: LogScaleQuery;
 }
 
 type Repository = {
@@ -16,13 +16,12 @@ type Repository = {
 };
 
 export function LogScaleQueryEditor(props: Props) {
-  const { datasource } = props;
+  const { datasource, query } = props;
   const [repositories, setRepositories] = useState(Array<SelectableValue<string>>);
   
   useEffect(() => {
     datasource.getResource('/repositories').then((result: Repository[]) => {
       const repositories = result.map(({ Name }) => ({ value: Name, label: Name }));
-
       setRepositories(prevRepositories => [...prevRepositories, ...repositories])
     });
   }, [datasource]);
@@ -31,12 +30,12 @@ export function LogScaleQueryEditor(props: Props) {
       <div className="query-editor-row" can-collapse="true">
         <div className="gf-form gf-form--grow flex-shrink-1 min-width-15 explore-input-margin">
           <QueryField
-            query={props.query.queryString}
-            onChange={(val) => props.onChange({...props.query, queryString: val})}
+            query={query.lsql}
+            onChange={(val) => props.onChange({...props.query, lsql: val})}
             onBlur={props.runQuery}
             onRunQuery={props.runQuery}
-            placeholder="Enter a Humio query (run with Shift+Enter)"
-            portalOrigin="Humio"
+            placeholder="Enter a LogScale query (run with Shift+Enter)"
+            portalOrigin="LogScale"
           />
         </div>
 

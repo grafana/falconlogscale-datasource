@@ -2,7 +2,7 @@ package humio
 
 type Query struct {
 	Repository     string `json:"repository"`
-	QueryString    string `json:"queryString"`
+	LSQL           string `json:"lsql"`
 	Start          string `json:"start,omitempty"`
 	End            string `json:"end,omitempty"`
 	Live           bool   `json:"isLive,omitempty"`

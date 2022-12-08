@@ -1,11 +1,10 @@
 import React from 'react';
 import { QueryEditorProps } from '@grafana/data';
-import { HumioDataSource } from './HumioDataSource';
-import { HumioOptions, HumioQuery } from './types';
-import _ from 'lodash';
+import { DataSource } from '../DataSource';
+import { LogScaleOptions, LogScaleQuery } from '../types';
 import { LogScaleQueryEditor } from 'components/LogScaleQueryEditor';
 
-type Props = QueryEditorProps<HumioDataSource, HumioQuery, HumioOptions>;
+type Props = QueryEditorProps<DataSource, LogScaleQuery, LogScaleOptions>;
 
 export function QueryEditor(props: Props) {
   const { datasource, onChange, onRunQuery, query } = props;

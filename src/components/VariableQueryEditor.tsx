@@ -1,23 +1,23 @@
-import { HumioDataSource } from 'HumioDataSource';
+import { DataSource } from 'DataSource';
 import React, { useState } from 'react';
-import { HumioQuery } from 'types';
+import { LogScaleQuery } from 'types';
 import { LogScaleQueryEditor } from 'components/LogScaleQueryEditor';
 
 
 type Props = {
-  query: HumioQuery;
-  onChange: (q: HumioQuery, desc: string) => void;
-  datasource: HumioDataSource;
+  query: LogScaleQuery;
+  onChange: (q: LogScaleQuery, desc: string) => void;
+  datasource: DataSource;
 };
 
 export function VariableQueryEditor(props: Props) {
   const { onChange, datasource } = props;
-  const [query, setQuery] = useState(props.query || {} as HumioQuery);
+  const [query, setQuery] = useState(props.query || {} as LogScaleQuery);
 
-  const handleVariableQuery = (q: HumioQuery) => {
-    const updated: HumioQuery = {...query, queryString: q.queryString}
+  const handleVariableQuery = (q: LogScaleQuery) => {
+    const updated: LogScaleQuery = {...query, lsql: q.lsql}
       setQuery(updated);
-      onChange(updated, query.queryString);
+      onChange(updated, `LogScale Query - ${query.lsql}`);
     };
 
   return (
