@@ -1,12 +1,14 @@
 import { HumioDataSource } from 'HumioDataSource';
-import React, { useEffect, useState } from 'react';
-import { VariableQueryData } from 'types';
-import { QueryField, Select } from '@grafana/ui';
+import React, { ChangeEvent, useEffect, useState } from 'react';
+import { HumioQuery } from 'types';
+import { InlineField, Select, LegacyForms } from '@grafana/ui';
 import { SelectableValue } from '@grafana/data';
 
+const { FormField } = LegacyForms;
+
 type Props = {
-  query: VariableQueryData;
-  onChange: (q: VariableQueryData, desc: string) => void;
+  query: HumioQuery;
+  onChange: (q: HumioQuery, desc: string) => void;
   datasource: HumioDataSource;
 };
 type Repository = {
@@ -15,7 +17,7 @@ type Repository = {
 
 export function VariableQueryEditor(props: Props) {
   const { onChange, datasource } = props;
-  const [query, setQuery] = useState(!!props.query ? props.query : ({} as VariableQueryData));
+  const [query, setQuery] = useState(props.query || {} as HumioQuery);
   const [repositories, setRepositories] = useState(Array<SelectableValue<string>>);
   
   useEffect(() => {
@@ -26,28 +28,29 @@ export function VariableQueryEditor(props: Props) {
     });
   }, [datasource]);
 
-  const handleVariableQuery = (q: string) => {
-    const updated = {...query, query: q}
+  const handleVariableQuery = (event: ChangeEvent<HTMLInputElement>) => {
+    const updated: HumioQuery = {...query, queryString: event.target.value}
       setQuery(updated);
-      onChange(updated, query.query);
+      props.onChange(updated, query.queryString);
     };
 
   return (
      <div className="query-editor-row" can-collapse="true">
-        <div className="gf-form gf-form--grow flex-shrink-1 min-width-15 explore-input-margin">
-          <QueryField
-            query={query.query}
+       <InlineField label="Query" labelWidth={17} grow>
+          <FormField
+            value={query.queryString}
+            onBlur={handleVariableQuery}
             onChange={handleVariableQuery}
-            placeholder="Enter a Humio query (run with Shift+Enter)"
-            portalOrigin="Humio"
-          ></QueryField>
-        </div>
+            placeholder="Enter a Humio query (run with Shift+Enter)" 
+            label={'Humio query'}
+            />
+          </InlineField>
 
         <Select
           width={30}
           options={repositories}
-          value={query.repo}
-          onChange={(val) => props.onChange({...props.query, repo: val.value!.toString()}, query.repo)}
+          value={query.repository}
+          onChange={(val) => onChange({...props.query, repository: val.value!.toString()}, query.repository)}
         ></Select>
       </div>
   );
