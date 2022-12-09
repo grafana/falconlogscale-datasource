@@ -43,7 +43,7 @@ func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
 	// run in lambda func to be able to defer and delete the query job
 	result, err := func() (*humio.QueryResult, error) {
 		id, err := client.QueryJobs().Create(repository, humio.Query{
-			QueryString:                query.QueryString,
+			QueryString:                query.LSQL,
 			Start:                      query.Start,
 			End:                        query.End,
 			Live:                       query.Live,

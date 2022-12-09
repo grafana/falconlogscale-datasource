@@ -4,9 +4,9 @@ import { DataSourceHttpSettings, LegacyForms } from '@grafana/ui';
 
 const { SecretFormField } = LegacyForms;
 
-import { HumioOptions, SecretHumioOptions } from './types';
+import { LogScaleOptions, SecretLogScaleOptions } from '../types';
 
-interface Props extends DataSourcePluginOptionsEditorProps<HumioOptions, SecretHumioOptions> {}
+interface Props extends DataSourcePluginOptionsEditorProps<LogScaleOptions, SecretLogScaleOptions> {}
 
 interface State {
   props: any;
@@ -40,8 +40,8 @@ export class ConfigEditor extends PureComponent<Props, State> {
     return (
       <>
         <p>
-          To authenticate against Humio, you may either use the standard authentication methods as provided by Grafana
-          under <b>Auth</b>, or use a Humio token under <b>Humio Token Authentication</b>. There should be no reason to
+          To authenticate against LogScale, you may either use the standard authentication methods as provided by Grafana
+          under <b>Auth</b>, or use a LogScale token under <b>LogScale Token Authentication</b>. There should be no reason to
           mix these two methods for authentication, so be mindfuld not to configure both.
         </p>
 
@@ -61,10 +61,10 @@ export class ConfigEditor extends PureComponent<Props, State> {
           }
         />
         <div className="gf-form-group">
-          <h5> Humio Token Authentication </h5>
+          <h5> LogScale Token Authentication </h5>
           <p>
             {' '}
-            If you wish to authenticate using a personal Humio token copy and paste it into the field below. <br></br>
+            If you wish to authenticate using a personal LogScale token copy and paste it into the field below. <br></br>
           </p>
           <div className="gf-form max-width-25">
             <SecretFormField
