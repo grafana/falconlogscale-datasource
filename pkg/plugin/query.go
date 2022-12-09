@@ -3,6 +3,7 @@ package plugin
 import (
 	"context"
 	"encoding/json"
+	"strconv"
 
 	"github.com/grafana/falconlogscale-datasource-backend/pkg/humio"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
@@ -21,10 +22,6 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 			response.Responses[q.RefID] = backend.DataResponse{Error: err}
 			continue
 		}
-
-		// if qr.DatasetSlug == "" {
-		// 	continue
-		// }
 
 		res, err := h.QueryRunner.Run(qr)
 		if err != nil {
@@ -61,8 +58,8 @@ func (h *Handler) queryRequest(q backend.DataQuery) (humio.Query, error) {
 		return humio.Query{}, err
 	}
 
-	startTime := "10y" //q.TimeRange.From.String()
-	endTime := ""      //q.TimeRange.To.String()
+	startTime := strconv.FormatInt(q.TimeRange.From.UnixMilli(), 10)
+	endTime := strconv.FormatInt(q.TimeRange.To.UnixMilli(), 10)
 
 	gr.Start = startTime
 	gr.End = endTime
