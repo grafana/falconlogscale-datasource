@@ -16,7 +16,7 @@ type Repository = {
 };
 
 export function LogScaleQueryEditor(props: Props) {
-  const { datasource, query } = props;
+  const { datasource, query, onChange, runQuery } = props;
   const [repositories, setRepositories] = useState(Array<SelectableValue<string>>);
   
   useEffect(() => {
@@ -31,9 +31,9 @@ export function LogScaleQueryEditor(props: Props) {
         <div className="gf-form gf-form--grow flex-shrink-1 min-width-15 explore-input-margin">
           <QueryField
             query={query.lsql}
-            onChange={(val) => props.onChange({...props.query, lsql: val})}
-            onBlur={props.runQuery}
-            onRunQuery={props.runQuery}
+            onChange={(val) => onChange({...query, lsql: val})}
+            onBlur={runQuery}
+            onRunQuery={runQuery}
             placeholder="Enter a LogScale query (run with Shift+Enter)"
             portalOrigin="LogScale"
           />
@@ -42,8 +42,8 @@ export function LogScaleQueryEditor(props: Props) {
         <Select
           width={30}
           options={repositories}
-          value={props.query.repository}
-          onChange={(val) => props.onChange({...props.query, repository: val.value!.toString()})}
+          value={query.repository}
+          onChange={(val) => onChange({...query, repository: val.value!.toString()})}
         />
       </div>
     );

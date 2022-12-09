@@ -15,9 +15,8 @@ export function VariableQueryEditor(props: Props) {
   const [query, setQuery] = useState(props.query || {} as LogScaleQuery);
 
   const handleVariableQuery = (q: LogScaleQuery) => {
-    const updated: LogScaleQuery = {...query, lsql: q.lsql}
-      setQuery(updated);
-      onChange(updated, `LogScale Query - ${query.lsql}`);
+      setQuery(q);
+      onChange(q, `LogScale Query - ${query.lsql}`);
     };
 
   return (
@@ -26,6 +25,5 @@ export function VariableQueryEditor(props: Props) {
       onChange={handleVariableQuery}
       runQuery={() => handleVariableQuery(query)}
       query={query}/>
-    
   );
 };
