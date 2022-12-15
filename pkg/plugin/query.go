@@ -4,10 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/grafana/falconlogscale-datasource-backend/pkg/humio"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
+	"github.com/grafana/grafana-plugin-sdk-go/data/framestruct"
 )
 
 // QueryData handles multiple queries and returns multiple responses.
@@ -35,7 +38,8 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 				continue
 			}
 
-			f, err := h.FrameMarshaller("", r.Events)
+			converters := getConverters(r.Events)
+			f, err := h.FrameMarshaller("events", r.Events, converters...)
 			if err != nil {
 				response.Responses[q.RefID] = backend.DataResponse{Error: err}
 				continue
@@ -50,6 +54,55 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 	}
 
 	return response, nil
+}
+
+type Events []map[string]interface{}
+
+func getConverters(events Events) []framestruct.FramestructOption {
+	var converters []framestruct.FramestructOption
+	for key, value := range events[0] {
+		// There needs to be a better way to check to see if a field is a time
+		// _bucket is defined by humio. it is a time group bucket
+		if strings.Contains(key, "time") || key == "_bucket" {
+			converters = append(converters, framestruct.WithConverterFor(key, converterForStringToTime))
+			continue
+		}
+		_, err := converterForStringToInt64(value)
+		if err == nil {
+			converters = append(converters, framestruct.WithConverterFor(key, converterForStringToInt64))
+			continue
+		}
+	}
+	return converters
+}
+
+func converterForStringToTime(input interface{}) (interface{}, error) {
+	var num int64
+	switch v := input.(type) {
+	case string:
+		var err error
+		num, err = strconv.ParseInt(v, 10, 64)
+		if err != nil {
+			if t, err := time.Parse("2006-01-02T15:04:05Z", v); err == nil {
+				return t, nil
+			}
+			return input, nil
+		}
+	case float64:
+		num = int64(v)
+	case int64:
+		num = v
+	}
+	p := time.Unix(0, num*int64(time.Millisecond))
+	return &p, nil
+}
+
+func converterForStringToInt64(input interface{}) (interface{}, error) {
+	num, err := strconv.ParseFloat(input.(string), 64)
+	if err != nil {
+		return nil, err
+	}
+	return &num, nil
 }
 
 func (h *Handler) queryRequest(q backend.DataQuery) (humio.Query, error) {
