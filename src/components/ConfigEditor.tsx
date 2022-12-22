@@ -40,9 +40,9 @@ export class ConfigEditor extends PureComponent<Props, State> {
     return (
       <>
         <p>
-          To authenticate against LogScale, you may either use the standard authentication methods as provided by Grafana
-          under <b>Auth</b>, or use a LogScale token under <b>LogScale Token Authentication</b>. There should be no reason to
-          mix these two methods for authentication, so be mindfuld not to configure both.
+          To authenticate against LogScale, you may either use the standard authentication methods as provided by
+          Grafana under <b>Auth</b>, or use a LogScale token under <b>LogScale Token Authentication</b>. There should be
+          no reason to mix these two methods for authentication, so be mindful not to configure both.
         </p>
 
         <DataSourceHttpSettings
@@ -64,7 +64,8 @@ export class ConfigEditor extends PureComponent<Props, State> {
           <h5> LogScale Token Authentication </h5>
           <p>
             {' '}
-            If you wish to authenticate using a personal LogScale token copy and paste it into the field below. <br></br>
+            If you wish to authenticate using a personal LogScale token copy and paste it into the field below.{' '}
+            <br></br>
           </p>
           <div className="gf-form max-width-25">
             <SecretFormField
