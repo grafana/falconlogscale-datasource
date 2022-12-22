@@ -17,7 +17,7 @@ export type Repository = {
 
 export function LogScaleQueryEditor(props: Props) {
   const { datasource, query, onChange, runQuery } = props;
-  const [repositories, setRepositories] = useState(Array<SelectableValue<string>>);
+  const [repositories, setRepositories] = useState<Array<SelectableValue<string>>>([]);
 
   useEffect(() => {
     datasource.getResource('/repositories').then((result: Repository[]) => {
