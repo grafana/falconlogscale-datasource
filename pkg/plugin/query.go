@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/araddon/dateparse"
 	"github.com/grafana/falconlogscale-datasource-backend/pkg/humio"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
@@ -56,7 +57,7 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 	return response, nil
 }
 
-type Events []map[string]interface{}
+type Events []map[string]any
 
 func getConverters(events Events) []framestruct.FramestructOption {
 	var converters []framestruct.FramestructOption
@@ -76,14 +77,14 @@ func getConverters(events Events) []framestruct.FramestructOption {
 	return converters
 }
 
-func converterForStringToTime(input interface{}) (interface{}, error) {
+func converterForStringToTime(input any) (any, error) {
 	var num int64
 	switch v := input.(type) {
 	case string:
 		var err error
 		num, err = strconv.ParseInt(v, 10, 64)
 		if err != nil {
-			if t, err := time.Parse("2006-01-02T15:04:05Z", v); err == nil {
+			if t, err := dateparse.ParseAny(v); err == nil {
 				return t, nil
 			}
 			return input, nil
@@ -97,7 +98,7 @@ func converterForStringToTime(input interface{}) (interface{}, error) {
 	return &p, nil
 }
 
-func converterForStringToInt64(input interface{}) (interface{}, error) {
+func converterForStringToInt64(input any) (any, error) {
 	num, err := strconv.ParseFloat(input.(string), 64)
 	if err != nil {
 		return nil, err
