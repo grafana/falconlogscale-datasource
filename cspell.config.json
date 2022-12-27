@@ -35,6 +35,16 @@
     "nolint",
     "framestruct",
     "vectorator",
-    "httpadapter"
+    "httpadapter",
+    "Humio",
+    "nolint",
+    "LSQL",
+    "Framestruct",
+    "Dataframe",
+    "stretchr",
+    "timerange",
+    "dateparse",
+    "mindfuld",
+    "Logscale"
   ]
 }
