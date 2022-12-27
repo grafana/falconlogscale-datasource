@@ -72,37 +72,12 @@ func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
 			return nil, err
 		}
 
-		//if result.Metadata.IsAggregate {
-		//printer = newAggregatePrinter(cmd.OutOrStdout())
-		//} else {
-		//printer = newEventListPrinter(cmd.OutOrStdout(), fmtStr)
-		//}
-
 		for !result.Done {
-			// if progress != nil {
-			// 	progress.Update(result)
-			// }
 			result, err = poller.WaitAndPollContext(ctx)
 			if err != nil {
 				return nil, err
 			}
 		}
-
-		// if progress != nil {
-		// 	progress.Update(result)
-		// 	progress.Finish()
-		// }
-
-		// if live {
-		// 	for {
-		// 		result, err = poller.WaitAndPollContext(ctx)
-		// 		if err != nil {
-		// 			return err
-		// 		}
-
-		// 		printer.print(result)
-		// 	}
-		// }
 
 		return &result, nil
 	}()

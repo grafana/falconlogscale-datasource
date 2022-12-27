@@ -23,6 +23,7 @@ export class DataSource extends DataSourceWithBackend<LogScaleQuery, LogScaleOpt
   async metricFindQuery(q: LogScaleQuery, options: any): Promise<MetricFindValue[]> {
     const request = {
       targets: [{ ...q, refId: 'A' }],
+      range: options.range,
     } as DataQueryRequest<LogScaleQuery>;
     const results = await this.query(request).toPromise();
 

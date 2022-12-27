@@ -10,7 +10,7 @@ type Query struct {
 }
 
 type QueryResult struct {
-	Cancelled bool                     `json:"cancelled"`
-	Done      bool                     `json:"done"`
-	Events    []map[string]interface{} `json:"events"`
+	Cancelled bool             `json:"cancelled"`
+	Done      bool             `json:"done"`
+	Events    []map[string]any `json:"events"`
 }

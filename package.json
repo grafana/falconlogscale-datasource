@@ -3,18 +3,20 @@
   "version": "0.0.0",
   "description": "Falcon LogScale data source plugin for Grafana",
   "scripts": {
-     "build": "rm -rf node_modules/@grafana/data/node_modules; grafana-toolkit plugin:build",
+    "build": "rm -rf node_modules/@grafana/data/node_modules; grafana-toolkit plugin:build",
     "test": "rm -rf node_modules/@grafana/data/node_modules; grafana-toolkit plugin:test",
     "dev": "rm -rf node_modules/@grafana/data/node_modules; grafana-toolkit plugin:dev",
     "watch": "rm -rf node_modules/@grafana/data/node_modules; grafana-toolkit plugin:dev --watch",
     "sign": "grafana-toolkit plugin:sign",
-    "start": "yarn watch"
+    "start": "yarn watch",
+    "spellcheck": "cspell -c cspell.config.json \"**/*.{ts,tsx,js,go,md,mdx,yml,yaml,json,scss,css}\""
   },
   "author": "Grafana Labs",
   "license": "Apache-2.0",
   "devDependencies": {
     "@grafana/toolkit": "latest",
     "@types/lodash": "latest",
+    "cspell": "6.13.3",
     "jest-mock-extended": "^1.0.10"
   },
   "dependencies": {
