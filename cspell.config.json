@@ -18,7 +18,9 @@
     "docker-compose*.yml"
   ],
   "ignoreRegExpList": [
+    // ignore multiline imports
     "import\\s*\\((.|[\r\n])*?\\)",
+    // ignore single line imports
     "import\\s*.*\".*?\""
   ],
   "words": [
@@ -26,21 +28,23 @@
     "datasource",
     "datasources",
     "humio",
-    "Humio",
+    "logscale",
     "falconlogscale",
+    "lsql",
+    "instancemgmt",
+    "nolint",
+    "framestruct",
+    "vectorator",
+    "httpadapter",
+    "Humio",
     "nolint",
     "LSQL",
-    "lsql",
-    "framestruct",
     "Framestruct",
     "Dataframe",
-    "instancemgmt",
-    "httpadapter",
     "stretchr",
     "timerange",
     "dateparse",
     "mindfuld",
-    "Logscale",
-    "vectorator"
+    "Logscale"
   ]
 }

@@ -15,8 +15,13 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@grafana/toolkit": "latest",
+    "@testing-library/dom": "^7.29.0",
+    "@testing-library/jest-dom": "^5.1.1",
+    "@testing-library/react": "^10.0.2",
+    "@testing-library/user-event": "^14.4.3",
     "@types/lodash": "latest",
     "cspell": "6.13.3",
+    "grafana-plugin-ui": "https://github.com/grafana/plugin-ui#0.1.5",
     "jest-mock-extended": "^1.0.10"
   },
   "dependencies": {
