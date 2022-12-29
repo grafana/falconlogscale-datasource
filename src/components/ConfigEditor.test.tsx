@@ -81,4 +81,22 @@ describe('<ConfigEditor />', () => {
       },
     });
   });
+
+  it('should call `onOptionsChange` when token is reset', async () => {
+    const props = getDefaultProps();
+    props.options.jsonData.authenticateWithToken = true;
+
+    render(<ConfigEditor {...props} />);
+
+    await userEvent.click(screen.getByText('Reset'));
+
+    expect(props.onOptionsChange).toHaveBeenCalledWith({
+      jsonData: {
+        ...props.options.jsonData,
+        authenticateWithToken: false,
+      },
+      secureJsonData: undefined,
+      secureJsonFields: {},
+    });
+  });
 });
