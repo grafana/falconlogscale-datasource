@@ -7,6 +7,7 @@ import {
   vectorator,
 } from '@grafana/data';
 import { DataSourceWithBackend, getTemplateSrv, TemplateSrv } from '@grafana/runtime';
+import { lastValueFrom } from 'rxjs';
 import { LogScaleQuery, LogScaleOptions } from './types';
 
 export class DataSource extends DataSourceWithBackend<LogScaleQuery, LogScaleOptions> {
@@ -25,12 +26,12 @@ export class DataSource extends DataSourceWithBackend<LogScaleQuery, LogScaleOpt
       targets: [{ ...q, refId: 'A' }],
       range: options.range,
     } as DataQueryRequest<LogScaleQuery>;
-    const results = await this.query(request).toPromise();
+    const results = await lastValueFrom(this.query(request), { defaultValue: null });
 
     if (!results || !results.data || results.data.length === 0) {
       return [];
     }
-    const frame: DataFrame = results!.data[0];
+    const frame: DataFrame = results.data[0];
     return vectorator(frame.fields[0].values).map((v) => ({ text: v }));
   }
 
