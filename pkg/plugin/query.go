@@ -61,7 +61,18 @@ type Events []map[string]any
 
 func getConverters(events Events) []framestruct.FramestructOption {
 	var converters []framestruct.FramestructOption
-	for key, value := range events[0] {
+	// if a value is nil, keep looking until a value is found
+	for key, v := range events[0] {
+		value := v
+		if value == nil {
+			for i := range events {
+				if events[i][key] == nil {
+					continue
+				}
+				value = events[i][key]
+				break
+			}
+		}
 		// There needs to be a better way to check to see if a field is a time
 		// _bucket is defined by humio. it is a time group bucket
 		if strings.Contains(key, "time") || key == "_bucket" {
