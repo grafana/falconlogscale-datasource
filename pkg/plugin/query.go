@@ -41,6 +41,11 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 
 			converters := getConverters(r.Events)
 			f, err := h.FrameMarshaller("events", r.Events, converters...)
+			if q.QueryType == "logs" {
+				f.Meta = &data.FrameMeta{
+					PreferredVisualization: data.VisTypeLogs,
+				}
+			}
 			if err != nil {
 				response.Responses[q.RefID] = backend.DataResponse{Error: err}
 				continue

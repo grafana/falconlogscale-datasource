@@ -1,22 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { SelectableValue } from '@grafana/data';
+import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { Select, QueryField } from '@grafana/ui';
 import { DataSource } from '../DataSource';
-import { LogScaleQuery } from './../types';
+import { LogScaleOptions, LogScaleQuery } from './../types';
 
-export type Props = {
-  datasource: DataSource;
-  onChange: (q: LogScaleQuery) => void;
-  runQuery: () => void;
-  query: LogScaleQuery;
-};
+export type Props = QueryEditorProps<DataSource, LogScaleQuery, LogScaleOptions>;
 
 export type Repository = {
   Name: string;
 };
 
 export function LogScaleQueryEditor(props: Props) {
-  const { datasource, query, onChange, runQuery } = props;
+  const { datasource, query, onChange, onRunQuery } = props;
   const [repositories, setRepositories] = useState<Array<SelectableValue<string>>>([]);
 
   useEffect(() => {
@@ -32,13 +27,11 @@ export function LogScaleQueryEditor(props: Props) {
         <QueryField
           query={query.lsql}
           onChange={(val) => onChange({ ...query, lsql: val })}
-          onBlur={runQuery}
-          onRunQuery={runQuery}
+          onRunQuery={onRunQuery}
           placeholder="Enter a LogScale query (run with Shift+Enter)"
           portalOrigin="LogScale"
         />
       </div>
-
       <Select
         width={30}
         options={repositories}
