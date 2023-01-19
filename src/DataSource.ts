@@ -1,24 +1,33 @@
 import {
   DataFrame,
   DataQueryRequest,
+  DataQueryResponse,
   DataSourceInstanceSettings,
   MetricFindValue,
   ScopedVar,
   vectorator,
 } from '@grafana/data';
 import { DataSourceWithBackend, getTemplateSrv, TemplateSrv } from '@grafana/runtime';
-import { lastValueFrom } from 'rxjs';
+import { lastValueFrom, Observable } from 'rxjs';
 import { LogScaleQuery, LogScaleOptions } from './types';
+import { map } from 'rxjs/operators';
+import { transformBackendResult } from 'dataLink';
 
 export class DataSource extends DataSourceWithBackend<LogScaleQuery, LogScaleOptions> {
   // This enables default annotation support for 7.2+
   annotations = {};
 
   constructor(
-    instanceSettings: DataSourceInstanceSettings<LogScaleOptions>,
+    private instanceSettings: DataSourceInstanceSettings<LogScaleOptions>,
     readonly templateSrv: TemplateSrv = getTemplateSrv()
   ) {
     super(instanceSettings);
+  }
+
+  query(request: DataQueryRequest<LogScaleQuery>): Observable<DataQueryResponse> {
+    return super
+      .query(request)
+      .pipe(map((response) => transformBackendResult(response, this.instanceSettings.jsonData.dataLinks ?? [])));
   }
 
   async metricFindQuery(q: LogScaleQuery, options: any): Promise<MetricFindValue[]> {
