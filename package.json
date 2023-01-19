@@ -1,5 +1,5 @@
 {
-  "name": "simple-datasource-backend",
+  "name": "grafana-falconlogscale-datasource",
   "version": "0.0.0",
   "description": "Falcon LogScale data source plugin for Grafana",
   "scripts": {
@@ -14,20 +14,20 @@
   "author": "Grafana Labs",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@grafana/toolkit": "latest",
+    "@grafana/toolkit": "8.4.7",
     "@testing-library/dom": "^7.29.0",
-    "@testing-library/jest-dom": "^5.1.1",
-    "@testing-library/react": "^10.0.2",
-    "@testing-library/user-event": "^14.4.3",
-    "@types/lodash": "latest",
+    "@testing-library/jest-dom": "5.16.1",
+    "@testing-library/react": "12.1.2",
+    "@testing-library/user-event": "13.5.0",
+    "@types/lodash": "^4.14.168",
     "cspell": "6.13.3",
-    "grafana-plugin-ui": "https://github.com/grafana/plugin-ui#0.1.5",
     "jest-mock-extended": "^1.0.10"
   },
   "dependencies": {
     "@grafana/data": "8.4.7",
     "@grafana/runtime": "8.4.7",
     "@grafana/ui": "8.4.7",
+    "plugin-ui": "https://github.com/grafana/plugin-ui#0.1.5",
     "react": "17.0.2",
     "react-dom": "17.0.2"
   },

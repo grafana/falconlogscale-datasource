@@ -1,8 +1,8 @@
 import React from 'react';
 import { render, waitFor } from '@testing-library/react';
-import { mockDataQuery } from 'grafana-plugin-ui';
+import { mockDataQuery } from 'plugin-ui';
 import { getMockDatasource } from './__fixtures__/datasource';
-import { QueryEditor, type Props } from './QueryEditor';
+import { QueryEditor, Props } from './QueryEditor';
 
 const getDefaultProps = (): Props => {
   const props: Props = {

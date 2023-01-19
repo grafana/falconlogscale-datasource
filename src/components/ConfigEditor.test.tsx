@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, waitFor, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ConfigEditor, type Props } from './ConfigEditor';
+import { ConfigEditor, Props } from './ConfigEditor';
 
 const getDefaultProps = (): Props => {
   const options: Partial<Props['options']> = {
