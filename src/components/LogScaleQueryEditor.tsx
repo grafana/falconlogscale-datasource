@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
-import { Select, QueryField } from '@grafana/ui';
+import {
+  Select,
+  QueryField,
+  InlineFormLabel,
+} from '@grafana/ui';
 import { DataSource } from '../DataSource';
 import { LogScaleOptions, LogScaleQuery } from './../types';
 
@@ -23,21 +27,28 @@ export function LogScaleQueryEditor(props: Props) {
 
   return (
     <div className="query-editor-row" can-collapse="true">
-      <div className="gf-form gf-form--grow flex-shrink-1 min-width-15 explore-input-margin">
-        <QueryField
+      <div className="gf-form-inline gf-form-inline--nowrap">
+        <div className="gf-form gf-form--grow flex-shrink-1">
+          <InlineFormLabel width={6}>Query</InlineFormLabel>
+                  <QueryField
           query={query.lsql}
           onChange={(val) => onChange({ ...query, lsql: val })}
           onRunQuery={onRunQuery}
           placeholder="Enter a LogScale query (run with Shift+Enter)"
           portalOrigin="LogScale"
         />
+        </div>
       </div>
-      <Select
-        width={30}
-        options={repositories}
-        value={query.repository}
-        onChange={(val) => onChange({ ...query, repository: val.value!.toString() })}
-      />
+
+      <div className="gf-form gf-form--grow flex-shrink-1">
+        <InlineFormLabel width={6}>Repository</InlineFormLabel>
+        <Select
+          width={30}
+          options={repositories}
+          value={query.repository}
+          onChange={(val) => onChange({ ...query, repository: val.value!.toString() })}
+        />
+      </div>
     </div>
   );
 }

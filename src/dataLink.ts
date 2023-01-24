@@ -1,12 +1,14 @@
-import { DataFrame, DataLink, DataQueryResponse, isDataFrame } from '@grafana/data';
+import { DataFrame, DataLink, DataQueryError, DataQueryResponse, isDataFrame } from '@grafana/data';
 import { getDataSourceSrv } from '@grafana/runtime';
-import { DataLinkConfig } from 'plugin-ui';
+import { DataLinkConfig } from 'grafana-plugin-ui';
+import { LogScaleQuery } from 'types';
 
 export function transformBackendResult(
   response: DataQueryResponse,
+  queries: LogScaleQuery[],
   derivedFieldConfigs: DataLinkConfig[]
 ): DataQueryResponse {
-  const { data } = response;
+  const { data, error } = response;
 
   const dataFrames = data.map((d) => {
     if (!isDataFrame(d)) {
@@ -15,9 +17,11 @@ export function transformBackendResult(
     return d;
   });
 
+  const queryMap = new Map(queries.map((query) => [query.refId, query]));
+
   return {
     ...response,
-    //error: improveError(error, queryMap),
+    error: improveError(error, queryMap),
     data: [...processStreamsFrames(dataFrames, derivedFieldConfigs)],
   };
 }
@@ -62,4 +66,25 @@ export function applyLinksToFrame(dataFrame: DataFrame, dataLinks: DataLinkConfi
     }
   }
   return dataFrame;
+}
+
+
+function improveError(error: DataQueryError | undefined, queryMap: Map<string, LogScaleQuery>): DataQueryError | undefined {
+  // many things are optional in an error-object, we need an error-message to exist,
+  // and we need to find the query, based on the refId in the error-object.
+  if (error === undefined) {
+    return error;
+  }
+
+  const { refId, message } = error;
+  if (refId === undefined || message === undefined) {
+    return error;
+  }
+
+  const query = queryMap.get(refId);
+  if (query === undefined) {
+    return error;
+  }
+
+  return error;
 }

@@ -27,7 +27,7 @@ export class DataSource extends DataSourceWithBackend<LogScaleQuery, LogScaleOpt
   query(request: DataQueryRequest<LogScaleQuery>): Observable<DataQueryResponse> {
     return super
       .query(request)
-      .pipe(map((response) => transformBackendResult(response, this.instanceSettings.jsonData.dataLinks ?? [])));
+      .pipe(map((response) => transformBackendResult(response, request.targets, this.instanceSettings.jsonData.dataLinks ?? [])));
   }
 
   async metricFindQuery(q: LogScaleQuery, options: any): Promise<MetricFindValue[]> {

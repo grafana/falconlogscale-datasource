@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, waitFor } from '@testing-library/react';
-import { mockDataQuery } from 'plugin-ui';
+import { mockDataQuery } from 'grafana-plugin-ui';
 import { getMockDatasource } from './__fixtures__/datasource';
 import { QueryEditor, Props } from './QueryEditor';
 
