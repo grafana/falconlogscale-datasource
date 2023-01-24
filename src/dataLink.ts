@@ -30,7 +30,7 @@ function processFrames(frames: DataFrame[], dataLinkConfigs: DataLinkConfig[]): 
   });
 }
 
-function getDataLinks(dataFrame: DataFrame, dataLinkConfigs: DataLinkConfig[]): Field[] {
+export function getDataLinks(dataFrame: DataFrame, dataLinkConfigs: DataLinkConfig[]): Field[] {
   if (!dataLinkConfigs.length) {
     return [];
   }
@@ -45,9 +45,8 @@ function getDataLinks(dataFrame: DataFrame, dataLinkConfigs: DataLinkConfig[]): 
 
   dataLinks.forEach((dl) => {
     dl.lineField?.values.toArray().forEach((line) => {
-      const field = dl.newField;
       const logMatch = line.match(dl.dataLinkConfig.matcherRegex);
-      field.values.add(logMatch && logMatch[0]);
+      dl.newField.values.add(logMatch && logMatch[1]);
     })
   });
 
@@ -62,7 +61,7 @@ function dataLinkConfigToDataFrameField(dataLinkConfig: DataLinkConfig): Field<a
     const dsSettings = dataSourceSrv.getInstanceSettings(dataLinkConfig.datasourceUid);
 
     dataLink = {
-      title: dataLinkConfig.field || '',
+      title: '',
       url: '',
       internal: {
         query: { query: dataLinkConfig.url },
@@ -72,7 +71,7 @@ function dataLinkConfigToDataFrameField(dataLinkConfig: DataLinkConfig): Field<a
     };
   } else if (dataLinkConfig.url) {
     dataLink = {
-      title: dataLinkConfig.field || '',
+      title: '',
       url: dataLinkConfig.url,
     };
   }
