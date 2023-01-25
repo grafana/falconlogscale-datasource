@@ -1,0 +1,53 @@
+//  🌟 This was machine generated.  Do not edit. 🌟
+//  
+//  Frame[0] 
+//  Name: field
+//  Dimensions: 2 Fields by 1 Rows
+//  +-------------------+-------------------+
+//  | Name: numberField | Name: stringField |
+//  | Labels:           | Labels:           |
+//  | Type: []*float64  | Type: []*string   |
+//  +-------------------+-------------------+
+//  | 100               | hello             |
+//  +-------------------+-------------------+
+//  
+//  
+//  🌟 This was machine generated.  Do not edit. 🌟
+{
+  "status": 200,
+  "frames": [
+    {
+      "schema": {
+        "name": "field",
+        "fields": [
+          {
+            "name": "numberField",
+            "type": "number",
+            "typeInfo": {
+              "frame": "float64",
+              "nullable": true
+            }
+          },
+          {
+            "name": "stringField",
+            "type": "string",
+            "typeInfo": {
+              "frame": "string",
+              "nullable": true
+            }
+          }
+        ]
+      },
+      "data": {
+        "values": [
+          [
+            100
+          ],
+          [
+            "hello"
+          ]
+        ]
+      }
+    }
+  ]
+}

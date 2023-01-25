@@ -37,7 +37,6 @@ export const ConfigEditor: React.FC<Props> = ({ options, onOptionsChange }) => {
             jsonData: {
               ...newValue.jsonData,
               baseUrl: newValue.url,
-              authenticateWithToken: true,
             },
           })
         }

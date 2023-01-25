@@ -1,10 +1,13 @@
 package plugin_test
 
 import (
+	"testing"
+
 	"github.com/grafana/falconlogscale-datasource-backend/pkg/humio"
 	"github.com/grafana/falconlogscale-datasource-backend/pkg/plugin"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/grafana/grafana-plugin-sdk-go/data/framestruct"
+	"github.com/grafana/grafana-plugin-sdk-go/experimental"
 )
 
 type testContext struct {
@@ -43,6 +46,21 @@ func setup(opts ...plugin.HandlerOption) (*plugin.Handler, testContext) {
 	)
 
 	return handler, tc
+}
+
+func TestGetConverters(t *testing.T) {
+	t.Run("gets all types", func(t *testing.T) {
+		events := []map[string]any{{"numberField": "100", "stringField": "hello"}}
+		converters := plugin.GetConverters(events)
+		frames, _ := framestruct.ToDataFrame("field", events, converters...)
+		experimental.CheckGoldenJSONFrame(t, "../testdata", "converter_all_field_types", frames, false)
+	})
+	t.Run("gets number in second entry", func(t *testing.T) {
+		events := []map[string]any{{}, {"numberField": "3"}}
+		converters := plugin.GetConverters(events)
+		frames, _ := framestruct.ToDataFrame("field", events, converters...)
+		experimental.CheckGoldenJSONFrame(t, "../testdata", "convert_num_second", frames, false)
+	})
 }
 
 func newFakeFalconClient() *fakeFalconClient {
