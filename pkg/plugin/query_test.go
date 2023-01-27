@@ -53,13 +53,13 @@ func TestGetConverters(t *testing.T) {
 		events := []map[string]any{{"numberField": "100", "stringField": "hello"}}
 		converters := plugin.GetConverters(events)
 		frames, _ := framestruct.ToDataFrame("field", events, converters...)
-		experimental.CheckGoldenJSONFrame(t, "../testdata", "converter_all_field_types", frames, false)
+		experimental.CheckGoldenJSONFrame(t, "../test_data", "converter_all_field_types", frames, false)
 	})
 	t.Run("gets number in second entry", func(t *testing.T) {
 		events := []map[string]any{{}, {"numberField": "3"}}
 		converters := plugin.GetConverters(events)
 		frames, _ := framestruct.ToDataFrame("field", events, converters...)
-		experimental.CheckGoldenJSONFrame(t, "../testdata", "convert_num_second", frames, false)
+		experimental.CheckGoldenJSONFrame(t, "../test_data", "convert_num_second", frames, false)
 	})
 }
 

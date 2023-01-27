@@ -1,6 +1,4 @@
-import { DataSourceInstanceSettings } from '@grafana/data';
 import { mockDatasourceInstanceSettings } from 'grafana-plugin-ui';
-import { LogScaleOptions } from 'types';
 import { DataSource } from '../../DataSource';
 
 export const getMockDatasource = (): DataSource => {
@@ -11,7 +9,7 @@ export const getMockDatasource = (): DataSource => {
       authenticateWithToken: false,
       dataLinks: [],
     },
-  } as DataSourceInstanceSettings<LogScaleOptions>);
+  });
 
   ds.getResource = async () => [];
 
