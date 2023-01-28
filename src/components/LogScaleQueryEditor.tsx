@@ -1,22 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { SelectableValue } from '@grafana/data';
-import { Select, QueryField } from '@grafana/ui';
+import { QueryEditorProps, SelectableValue } from '@grafana/data';
+import {
+  Select,
+  QueryField,
+  InlineFormLabel,
+} from '@grafana/ui';
 import { DataSource } from '../DataSource';
-import { LogScaleQuery } from './../types';
+import { LogScaleOptions, LogScaleQuery } from './../types';
 
-export type Props = {
-  datasource: DataSource;
-  onChange: (q: LogScaleQuery) => void;
-  runQuery: () => void;
-  query: LogScaleQuery;
-};
+export type Props = QueryEditorProps<DataSource, LogScaleQuery, LogScaleOptions>;
 
 export type Repository = {
   Name: string;
 };
 
 export function LogScaleQueryEditor(props: Props) {
-  const { datasource, query, onChange, runQuery } = props;
+  const { datasource, query, onChange, onRunQuery } = props;
   const [repositories, setRepositories] = useState<Array<SelectableValue<string>>>([]);
 
   useEffect(() => {
@@ -28,23 +27,28 @@ export function LogScaleQueryEditor(props: Props) {
 
   return (
     <div className="query-editor-row" can-collapse="true">
-      <div className="gf-form gf-form--grow flex-shrink-1 min-width-15 explore-input-margin">
-        <QueryField
+      <div className="gf-form-inline gf-form-inline--nowrap">
+        <div className="gf-form gf-form--grow flex-shrink-1">
+          <InlineFormLabel width={6}>Query</InlineFormLabel>
+                  <QueryField
           query={query.lsql}
           onChange={(val) => onChange({ ...query, lsql: val })}
-          onBlur={runQuery}
-          onRunQuery={runQuery}
+          onRunQuery={onRunQuery}
           placeholder="Enter a LogScale query (run with Shift+Enter)"
           portalOrigin="LogScale"
         />
+        </div>
       </div>
 
-      <Select
-        width={30}
-        options={repositories}
-        value={query.repository}
-        onChange={(val) => onChange({ ...query, repository: val.value!.toString() })}
-      />
+      <div className="gf-form gf-form--grow flex-shrink-1">
+        <InlineFormLabel width={6}>Repository</InlineFormLabel>
+        <Select
+          width={30}
+          options={repositories}
+          value={query.repository}
+          onChange={(val) => onChange({ ...query, repository: val.value!.toString() })}
+        />
+      </div>
     </div>
   );
 }

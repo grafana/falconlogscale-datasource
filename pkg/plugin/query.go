@@ -39,8 +39,13 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 				continue
 			}
 
-			converters := getConverters(r.Events)
+			converters := GetConverters(r.Events)
 			f, err := h.FrameMarshaller("events", r.Events, converters...)
+			if q.QueryType == "logs" {
+				f.Meta = &data.FrameMeta{
+					PreferredVisualization: data.VisTypeLogs,
+				}
+			}
 			if err != nil {
 				response.Responses[q.RefID] = backend.DataResponse{Error: err}
 				continue
@@ -59,25 +64,34 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 
 type Events []map[string]any
 
-func getConverters(events Events) []framestruct.FramestructOption {
+func GetConverters(events Events) []framestruct.FramestructOption {
 	var converters []framestruct.FramestructOption
-	for key, value := range events[0] {
+	// search through all event fields and return every field name with a value
+	fieldNames := make(map[string]any)
+	for _, event := range events {
+		for k, val := range event {
+			if fieldNames[k] == nil {
+				fieldNames[k] = val
+			}
+		}
+	}
+	for key, v := range fieldNames {
 		// There needs to be a better way to check to see if a field is a time
 		// _bucket is defined by humio. it is a time group bucket
 		if strings.Contains(key, "time") || key == "_bucket" {
-			converters = append(converters, framestruct.WithConverterFor(key, converterForStringToTime))
+			converters = append(converters, framestruct.WithConverterFor(key, ConverterForStringToTime))
 			continue
 		}
-		_, err := converterForStringToInt64(value)
+		_, err := ConverterForStringToInt64(v)
 		if err == nil {
-			converters = append(converters, framestruct.WithConverterFor(key, converterForStringToInt64))
+			converters = append(converters, framestruct.WithConverterFor(key, ConverterForStringToInt64))
 			continue
 		}
 	}
 	return converters
 }
 
-func converterForStringToTime(input any) (any, error) {
+func ConverterForStringToTime(input any) (any, error) {
 	var num int64
 	switch v := input.(type) {
 	case string:
@@ -98,12 +112,12 @@ func converterForStringToTime(input any) (any, error) {
 	return &p, nil
 }
 
-func converterForStringToInt64(input any) (any, error) {
+func ConverterForStringToInt64(input any) (any, error) {
 	num, err := strconv.ParseFloat(input.(string), 64)
 	if err != nil {
 		return nil, err
 	}
-	return &num, nil
+	return num, nil
 }
 
 func (h *Handler) queryRequest(q backend.DataQuery) (humio.Query, error) {

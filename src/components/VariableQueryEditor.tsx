@@ -22,7 +22,7 @@ export function VariableQueryEditor(props: Props) {
     <LogScaleQueryEditor
       datasource={datasource}
       onChange={handleVariableQuery}
-      runQuery={() => handleVariableQuery(query)}
+      onRunQuery={() => handleVariableQuery(query)}
       query={query}
     />
   );

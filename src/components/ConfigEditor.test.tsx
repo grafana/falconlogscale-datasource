@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, waitFor, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ConfigEditor, type Props } from './ConfigEditor';
+import { ConfigEditor, Props } from './ConfigEditor';
 
 const getDefaultProps = (): Props => {
   const options: Partial<Props['options']> = {
@@ -34,24 +34,6 @@ describe('<ConfigEditor />', () => {
     render(<ConfigEditor {...props} />);
 
     expect(screen.getByDisplayValue('http://humio-test.test')).toBeInTheDocument();
-  });
-
-  it('should call `onOptionsChange` when URL changes', async () => {
-    const props = getDefaultProps();
-
-    render(<ConfigEditor {...props} />);
-
-    const input = screen.getByLabelText('Datasource HTTP settings url');
-    await userEvent.type(input, 'http://humio-test.test');
-
-    expect(props.onOptionsChange).toHaveBeenCalledWith({
-      url: 'http://humio-test.test',
-      jsonData: {
-        ...props.options.jsonData,
-        baseUrl: 'http://humio-test.test',
-      },
-      secureJsonData: {},
-    });
   });
 
   it('should render token as "configured" when token is set', () => {

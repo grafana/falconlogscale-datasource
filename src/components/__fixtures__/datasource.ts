@@ -7,6 +7,7 @@ export const getMockDatasource = (): DataSource => {
     jsonData: {
       baseUrl: 'https://mock-default.mock',
       authenticateWithToken: false,
+      dataLinks: [],
     },
   });
 

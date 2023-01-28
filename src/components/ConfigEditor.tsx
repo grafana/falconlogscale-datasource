@@ -5,6 +5,7 @@ import { DataSourceHttpSettings, LegacyForms } from '@grafana/ui';
 const { SecretFormField } = LegacyForms;
 
 import { LogScaleOptions, SecretLogScaleOptions } from '../types';
+import { DataLinks } from 'grafana-plugin-ui';
 
 export interface Props extends DataSourcePluginOptionsEditorProps<LogScaleOptions, SecretLogScaleOptions> {}
 
@@ -69,6 +70,19 @@ export const ConfigEditor: React.FC<Props> = ({ options, onOptionsChange }) => {
           />
         </div>
       </div>
+
+      <DataLinks
+        value={options.jsonData.dataLinks}
+        onChange={(newValue: any) => {
+          onOptionsChange({
+            ...options,
+            jsonData: {
+              ...options.jsonData,
+              dataLinks: newValue,
+            },
+          });
+        }}
+      />
     </>
   );
 };
