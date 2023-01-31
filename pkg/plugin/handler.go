@@ -8,11 +8,11 @@ import (
 )
 
 type humioClient interface {
-	HealthString() (string, error)
 }
 
 type queryRunner interface {
 	Run(humio.Query) ([]humio.QueryResult, error)
+	GetAllViews() ([]string, error)
 }
 
 // Handler encapsulates the lifecycle management of the handler components.

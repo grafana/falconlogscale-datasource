@@ -68,18 +68,14 @@ func newFakeFalconClient() *fakeFalconClient {
 }
 
 type fakeFalconClient struct {
-	err         error
-	stringValue string
-}
-
-func (c *fakeFalconClient) HealthString() (string, error) {
-	return c.stringValue, c.err
 }
 
 type fakeQueryRunner struct {
-	req  humio.Query
-	ret  chan humio.QueryResult
-	errs chan error
+	req      humio.Query
+	ret      chan humio.QueryResult
+	errs     chan error
+	views    []string
+	viewsErr error
 }
 
 func (qr *fakeQueryRunner) Run(req humio.Query) ([]humio.QueryResult, error) {
@@ -92,6 +88,10 @@ func (qr *fakeQueryRunner) Run(req humio.Query) ([]humio.QueryResult, error) {
 	default:
 		return nil, qr.err()
 	}
+}
+
+func (qr *fakeQueryRunner) GetAllViews() ([]string, error) {
+	return qr.views, qr.viewsErr
 }
 
 func (qr *fakeQueryRunner) err() error {

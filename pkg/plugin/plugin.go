@@ -17,7 +17,7 @@ func NewDataSourceInstance(settings backend.DataSourceInstanceSettings) (instanc
 		return nil, err
 	}
 
-	client, err := client(s.AccessToken, s.BaseURL)
+	client, err := client(s.AccessToken, s.BaseURL, s.BasicAuthUser, s.BasicAuthPass)
 	if err != nil {
 		return nil, err
 	}
@@ -32,9 +32,10 @@ func NewDataSourceInstance(settings backend.DataSourceInstanceSettings) (instanc
 	), nil
 }
 
-func client(accessToken string, baseURL string) (*humioAPI.Client, error) {
+func client(accessToken string, baseURL string, user string, pass string) (*humioAPI.Client, error) {
 	config := humioAPI.DefaultConfig()
 	address, err := url.Parse(baseURL)
+	address.User = url.UserPassword(user, pass)
 	if err != nil {
 		return nil, err
 	}

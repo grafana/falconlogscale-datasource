@@ -12,7 +12,7 @@ import (
 func TestCheckHealth(t *testing.T) {
 	t.Run("HealthStatusOK when settings are valid and API returns 200 and no error", func(t *testing.T) {
 		handler, tc := setup()
-		tc.falconClient.err = nil
+		tc.queryRunner.viewsErr = nil
 
 		res, _ := handler.CheckHealth(
 			context.Background(),
@@ -25,7 +25,7 @@ func TestCheckHealth(t *testing.T) {
 
 	t.Run("HealthStatusError when settings are valid and API returns error", func(t *testing.T) {
 		handler, tc := setup()
-		tc.falconClient.err = errors.New("some error")
+		tc.queryRunner.viewsErr = errors.New("some error")
 
 		res, _ := handler.CheckHealth(
 			context.Background(),

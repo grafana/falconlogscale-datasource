@@ -31,6 +31,7 @@ export const ConfigEditor: React.FC<Props> = ({ options, onOptionsChange }) => {
         defaultUrl={'https://cloud.humio.com'}
         dataSourceConfig={options}
         showAccessOptions={false}
+        showForwardOAuthIdentityOption={false}
         onChange={(newValue) =>
           onOptionsChange({
             ...newValue,
@@ -44,7 +45,6 @@ export const ConfigEditor: React.FC<Props> = ({ options, onOptionsChange }) => {
       <div className="gf-form-group">
         <h5> LogScale Token Authentication </h5>
         <p>
-          {' '}
           If you wish to authenticate using a personal LogScale token copy and paste it into the field below. <br></br>
         </p>
         <div className="gf-form max-width-25">
