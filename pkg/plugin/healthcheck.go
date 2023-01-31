@@ -7,7 +7,9 @@ import (
 )
 
 func (h *Handler) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
-	_, err := h.Client.HealthString()
+	// Check if we can view our humio repos
+	v := *h.Client.Views()
+	_, err := v.List()
 
 	if err != nil {
 		return &backend.CheckHealthResult{

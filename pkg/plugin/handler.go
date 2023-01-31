@@ -5,10 +5,11 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/grafana/grafana-plugin-sdk-go/data/framestruct"
+	humioAPI "github.com/humio/cli/api"
 )
 
 type humioClient interface {
-	HealthString() (string, error)
+	Views() *humioAPI.Views
 }
 
 type queryRunner interface {

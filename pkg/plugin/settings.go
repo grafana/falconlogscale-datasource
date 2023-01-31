@@ -14,6 +14,8 @@ type Settings struct {
 	AuthenticateWithToken bool   `json:"authenticateWithToken,omitempty"`
 	GraphqlEndpoint       string
 	RestEndpoint          string
+	BasicAuthUser         string
+	BasicAuthPass         string
 }
 
 var (
@@ -45,6 +47,9 @@ func LoadSettings(config backend.DataSourceInstanceSettings) (Settings, error) {
 		secureSettings = make(map[string]string)
 	}
 	settings.AccessToken = secureSettings["accessToken"]
+
+	settings.BasicAuthUser = config.BasicAuthUser
+	settings.BasicAuthPass = secureSettings["basicAuthPassword"]
 
 	return settings, nil
 }

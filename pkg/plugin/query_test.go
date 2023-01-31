@@ -8,6 +8,7 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/grafana/grafana-plugin-sdk-go/data/framestruct"
 	"github.com/grafana/grafana-plugin-sdk-go/experimental"
+	humioAPI "github.com/humio/cli/api"
 )
 
 type testContext struct {
@@ -70,10 +71,11 @@ func newFakeFalconClient() *fakeFalconClient {
 type fakeFalconClient struct {
 	err         error
 	stringValue string
+	views       *humioAPI.Views
 }
 
-func (c *fakeFalconClient) HealthString() (string, error) {
-	return c.stringValue, c.err
+func (c *fakeFalconClient) Views() *humioAPI.Views {
+	return c.views
 }
 
 type fakeQueryRunner struct {
