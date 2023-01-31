@@ -8,7 +8,6 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/grafana/grafana-plugin-sdk-go/data/framestruct"
 	"github.com/grafana/grafana-plugin-sdk-go/experimental"
-	humioAPI "github.com/humio/cli/api"
 )
 
 type testContext struct {
@@ -69,19 +68,14 @@ func newFakeFalconClient() *fakeFalconClient {
 }
 
 type fakeFalconClient struct {
-	err         error
-	stringValue string
-	views       *humioAPI.Views
-}
-
-func (c *fakeFalconClient) Views() *humioAPI.Views {
-	return c.views
 }
 
 type fakeQueryRunner struct {
-	req  humio.Query
-	ret  chan humio.QueryResult
-	errs chan error
+	req      humio.Query
+	ret      chan humio.QueryResult
+	errs     chan error
+	views    []string
+	viewsErr error
 }
 
 func (qr *fakeQueryRunner) Run(req humio.Query) ([]humio.QueryResult, error) {
@@ -94,6 +88,10 @@ func (qr *fakeQueryRunner) Run(req humio.Query) ([]humio.QueryResult, error) {
 	default:
 		return nil, qr.err()
 	}
+}
+
+func (qr *fakeQueryRunner) GetAllViews() ([]string, error) {
+	return qr.views, qr.viewsErr
 }
 
 func (qr *fakeQueryRunner) err() error {
