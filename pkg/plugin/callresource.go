@@ -7,8 +7,8 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/grafana/falconlogscale-datasource-backend/pkg/humio"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
-	humioAPI "github.com/humio/cli/api"
 )
 
 // CallResource handles gRPC requests from the frontend to get non-query resources.
@@ -18,14 +18,14 @@ func (h *Handler) CallResource(ctx context.Context, req *backend.CallResourceReq
 }
 
 // ResourceHandler handles http calls for resources from the api
-func ResourceHandler(c *humioAPI.Client) http.Handler {
+func ResourceHandler(c *humio.Client) http.Handler {
 	r := mux.NewRouter()
-	r.HandleFunc("/repositories", handleRepositories(c.Views().List))
+	r.HandleFunc("/repositories", handleRepositories(c.ListViews))
 
 	return r
 }
 
-func handleRepositories(repositories func() ([]humioAPI.ViewListItem, error)) func(w http.ResponseWriter, req *http.Request) {
+func handleRepositories(repositories func() ([]string, error)) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		resp, err := repositories()
 		writeResponse(resp, err, w)

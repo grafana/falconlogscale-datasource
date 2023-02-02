@@ -8,7 +8,6 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
 	"github.com/grafana/grafana-plugin-sdk-go/data/framestruct"
-	humioAPI "github.com/humio/cli/api"
 )
 
 func NewDataSourceInstance(settings backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
@@ -32,17 +31,13 @@ func NewDataSourceInstance(settings backend.DataSourceInstanceSettings) (instanc
 	), nil
 }
 
-func client(accessToken string, baseURL string, user string, pass string) (*humioAPI.Client, error) {
-	config := humioAPI.DefaultConfig()
+func client(accessToken string, baseURL string, user string, pass string) (*humio.Client, error) {
 	address, err := url.Parse(baseURL)
 	address.User = url.UserPassword(user, pass)
 	if err != nil {
 		return nil, err
 	}
-	config.Address = address
-	config.Token = accessToken
-
-	return humioAPI.NewClient(config), nil
+	return humio.NewClient(humio.Config{Address: address, Token: accessToken}), nil
 }
 
 func (h *Handler) Dispose() {
