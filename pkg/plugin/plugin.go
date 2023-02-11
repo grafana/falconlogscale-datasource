@@ -33,7 +33,7 @@ func NewDataSourceInstance(settings backend.DataSourceInstanceSettings) (instanc
 
 func client(accessToken string, baseURL string, user string, pass string) (*humio.Client, error) {
 	address, err := url.Parse(baseURL)
-	address.User = url.UserPassword(user, pass)
+	//address.User = url.UserPassword(user, pass)
 	if err != nil {
 		return nil, err
 	}
