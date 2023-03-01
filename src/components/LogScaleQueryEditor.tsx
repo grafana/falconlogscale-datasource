@@ -10,17 +10,13 @@ import { LogScaleOptions, LogScaleQuery } from './../types';
 
 export type Props = QueryEditorProps<DataSource, LogScaleQuery, LogScaleOptions>;
 
-export type Repository = {
-  Name: string;
-};
-
 export function LogScaleQueryEditor(props: Props) {
   const { datasource, query, onChange, onRunQuery } = props;
   const [repositories, setRepositories] = useState<Array<SelectableValue<string>>>([]);
 
   useEffect(() => {
-    datasource.getResource('/repositories').then((result: Repository[]) => {
-      const repositories = result.map(({ Name }) => ({ value: Name, label: Name }));
+    datasource.getResource('/repositories').then((result: string[]) => {
+      const repositories = result.map((Name) => ({ value: Name, label: Name }));
       setRepositories((prevRepositories) => [...prevRepositories, ...repositories]);
     });
   }, [datasource]);

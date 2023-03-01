@@ -3,7 +3,7 @@ import { render, waitFor, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { getMockDatasource } from './__fixtures__/datasource';
 import { mockDataQuery } from 'grafana-plugin-ui';
-import { LogScaleQueryEditor, Props, Repository } from './LogScaleQueryEditor';
+import { LogScaleQueryEditor, Props } from './LogScaleQueryEditor';
 
 const getDefaultProps = (): Props => {
   const props: Props = {
@@ -17,10 +17,10 @@ const getDefaultProps = (): Props => {
     },
   };
 
-  props.datasource.getResource = async (): Promise<Repository[]> => [
-    { Name: 'repository_1' },
-    { Name: 'repository_2' },
-    { Name: 'repository_3' },
+  props.datasource.getResource = async (): Promise<string[]> => [
+    'repository_1',
+    'repository_2',
+    'repository_3',
   ];
 
   return props;
