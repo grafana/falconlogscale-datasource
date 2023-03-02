@@ -8,7 +8,7 @@ import (
 
 func (h *Handler) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
 	// Check if we can view our humio repos
-	_, err := h.QueryRunner.GetAllViews()
+	_, err := h.QueryRunner.GetAllRepoNames()
 
 	if err != nil {
 		return &backend.CheckHealthResult{

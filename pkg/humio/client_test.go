@@ -1,0 +1,99 @@
+package humio_test
+
+import (
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"testing"
+
+	"github.com/grafana/falconlogscale-datasource-backend/pkg/humio"
+	"github.com/stretchr/testify/require"
+)
+
+const dummyAccessToken string = ""
+
+func TestClient(t *testing.T) {
+	t.Run("it creates a job and returns an id", func(t *testing.T) {
+		setup()
+		defer teardown()
+		testMux.HandleFunc("/api/v1/repositories/repo/queryjobs", func(w http.ResponseWriter, req *http.Request) {
+			testMethod(t, req, http.MethodPost)
+			fmt.Fprint(w, `{"id":"testid"}`)
+		})
+
+		id, err := testClient.CreateJob("repo", humio.Query{})
+		require.Nil(t, err)
+		require.Equal(t, "testid", id)
+	})
+	t.Run("it deletes a job", func(t *testing.T) {
+		setup()
+		defer teardown()
+		testMux.HandleFunc("/api/v1/repositories/repo/queryjobs/testid", func(w http.ResponseWriter, req *http.Request) {
+			testMethod(t, req, http.MethodDelete)
+		})
+
+		err := testClient.DeleteJob("repo", "testid")
+		require.Nil(t, err)
+	})
+	t.Run("it polls a job", func(t *testing.T) {
+		setup()
+		defer teardown()
+		testMux.HandleFunc("/api/v1/repositories/repo/queryjobs/testid", func(w http.ResponseWriter, req *http.Request) {
+			testMethod(t, req, http.MethodGet)
+			fmt.Fprint(w, `{
+				"cancelled": false,
+				"done": false,
+				"events": [],
+				"metaData": {
+				}
+				}`)
+		})
+
+		r, err := testClient.PollJob("repo", "testid")
+		require.Nil(t, err)
+		require.Equal(t, false, r.Done)
+		require.Equal(t, false, r.Cancelled)
+		require.Len(t, r.Events, 0)
+	})
+	t.Run("it lists all repos", func(t *testing.T) {
+		setup()
+		defer teardown()
+		testMux.HandleFunc("/graphql", func(w http.ResponseWriter, req *http.Request) {
+			testMethod(t, req, http.MethodPost)
+			fmt.Fprint(w, `{"searchDomains":[{"Name":"1"},{"Name":"2"}]}`)
+		})
+
+		r, err := testClient.ListRepos()
+		require.Nil(t, err)
+		require.Len(t, r, 2)
+	})
+}
+
+var (
+	// testMux is the HTTP request multiplexer used with the test server.
+	testMux *http.ServeMux
+	// testClient is the Humio client being tested.
+	testClient *humio.Client
+	// testServer is a test HTTP server used to provide mock API responses.
+	testServer *httptest.Server
+)
+
+func setup() {
+	// Test server
+	testMux = http.NewServeMux()
+	testServer = httptest.NewServer(testMux)
+
+	url, _ := url.Parse(testServer.URL)
+	config := humio.Config{Address: url, Token: dummyAccessToken}
+	testClient = humio.NewClient(config)
+}
+func teardown() {
+	testServer.Close()
+}
+
+func testMethod(t *testing.T, r *http.Request, want string) {
+	if got := r.Method; got != want {
+		t.Errorf("Request method: %v, want %v", got, want)
+	}
+}

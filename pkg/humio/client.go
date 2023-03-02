@@ -15,19 +15,7 @@ import (
 
 type Client struct {
 	URL        *url.URL
-	HTTPClient http.Client
-}
-
-type HttpHeaderTransport struct {
-	rt      http.RoundTripper
-	headers map[string]string
-}
-
-func (t *HttpHeaderTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	for key, val := range t.headers {
-		req.Header.Set(key, val)
-	}
-	return t.rt.RoundTrip(req)
+	HTTPClient *http.Client
 }
 
 type Config struct {
@@ -77,23 +65,23 @@ func (c *Client) PollJob(repo string, id string) (QueryResult, error) {
 	return jsonResponse, nil
 }
 
-type ViewListItem struct {
+type RepoListItem struct {
 	Name string
 }
 
-func (c *Client) ListViews() ([]string, error) {
+func (c *Client) ListRepos() ([]string, error) {
 	var query struct {
-		View []ViewListItem `graphql:"searchDomains"`
+		Repos []RepoListItem `graphql:"searchDomains"`
 	}
 
-	err := c.Query(&query, nil)
+	err := c.GraphQLQuery(&query, nil)
 
-	sort.Slice(query.View, func(i, j int) bool {
-		return strings.ToLower(query.View[i].Name) < strings.ToLower(query.View[j].Name)
+	sort.Slice(query.Repos, func(i, j int) bool {
+		return strings.ToLower(query.Repos[i].Name) < strings.ToLower(query.Repos[j].Name)
 	})
 
 	var f []string
-	for _, v := range query.View {
+	for _, v := range query.Repos {
 		f = append(f, v.Name)
 	}
 	return f, err
@@ -101,10 +89,10 @@ func (c *Client) ListViews() ([]string, error) {
 
 func (c *Client) newGraphQLClient() (*graphql.Client, error) {
 	graphqlURL, _ := c.URL.Parse("graphql")
-	return graphql.NewClient(graphqlURL.String(), &c.HTTPClient), nil
+	return graphql.NewClient(graphqlURL.String(), c.HTTPClient), nil
 }
 
-func (c *Client) Query(query interface{}, variables map[string]interface{}) error {
+func (c *Client) GraphQLQuery(query interface{}, variables map[string]interface{}) error {
 	client, err := c.newGraphQLClient()
 	if err != nil {
 		return err
@@ -112,20 +100,28 @@ func (c *Client) Query(query interface{}, variables map[string]interface{}) erro
 	return client.Query(context.Background(), query, variables)
 }
 
+func NewClientWithHTTPClient(config Config, httpClient *http.Client) *Client {
+	client := &Client{
+		URL: config.Address,
+	}
+	client.HTTPClient = httpClient
+	return client
+}
+
 func NewClient(config Config) *Client {
 	client := &Client{
 		URL: config.Address,
 	}
-	client.HTTPClient = NewHTTPClientWithHeaders(config.Token)
+	client.HTTPClient = newHTTPClientWithHeaders(config.Token)
 	return client
 }
 
-func NewHTTPClientWithHeaders(authToken string) http.Client {
+func newHTTPClientWithHeaders(authToken string) *http.Client {
 	headers := map[string]string{
 		"Authorization": fmt.Sprintf("Bearer %s", authToken),
 		"Content-Type":  "application/json",
 	}
-	return http.Client{
+	return &http.Client{
 		Transport: &HttpHeaderTransport{
 			rt:      http.DefaultTransport,
 			headers: headers,

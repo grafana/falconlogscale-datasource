@@ -32,11 +32,6 @@ func NewQueryRunner(c Client, opts ...QueryRunnerOption) *QueryRunner {
 func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
 	client := qj.client
 	repository := query.Repository
-	// 	queryString := `#cid = "56879ccf959c4afc96dd17e8bb1dcbb5"
-	// | ComputerName = * AND AgentIdString = "f5ea7013e8c24bceb5e9715f2cde8c0a" | "Event_DetectionSummaryEvent"
-	// | top(Technique)` //qj.context.Model.Query
-	// 	start := "10y" //qj.context.Query.TimeRange.From.String()
-	// 	end := ""      //qj.context.Query.TimeRange.To.String()
 
 	ctx := contextCancelledOnInterrupt(context.Background())
 	// run in lambda func to be able to defer and delete the query job
@@ -84,6 +79,11 @@ func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
 
 	r := humioToDatasourceResult(*result)
 	return []QueryResult{r}, nil
+}
+
+func (qr *QueryRunner) GetAllRepoNames() ([]string, error) {
+	client := qr.client
+	return client.ListRepos()
 }
 
 func humioToDatasourceResult(r QueryResult) QueryResult {
