@@ -71,17 +71,17 @@ type RepoListItem struct {
 
 func (c *Client) ListRepos() ([]string, error) {
 	var query struct {
-		Repos []RepoListItem `graphql:"searchDomains"`
+		Views []RepoListItem `graphql:"searchDomains"`
 	}
 
 	err := c.GraphQLQuery(&query, nil)
 
-	sort.Slice(query.Repos, func(i, j int) bool {
-		return strings.ToLower(query.Repos[i].Name) < strings.ToLower(query.Repos[j].Name)
+	sort.Slice(query.Views, func(i, j int) bool {
+		return strings.ToLower(query.Views[i].Name) < strings.ToLower(query.Views[j].Name)
 	})
 
 	var f []string
-	for _, v := range query.Repos {
+	for _, v := range query.Views {
 		f = append(f, v.Name)
 	}
 	return f, err
@@ -98,14 +98,6 @@ func (c *Client) GraphQLQuery(query interface{}, variables map[string]interface{
 		return err
 	}
 	return client.Query(context.Background(), query, variables)
-}
-
-func NewClientWithHTTPClient(config Config, httpClient *http.Client) *Client {
-	client := &Client{
-		URL: config.Address,
-	}
-	client.HTTPClient = httpClient
-	return client
 }
 
 func NewClient(config Config) *Client {

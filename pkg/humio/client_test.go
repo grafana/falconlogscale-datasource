@@ -11,12 +11,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const dummyAccessToken string = ""
-
 func TestClient(t *testing.T) {
 	t.Run("it creates a job and returns an id", func(t *testing.T) {
-		setup()
-		defer teardown()
+		setupClientTest()
+		defer teardownClientTest()
 		testMux.HandleFunc("/api/v1/repositories/repo/queryjobs", func(w http.ResponseWriter, req *http.Request) {
 			testMethod(t, req, http.MethodPost)
 			fmt.Fprint(w, `{"id":"testid"}`)
@@ -27,18 +25,19 @@ func TestClient(t *testing.T) {
 		require.Equal(t, "testid", id)
 	})
 	t.Run("it deletes a job", func(t *testing.T) {
-		setup()
-		defer teardown()
+		setupClientTest()
+		defer teardownClientTest()
 		testMux.HandleFunc("/api/v1/repositories/repo/queryjobs/testid", func(w http.ResponseWriter, req *http.Request) {
 			testMethod(t, req, http.MethodDelete)
+			fmt.Fprint(w, "{}")
 		})
 
 		err := testClient.DeleteJob("repo", "testid")
 		require.Nil(t, err)
 	})
 	t.Run("it polls a job", func(t *testing.T) {
-		setup()
-		defer teardown()
+		setupClientTest()
+		defer teardownClientTest()
 		testMux.HandleFunc("/api/v1/repositories/repo/queryjobs/testid", func(w http.ResponseWriter, req *http.Request) {
 			testMethod(t, req, http.MethodGet)
 			fmt.Fprint(w, `{
@@ -47,7 +46,8 @@ func TestClient(t *testing.T) {
 				"events": [],
 				"metaData": {
 				}
-				}`)
+				}`,
+			)
 		})
 
 		r, err := testClient.PollJob("repo", "testid")
@@ -57,11 +57,19 @@ func TestClient(t *testing.T) {
 		require.Len(t, r.Events, 0)
 	})
 	t.Run("it lists all repos", func(t *testing.T) {
-		setup()
-		defer teardown()
+		setupClientTest()
+		defer teardownClientTest()
 		testMux.HandleFunc("/graphql", func(w http.ResponseWriter, req *http.Request) {
 			testMethod(t, req, http.MethodPost)
-			fmt.Fprint(w, `{"searchDomains":[{"Name":"1"},{"Name":"2"}]}`)
+			fmt.Fprint(w, `{
+				  "data": {
+				    "searchDomains": [
+							{ "name": "repo1" },
+							{ "name": "repo2" }
+						]
+				  }
+				}`,
+			)
 		})
 
 		r, err := testClient.ListRepos()
@@ -79,16 +87,17 @@ var (
 	testServer *httptest.Server
 )
 
-func setup() {
+func setupClientTest() {
 	// Test server
 	testMux = http.NewServeMux()
 	testServer = httptest.NewServer(testMux)
 
 	url, _ := url.Parse(testServer.URL)
-	config := humio.Config{Address: url, Token: dummyAccessToken}
+	config := humio.Config{Address: url, Token: "testToken"}
 	testClient = humio.NewClient(config)
 }
-func teardown() {
+
+func teardownClientTest() {
 	testServer.Close()
 }
 

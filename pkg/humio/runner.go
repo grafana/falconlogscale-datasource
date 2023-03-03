@@ -10,16 +10,23 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 )
 
+type JobQuerier interface {
+	CreateJob(repo string, query Query) (string, error)
+	DeleteJob(repo string, id string) error
+	PollJob(repo string, id string) (QueryResult, error)
+	ListRepos() ([]string, error)
+}
+
 type QueryRunner struct {
-	client Client
+	jobQuerier JobQuerier
 }
 
 // QueryRunnerOption acts as an optional modifier on the QueryRunner
 type QueryRunnerOption func(qr *QueryRunner)
 
-func NewQueryRunner(c Client, opts ...QueryRunnerOption) *QueryRunner {
+func NewQueryRunner(c JobQuerier, opts ...QueryRunnerOption) *QueryRunner {
 	qr := &QueryRunner{
-		client: c,
+		jobQuerier: c,
 	}
 
 	for _, o := range opts {
@@ -30,13 +37,12 @@ func NewQueryRunner(c Client, opts ...QueryRunnerOption) *QueryRunner {
 }
 
 func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
-	client := qj.client
 	repository := query.Repository
 
 	ctx := contextCancelledOnInterrupt(context.Background())
 	// run in lambda func to be able to defer and delete the query job
 	result, err := func() (*QueryResult, error) {
-		id, err := client.CreateJob(repository, query)
+		id, err := qj.jobQuerier.CreateJob(repository, query)
 
 		if err != nil {
 			return nil, err
@@ -44,12 +50,12 @@ func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
 
 		defer func(id string) {
 			// Humio will eventually delete the query when we stop polling and we can't do much about errors here.
-			_ = client.DeleteJob(repository, id)
+			_ = qj.jobQuerier.DeleteJob(repository, id)
 		}(id)
 
 		var result QueryResult
 		poller := queryJobPoller{
-			queryJobs:  &qj.client,
+			queryJobs:  &qj.jobQuerier,
 			repository: repository,
 			id:         id,
 		}
@@ -82,8 +88,7 @@ func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
 }
 
 func (qr *QueryRunner) GetAllRepoNames() ([]string, error) {
-	client := qr.client
-	return client.ListRepos()
+	return qr.jobQuerier.ListRepos()
 }
 
 func humioToDatasourceResult(r QueryResult) QueryResult {
@@ -95,7 +100,7 @@ func humioToDatasourceResult(r QueryResult) QueryResult {
 }
 
 type queryJobPoller struct {
-	queryJobs  *Client
+	queryJobs  *JobQuerier
 	repository string
 	id         string
 	nextPoll   time.Time
@@ -108,7 +113,7 @@ func (q *queryJobPoller) WaitAndPollContext(ctx context.Context) (QueryResult, e
 		return QueryResult{}, ctx.Err()
 	}
 
-	result, err := q.queryJobs.PollJob(q.repository, q.id)
+	result, err := (*q.queryJobs).PollJob(q.repository, q.id)
 	if err != nil {
 		return result, err
 	}
