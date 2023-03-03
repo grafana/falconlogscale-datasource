@@ -5,6 +5,7 @@ export interface LogScaleOptions extends DataSourceJsonData {
   baseUrl?: string;
   authenticateWithToken: boolean;
   dataLinks?: DataLinkConfig[];
+  defaultRepository?: string;
 }
 
 export interface SecretLogScaleOptions extends DataSourceJsonData {

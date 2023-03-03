@@ -16,12 +16,14 @@ import { transformBackendResult } from 'dataLink';
 export class DataSource extends DataSourceWithBackend<LogScaleQuery, LogScaleOptions> {
   // This enables default annotation support for 7.2+
   annotations = {};
+  defaultRepository: string | undefined = undefined;
 
   constructor(
     private instanceSettings: DataSourceInstanceSettings<LogScaleOptions>,
     readonly templateSrv: TemplateSrv = getTemplateSrv()
   ) {
     super(instanceSettings);
+    this.defaultRepository = instanceSettings.jsonData.defaultRepository;
   }
 
   query(request: DataQueryRequest<LogScaleQuery>): Observable<DataQueryResponse> {
