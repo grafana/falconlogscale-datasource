@@ -90,7 +90,7 @@ func (qr *fakeQueryRunner) Run(req humio.Query) ([]humio.QueryResult, error) {
 	}
 }
 
-func (qr *fakeQueryRunner) GetAllViews() ([]string, error) {
+func (qr *fakeQueryRunner) GetAllRepoNames() ([]string, error) {
 	return qr.views, qr.viewsErr
 }
 

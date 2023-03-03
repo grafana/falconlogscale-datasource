@@ -8,19 +8,25 @@ import (
 	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-	humio "github.com/humio/cli/api"
 )
 
+type JobQuerier interface {
+	CreateJob(repo string, query Query) (string, error)
+	DeleteJob(repo string, id string) error
+	PollJob(repo string, id string) (QueryResult, error)
+	ListRepos() ([]string, error)
+}
+
 type QueryRunner struct {
-	client humio.Client
+	jobQuerier JobQuerier
 }
 
 // QueryRunnerOption acts as an optional modifier on the QueryRunner
 type QueryRunnerOption func(qr *QueryRunner)
 
-func NewQueryRunner(c humio.Client, opts ...QueryRunnerOption) *QueryRunner {
+func NewQueryRunner(c JobQuerier, opts ...QueryRunnerOption) *QueryRunner {
 	qr := &QueryRunner{
-		client: c,
+		jobQuerier: c,
 	}
 
 	for _, o := range opts {
@@ -31,25 +37,12 @@ func NewQueryRunner(c humio.Client, opts ...QueryRunnerOption) *QueryRunner {
 }
 
 func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
-	client := qj.client
 	repository := query.Repository
-	// 	queryString := `#cid = "56879ccf959c4afc96dd17e8bb1dcbb5"
-	// | ComputerName = * AND AgentIdString = "f5ea7013e8c24bceb5e9715f2cde8c0a" | "Event_DetectionSummaryEvent"
-	// | top(Technique)` //qj.context.Model.Query
-	// 	start := "10y" //qj.context.Query.TimeRange.From.String()
-	// 	end := ""      //qj.context.Query.TimeRange.To.String()
 
 	ctx := contextCancelledOnInterrupt(context.Background())
 	// run in lambda func to be able to defer and delete the query job
-	result, err := func() (*humio.QueryResult, error) {
-		id, err := client.QueryJobs().Create(repository, humio.Query{
-			QueryString:                query.LSQL,
-			Start:                      query.Start,
-			End:                        query.End,
-			Live:                       query.Live,
-			TimezoneOffset:             query.TimezoneOffset,
-			ShowQueryEventDistribution: true,
-		})
+	result, err := func() (*QueryResult, error) {
+		id, err := qj.jobQuerier.CreateJob(repository, query)
 
 		if err != nil {
 			return nil, err
@@ -57,12 +50,12 @@ func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
 
 		defer func(id string) {
 			// Humio will eventually delete the query when we stop polling and we can't do much about errors here.
-			_ = client.QueryJobs().Delete(repository, id)
+			_ = qj.jobQuerier.DeleteJob(repository, id)
 		}(id)
 
-		var result humio.QueryResult
+		var result QueryResult
 		poller := queryJobPoller{
-			queryJobs:  client.QueryJobs(),
+			queryJobs:  &qj.jobQuerier,
 			repository: repository,
 			id:         id,
 		}
@@ -86,15 +79,19 @@ func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
 		return nil, err
 	}
 
-	if queryError, ok := err.(humio.QueryError); ok {
-		log.DefaultLogger.Error("Humio query string error: %s\n", queryError.Error())
+	if err != nil {
+		log.DefaultLogger.Error("Humio query string error: %s\n", err.Error())
 	}
 
 	r := humioToDatasourceResult(*result)
 	return []QueryResult{r}, nil
 }
 
-func humioToDatasourceResult(r humio.QueryResult) QueryResult {
+func (qr *QueryRunner) GetAllRepoNames() ([]string, error) {
+	return qr.jobQuerier.ListRepos()
+}
+
+func humioToDatasourceResult(r QueryResult) QueryResult {
 	return QueryResult{
 		Cancelled: r.Cancelled,
 		Done:      r.Done,
@@ -103,20 +100,20 @@ func humioToDatasourceResult(r humio.QueryResult) QueryResult {
 }
 
 type queryJobPoller struct {
-	queryJobs  *humio.QueryJobs
+	queryJobs  *JobQuerier
 	repository string
 	id         string
 	nextPoll   time.Time
 }
 
-func (q *queryJobPoller) WaitAndPollContext(ctx context.Context) (humio.QueryResult, error) {
+func (q *queryJobPoller) WaitAndPollContext(ctx context.Context) (QueryResult, error) {
 	select {
 	case <-time.After(time.Until(q.nextPoll)):
 	case <-ctx.Done():
-		return humio.QueryResult{}, ctx.Err()
+		return QueryResult{}, ctx.Err()
 	}
 
-	result, err := q.queryJobs.PollContext(ctx, q.repository, q.id)
+	result, err := (*q.queryJobs).PollJob(q.repository, q.id)
 	if err != nil {
 		return result, err
 	}
