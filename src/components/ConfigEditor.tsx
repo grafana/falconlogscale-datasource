@@ -54,6 +54,7 @@ export const ConfigEditor: React.FC<Props> = ({ options, onOptionsChange }) => {
             label="Token"
             placeholder="Token"
             value={options.secureJsonData?.accessToken}
+            autoComplete="new-password"
             onChange={(event) =>
               onOptionsChange({
                 ...options,
