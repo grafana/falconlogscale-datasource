@@ -1,12 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
-import {
-  Select,
-  QueryField,
-  InlineFormLabel,
-} from '@grafana/ui';
+import { Select, QueryField, InlineFormLabel } from '@grafana/ui';
 import { DataSource } from '../DataSource';
-import { LogScaleOptions, LogScaleQuery } from './../types';
+import { LogScaleOptions, LogScaleQuery, Repository } from './../types';
 
 export type Props = QueryEditorProps<DataSource, LogScaleQuery, LogScaleOptions>;
 
@@ -15,8 +11,8 @@ export function LogScaleQueryEditor(props: Props) {
   const [repositories, setRepositories] = useState<Array<SelectableValue<string>>>([]);
 
   useEffect(() => {
-    datasource.getResource('/repositories').then((result: string[]) => {
-      const repositories = result.map((Name) => ({ value: Name, label: Name }));
+    datasource.getRepositories().then((result: Repository[]) => {
+      const repositories = result.map(({ Name }) => ({ value: Name, label: Name }));
       setRepositories((prevRepositories) => [...prevRepositories, ...repositories]);
     });
   }, [datasource]);

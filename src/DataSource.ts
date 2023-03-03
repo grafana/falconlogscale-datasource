@@ -9,7 +9,7 @@ import {
 } from '@grafana/data';
 import { DataSourceWithBackend, getTemplateSrv, TemplateSrv } from '@grafana/runtime';
 import { lastValueFrom, Observable } from 'rxjs';
-import { LogScaleQuery, LogScaleOptions } from './types';
+import { LogScaleQuery, LogScaleOptions, Repository } from './types';
 import { map } from 'rxjs/operators';
 import { transformBackendResult } from 'dataLink';
 
@@ -28,6 +28,10 @@ export class DataSource extends DataSourceWithBackend<LogScaleQuery, LogScaleOpt
     return super
       .query(request)
       .pipe(map((response) => transformBackendResult(response, this.instanceSettings.jsonData.dataLinks ?? [])));
+  }
+
+  getRepositories(): Promise<Repository[]> {
+    return this.getResource('/repositories');
   }
 
   async metricFindQuery(q: LogScaleQuery, options: any): Promise<MetricFindValue[]> {
