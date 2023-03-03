@@ -17,11 +17,7 @@ const getDefaultProps = (): Props => {
     },
   };
 
-  props.datasource.getResource = async (): Promise<string[]> => [
-    'repository_1',
-    'repository_2',
-    'repository_3',
-  ];
+  props.datasource.getResource = async (): Promise<string[]> => ['repository_1', 'repository_2', 'repository_3'];
 
   return props;
 };

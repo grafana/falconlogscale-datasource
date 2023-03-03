@@ -52,6 +52,7 @@ describe('<ConfigEditor />', () => {
     render(<ConfigEditor {...props} />);
 
     await userEvent.type(screen.getByPlaceholderText('Token'), 'TEST_TOKEN');
+    await userEvent.tab();
 
     expect(props.onOptionsChange).toHaveBeenCalledWith({
       jsonData: {
