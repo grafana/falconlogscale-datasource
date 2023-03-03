@@ -35,17 +35,18 @@ export const DefaultRepository = ({
     return () => {
       canceled = true;
     };
+    // This effect is intended to be called only once initially and when Load Repositories is clicked
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [disabled, loadRepositoriesClicked]);
 
   const updateRepositories = (received: Array<SelectableValue<string>>, autoSelect = false) => {
     onRepositoriesChange(received);
     if (autoSelect && !defaultRepository && received.length > 0) {
-      // Selecting the default subscription if subscriptions received but no default subscription selected
+      // Selecting the default repository if repositories are received and there is no default
       onRepositoryChange(received[0]);
     } else if (defaultRepository) {
       const found = received.find((opt) => opt.value === defaultRepository);
       if (!found) {
-        // Unselecting the default subscription if it isn't found among the received subscriptions
         onRepositoryChange(undefined);
       }
     }
