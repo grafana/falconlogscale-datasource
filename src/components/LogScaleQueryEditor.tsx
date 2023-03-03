@@ -15,6 +15,9 @@ export function LogScaleQueryEditor(props: Props) {
       const repositories = result.map(({ Name }) => ({ value: Name, label: Name }));
       setRepositories((prevRepositories) => [...prevRepositories, ...repositories]);
     });
+    if (datasource.defaultRepository && !query.repository) {
+      onChange({ ...query, repository: datasource.defaultRepository });
+    }
   }, [datasource]);
 
   return (
@@ -22,13 +25,13 @@ export function LogScaleQueryEditor(props: Props) {
       <div className="gf-form-inline gf-form-inline--nowrap">
         <div className="gf-form gf-form--grow flex-shrink-1">
           <InlineFormLabel width={6}>Query</InlineFormLabel>
-                  <QueryField
-          query={query.lsql}
-          onChange={(val) => onChange({ ...query, lsql: val })}
-          onRunQuery={onRunQuery}
-          placeholder="Enter a LogScale query (run with Shift+Enter)"
-          portalOrigin="LogScale"
-        />
+          <QueryField
+            query={query.lsql}
+            onChange={(val) => onChange({ ...query, lsql: val })}
+            onRunQuery={onRunQuery}
+            placeholder="Enter a LogScale query (run with Shift+Enter)"
+            portalOrigin="LogScale"
+          />
         </div>
       </div>
 

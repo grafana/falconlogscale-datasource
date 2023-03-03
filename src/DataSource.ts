@@ -27,6 +27,17 @@ export class DataSource extends DataSourceWithBackend<LogScaleQuery, LogScaleOpt
   }
 
   query(request: DataQueryRequest<LogScaleQuery>): Observable<DataQueryResponse> {
+    if (request.targets) {
+      const hasRepositories = request.targets.every((req) => req.repository);
+      if (!hasRepositories) {
+        for (const query of request.targets) {
+          if (!query.repository) {
+            query.repository = this.defaultRepository ?? '';
+          }
+        }
+      }
+    }
+
     return super
       .query(request)
       .pipe(map((response) => transformBackendResult(response, this.instanceSettings.jsonData.dataLinks ?? [])));
