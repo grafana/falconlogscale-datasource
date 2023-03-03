@@ -39,6 +39,9 @@
     "Dataframe",
     "stretchr",
     "timerange",
-    "dateparse"
+    "dateparse",
+    "queryjobs",
+    "testid",
+    "Millis"
   ]
 }
