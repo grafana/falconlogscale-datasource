@@ -16,18 +16,35 @@ import { transformBackendResult } from 'dataLink';
 export class DataSource extends DataSourceWithBackend<LogScaleQuery, LogScaleOptions> {
   // This enables default annotation support for 7.2+
   annotations = {};
+  defaultRepository: string | undefined = undefined;
 
   constructor(
     private instanceSettings: DataSourceInstanceSettings<LogScaleOptions>,
     readonly templateSrv: TemplateSrv = getTemplateSrv()
   ) {
     super(instanceSettings);
+    this.defaultRepository = instanceSettings.jsonData.defaultRepository;
   }
 
   query(request: DataQueryRequest<LogScaleQuery>): Observable<DataQueryResponse> {
+    if (request.targets) {
+      const hasRepositories = request.targets.every((req) => req.repository);
+      if (!hasRepositories) {
+        for (const query of request.targets) {
+          if (!query.repository) {
+            query.repository = this.defaultRepository ?? '';
+          }
+        }
+      }
+    }
+
     return super
       .query(request)
       .pipe(map((response) => transformBackendResult(response, this.instanceSettings.jsonData.dataLinks ?? [])));
+  }
+
+  getRepositories(): Promise<string[]> {
+    return this.getResource('/repositories');
   }
 
   async metricFindQuery(q: LogScaleQuery, options: any): Promise<MetricFindValue[]> {

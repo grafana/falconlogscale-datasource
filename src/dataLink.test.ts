@@ -1,5 +1,5 @@
-import { MutableDataFrame } from "@grafana/data";
-import { getDataLinks } from "dataLink";
+import { MutableDataFrame } from '@grafana/data';
+import { getDataLinks } from 'dataLink';
 
 jest.mock('@grafana/runtime', () => ({
   // @ts-ignore
@@ -54,7 +54,6 @@ describe('dataLink', () => {
     });
   });
 
-
   it('should not add a data link because does not match regExp', () => {
     const df = new MutableDataFrame({ fields: [{ name: 'line', values: ['no traceId', 'agin no traceId'] }] });
     const newFields = getDataLinks(df, [
@@ -68,7 +67,6 @@ describe('dataLink', () => {
     const trace = newFields.find((f) => f.name === 'trace');
     expect(trace!.values.toArray()).toEqual([null, null]);
   });
-
 
   it('should not add a data link because does not have matching field', () => {
     const df = new MutableDataFrame({ fields: [{ name: 'not a line', values: ['no traceId', 'traceId=foo'] }] });
@@ -102,7 +100,6 @@ describe('dataLink', () => {
       },
     ]);
     const trace1 = newFields.find((f) => f.name === 'trace1');
-    console.log(trace1);
     expect(trace1!.values.toArray()).toEqual([null, '1234', null]);
     expect(trace1!.config.links![0]).toEqual({
       url: 'http://localhost/${__value.raw}',
