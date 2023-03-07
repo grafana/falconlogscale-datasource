@@ -56,7 +56,6 @@ export const DefaultRepository = ({
       <h5> Default LogScale Repository </h5>
       <p>
         Select the datasources default repository. This repository will be used for features such as traces to logs.{' '}
-        <br></br>
       </p>
       <InlineField
         label="Default Repository"
