@@ -38,7 +38,7 @@ describe('<DefaultRepository/>', () => {
     expect(await screen.getByText('test_repository')).toBeInTheDocument();
   });
 
-  it('should autoselect the first repository when load repositories is clicked', async () => {
+  it('should auto-select the first repository when load repositories is clicked', async () => {
     const props = getDefaultProps({
       disabled: false,
       defaultRepository: undefined,
@@ -48,7 +48,7 @@ describe('<DefaultRepository/>', () => {
 
     await waitFor(() => expect(screen.getByText('Default Repository')).toBeInTheDocument());
 
-    screen.getByTestId(selectors.components.configEditor.loadRepositories.button).click;
+    screen.getByTestId(selectors.components.configEditor.loadRepositories.button).click();
     expect(props.onRepositoriesChange).toHaveBeenCalledWith(repositories);
 
     rerender(<DefaultRepository {...{ ...props, repositories, defaultRepository: repositories[0].value }} />);
