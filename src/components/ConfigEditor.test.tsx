@@ -2,6 +2,7 @@ import React from 'react';
 import { render, waitFor, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ConfigEditor, Props } from './ConfigEditor';
+import { selectors } from 'e2e/selectors';
 
 const getDefaultProps = (): Props => {
   const options: Partial<Props['options']> = {
@@ -81,5 +82,27 @@ describe('<ConfigEditor />', () => {
       secureJsonData: undefined,
       secureJsonFields: {},
     });
+  });
+
+  it('should render DefaultRepository as disabled when token is not set', async () => {
+    const props = getDefaultProps();
+
+    render(<ConfigEditor {...props} />);
+
+    expect(
+      screen.getByTestId(selectors.components.configEditor.defaultRepository.input).querySelector('input')
+    ).toBeDisabled();
+  });
+
+  it('should render DefaultRepository as enabled when token is set', async () => {
+    const props = getDefaultProps();
+    props.options.jsonData.authenticateWithToken = true;
+    props.options.secureJsonData = { accessToken: 'test_token' };
+
+    render(<ConfigEditor {...props} />);
+
+    expect(
+      screen.getByTestId(selectors.components.configEditor.defaultRepository.input).querySelector('input')
+    ).toBeEnabled();
   });
 });

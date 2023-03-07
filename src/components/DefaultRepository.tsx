@@ -1,8 +1,9 @@
 import { SelectableValue } from '@grafana/data';
 import { InlineField, Select, Button } from '@grafana/ui';
+import { selectors } from 'e2e/selectors';
 import React, { useReducer, useEffect } from 'react';
 
-interface DefaultRepositoryProps {
+export interface DefaultRepositoryProps {
   disabled: boolean;
   defaultRepository?: string;
   repositories: SelectableValue[];
@@ -60,7 +61,7 @@ export const DefaultRepository = ({
       <InlineField
         label="Default Repository"
         labelWidth={20}
-        // data-testid={selectors.components.configEditor.authType.select}
+        data-testid={selectors.components.configEditor.defaultRepository.input}
       >
         <div className="width-30" style={{ display: 'flex', gap: '4px' }}>
           <Select
@@ -69,13 +70,14 @@ export const DefaultRepository = ({
             options={repositories}
             onChange={onRepositoryChange}
             disabled={disabled}
+            inputId={'default-repository'}
           />
           <Button
             variant="secondary"
             type="button"
             onClick={onLoadRepositories}
             disabled={disabled}
-            // data-testid={selectors.components.configEditor.loadSubscriptions.button}
+            data-testid={selectors.components.configEditor.loadRepositories.button}
           >
             Load Repositories
           </Button>
