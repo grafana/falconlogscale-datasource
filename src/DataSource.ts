@@ -9,7 +9,7 @@ import {
 } from '@grafana/data';
 import { DataSourceWithBackend, getTemplateSrv, TemplateSrv } from '@grafana/runtime';
 import { lastValueFrom, Observable } from 'rxjs';
-import { LogScaleQuery, LogScaleOptions, Repository } from './types';
+import { LogScaleQuery, LogScaleOptions } from './types';
 import { map } from 'rxjs/operators';
 import { transformBackendResult } from 'dataLink';
 
@@ -43,7 +43,7 @@ export class DataSource extends DataSourceWithBackend<LogScaleQuery, LogScaleOpt
       .pipe(map((response) => transformBackendResult(response, this.instanceSettings.jsonData.dataLinks ?? [])));
   }
 
-  getRepositories(): Promise<Repository[]> {
+  getRepositories(): Promise<string[]> {
     return this.getResource('/repositories');
   }
 
