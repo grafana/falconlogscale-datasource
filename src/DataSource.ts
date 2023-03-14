@@ -1,8 +1,10 @@
 import {
+  AbstractQuery,
   DataFrame,
   DataQueryRequest,
   DataQueryResponse,
   DataSourceInstanceSettings,
+  DataSourceWithQueryImportSupport,
   MetricFindValue,
   ScopedVar,
   vectorator,
@@ -12,8 +14,9 @@ import { lastValueFrom, Observable } from 'rxjs';
 import { LogScaleQuery, LogScaleOptions } from './types';
 import { map } from 'rxjs/operators';
 import { transformBackendResult } from 'dataLink';
+import LanguageProvider from 'LanguageProvider';
 
-export class DataSource extends DataSourceWithBackend<LogScaleQuery, LogScaleOptions> {
+export class DataSource extends DataSourceWithBackend<LogScaleQuery, LogScaleOptions> implements DataSourceWithQueryImportSupport<LogScaleQuery> {
   // This enables default annotation support for 7.2+
   annotations = {};
   defaultRepository: string | undefined = undefined;
@@ -24,6 +27,7 @@ export class DataSource extends DataSourceWithBackend<LogScaleQuery, LogScaleOpt
   ) {
     super(instanceSettings);
     this.defaultRepository = instanceSettings.jsonData.defaultRepository;
+    this.languageProvider = new LanguageProvider(this);
   }
 
   query(request: DataQueryRequest<LogScaleQuery>): Observable<DataQueryResponse> {
@@ -66,5 +70,9 @@ export class DataSource extends DataSourceWithBackend<LogScaleQuery, LogScaleOpt
       ...query,
       lsql: getTemplateSrv().replace(query.lsql, scopedVars),
     };
+  }
+
+  async importFromAbstractQueries(abstractQueries: AbstractQuery[]): Promise<LogScaleQuery[]> {
+    return abstractQueries.map((abstractQuery) => this.languageProvider.importFromAbstractQuery(abstractQuery));
   }
 }
