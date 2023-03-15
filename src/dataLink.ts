@@ -1,34 +1,6 @@
-import { ArrayVector, DataFrame, DataLink, DataQueryResponse, Field, FieldType, isDataFrame } from '@grafana/data';
+import { ArrayVector, DataFrame, DataLink, Field, FieldType } from '@grafana/data';
 import { getDataSourceSrv } from '@grafana/runtime';
 import { DataLinkConfig } from 'grafana-plugin-ui';
-
-export function transformBackendResult(
-  response: DataQueryResponse,
-  dataLinkConfigs: DataLinkConfig[]
-): DataQueryResponse {
-  const { data } = response;
-
-  const dataFrames = data.map((d) => {
-    if (!isDataFrame(d)) {
-      throw new Error('transformation only supports dataframe responses');
-    }
-    return d;
-  });
-
-  return {
-    ...response,
-    data: [...processFrames(dataFrames, dataLinkConfigs)],
-  };
-}
-
-function processFrames(frames: DataFrame[], dataLinkConfigs: DataLinkConfig[]): DataFrame[] {
-  return frames.map((frame) => {
-    return {
-      ...frame,
-      fields: [...frame.fields, ...getDataLinks(frame, dataLinkConfigs)],
-    }
-  });
-}
 
 export function getDataLinks(dataFrame: DataFrame, dataLinkConfigs: DataLinkConfig[]): Field[] {
   if (!dataLinkConfigs.length) {

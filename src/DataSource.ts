@@ -11,7 +11,7 @@ import { DataSourceWithBackend, getTemplateSrv, TemplateSrv } from '@grafana/run
 import { lastValueFrom, Observable } from 'rxjs';
 import { LogScaleQuery, LogScaleOptions } from './types';
 import { map } from 'rxjs/operators';
-import { transformBackendResult } from 'dataLink';
+import { transformBackendResult } from './logs';
 
 export class DataSource extends DataSourceWithBackend<LogScaleQuery, LogScaleOptions> {
   // This enables default annotation support for 7.2+
@@ -40,7 +40,7 @@ export class DataSource extends DataSourceWithBackend<LogScaleQuery, LogScaleOpt
 
     return super
       .query(request)
-      .pipe(map((response) => transformBackendResult(response, this.instanceSettings.jsonData.dataLinks ?? [])));
+      .pipe(map((response) => transformBackendResult(response, this.instanceSettings.jsonData.dataLinks ?? [], request)));
   }
 
   getRepositories(): Promise<string[]> {
