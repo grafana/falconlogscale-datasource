@@ -36,7 +36,7 @@ function processFrames(frames: DataFrame[], dataLinkConfigs: DataLinkConfig[], r
   });
 }
 
-function orderFields(fields: Field<any, Vector<any>>[]): Field<any, Vector<any>>[] {
+function orderFields(fields: Array<Field<any, Vector<any>>>): Array<Field<any, Vector<any>>> {
   const rawstringField = fields.find(x => x.name === "@rawstring");
   if (rawstringField) {
     return [rawstringField, ...fields]
