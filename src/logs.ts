@@ -27,7 +27,10 @@ function processFrames(frames: DataFrame[], dataLinkConfigs: DataLinkConfig[], r
   return frames.map((frame) => {
     const targetQuery = request.targets.find(x => x.refId === frame.refId);
     if (!targetQuery || targetQuery.queryType !== "logs") {
-      return frame;
+      return {
+        ...frame,
+        fields: [...orderFields(frame.fields)],
+      }
     }
     return {
       ...frame,
@@ -37,7 +40,8 @@ function processFrames(frames: DataFrame[], dataLinkConfigs: DataLinkConfig[], r
 }
 
 function orderFields(fields: Array<Field<any, Vector<any>>>): Array<Field<any, Vector<any>>> {
-  const rawstringField = fields.find(x => x.name === "@rawstring");
+  const rawstringFieldIndex = fields.findIndex(x => x.name === "@rawstring");
+  const rawstringField = fields.splice(rawstringFieldIndex, 1)[0];
   if (rawstringField) {
     return [rawstringField, ...fields]
   }
