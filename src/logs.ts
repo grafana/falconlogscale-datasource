@@ -41,9 +41,12 @@ function processFrames(frames: DataFrame[], dataLinkConfigs: DataLinkConfig[], r
 
 function orderFields(fields: Array<Field<any, Vector<any>>>): Array<Field<any, Vector<any>>> {
   const rawstringFieldIndex = fields.findIndex(x => x.name === "@rawstring");
+  if (rawstringFieldIndex === -1) {
+    return fields;
+  }
   const rawstringField = fields.splice(rawstringFieldIndex, 1)[0];
   if (rawstringField) {
-    return [rawstringField, ...fields]
+    return [{ ...rawstringField }, ...fields]
   }
   return fields;
 }
