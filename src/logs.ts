@@ -46,7 +46,7 @@ function orderFields(fields: Array<Field<any, Vector<any>>>): Array<Field<any, V
   }
   const rawstringField = fields.splice(rawstringFieldIndex, 1)[0];
   if (rawstringField) {
-    return [{ ...rawstringField }, ...fields]
+    return [rawstringField, ...fields]
   }
   return fields;
 }
