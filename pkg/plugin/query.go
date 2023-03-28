@@ -39,8 +39,8 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 				continue
 			}
 
-			converters := GetConverters(r.Events)
-			f, err := h.FrameMarshaller("events", r.Events, converters...)
+			//converters := GetConverters(r.Events)
+			f, err := h.FrameMarshaller("events", r.Events)
 			if q.QueryType == "logs" {
 				f.Meta = &data.FrameMeta{
 					PreferredVisualization: data.VisTypeLogs,
