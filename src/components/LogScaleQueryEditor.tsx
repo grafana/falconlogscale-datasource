@@ -19,7 +19,7 @@ export function LogScaleQueryEditor(props: Props) {
     if (datasource.defaultRepository && !query.repository) {
       onChange({ ...query, repository: datasource.defaultRepository });
     }
-  }, [datasource, onChange]);
+  }, [datasource, onChange, query]);
 
   return (
     <div className="query-editor-row" can-collapse="true">
