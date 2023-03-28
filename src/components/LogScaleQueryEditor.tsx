@@ -14,12 +14,12 @@ export function LogScaleQueryEditor(props: Props) {
   useEffect(() => {
     datasource.getRepositories().then((result: string[]) => {
       const repositories = parseRepositoriesResponse(result);
-      setRepositories((prevRepositories) => [...prevRepositories, ...repositories]);
+      setRepositories(repositories);
     });
     if (datasource.defaultRepository && !query.repository) {
       onChange({ ...query, repository: datasource.defaultRepository });
     }
-  }, [datasource, onChange, query]);
+  }, [datasource, onChange]);
 
   return (
     <div className="query-editor-row" can-collapse="true">
