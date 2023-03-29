@@ -66,7 +66,7 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 }
 
 func OrderFrameFieldsByMetaData(fieldOrder []string, f *data.Frame) {
-	if fieldOrder != nil && len(fieldOrder) != 0 {
+	if len(fieldOrder) != 0 {
 		var fields []*data.Field
 		for _, fieldName := range fieldOrder {
 			for _, field := range f.Fields {
