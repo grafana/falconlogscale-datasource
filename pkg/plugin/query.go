@@ -96,15 +96,12 @@ func GetConverters(events Events) []framestruct.FramestructOption {
 		switch key {
 		case "@timestamp", "@ingesttimestamp", "@timestamp.nanos", "@collect.timestamp", "_now", "_end", "_start", "_bucket":
 			converters = append(converters, framestruct.WithConverterFor(key, ConverterForStringToTime))
-			break
 		case "_count", "_sum", "_avg", "_length", "_rate", "_eventFieldCount", "_eventSize", "_geodistance", "_abs", "_arccos", "_arcsin", "_arctan", "_ceil", "_cos", "_cosh", "_deg2rad", "_exp", "_expm1", "_floor", "_log", "_log10", "_log1p", "_log2", "_mod", "_pow", "_rad2deg", "_sin", "_sinh", "_spherical2cartesian", "_sqrt", "_tan", "_tanh", "_max", "_min", "_range", "_shannonentropy":
 			converters = append(converters, framestruct.WithConverterFor(key, ConverterForStringToInt64))
-			break
 		default:
 			if strings.HasSuffix(key, "_x") {
 				converters = append(converters, framestruct.WithConverterFor(key, ConverterForStringToInt64))
 			}
-			break
 		}
 	}
 	return converters
