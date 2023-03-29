@@ -63,6 +63,61 @@ func TestGetConverters(t *testing.T) {
 	})
 }
 
+func TestOrderFrameFieldsByMetaData(t *testing.T) {
+	t.Run("orders fields by meta data", func(t *testing.T) {
+		frame := data.NewFrame("test",
+			data.NewField("b", nil, []string{"a", "b", "c"}),
+			data.NewField("c", nil, []string{"d", "e", "f"}),
+			data.NewField("a", nil, []string{"g", "h", "i"}),
+		)
+		fieldOrder := []string{
+			"a",
+			"b",
+			"c",
+		}
+		plugin.OrderFrameFieldsByMetaData(fieldOrder, frame)
+		experimental.CheckGoldenJSONFrame(t, "../test_data", "order_frame_fields", frame, false)
+	})
+	t.Run("orders fields by meta data with missing fields", func(t *testing.T) {
+		frame := data.NewFrame("test",
+			data.NewField("b", nil, []string{"a", "b", "c"}),
+			data.NewField("c", nil, []string{"d", "e", "f"}),
+			data.NewField("a", nil, []string{"g", "h", "i"}),
+		)
+		fieldOrder := []string{
+			"a",
+			"b",
+			"c",
+			"d",
+		}
+		plugin.OrderFrameFieldsByMetaData(fieldOrder, frame)
+		experimental.CheckGoldenJSONFrame(t, "../test_data", "order_frame_fields_missing", frame, false)
+	})
+	t.Run("orders fields by meta data with extra fields", func(t *testing.T) {
+		frame := data.NewFrame("test",
+			data.NewField("b", nil, []string{"a", "b", "c"}),
+			data.NewField("c", nil, []string{"d", "e", "f"}),
+			data.NewField("a", nil, []string{"g", "h", "i"}),
+		)
+		fieldOrder := []string{
+			"a",
+			"b",
+		}
+		plugin.OrderFrameFieldsByMetaData(fieldOrder, frame)
+		experimental.CheckGoldenJSONFrame(t, "../test_data", "order_frame_fields_extra", frame, false)
+	})
+	t.Run("do not order fields if no meta data", func(t *testing.T) {
+		frame := data.NewFrame("test",
+			data.NewField("b", nil, []string{"a", "b", "c"}),
+			data.NewField("c", nil, []string{"d", "e", "f"}),
+			data.NewField("a", nil, []string{"g", "h", "i"}),
+		)
+		fieldOrder := []string{}
+		plugin.OrderFrameFieldsByMetaData(fieldOrder, frame)
+		experimental.CheckGoldenJSONFrame(t, "../test_data", "order_frame_fields_no_meta", frame, false)
+	})
+}
+
 func newFakeFalconClient() *fakeFalconClient {
 	return &fakeFalconClient{}
 }

@@ -41,6 +41,9 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 
 			converters := GetConverters(r.Events)
 			f, err := h.FrameMarshaller("events", r.Events, converters...)
+
+			OrderFrameFieldsByMetaData(r.Metadata.FieldOrder, f)
+
 			if q.QueryType == "logs" {
 				f.Meta = &data.FrameMeta{
 					PreferredVisualization: data.VisTypeLogs,
@@ -62,6 +65,20 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 	return response, nil
 }
 
+func OrderFrameFieldsByMetaData(fieldOrder []string, f *data.Frame) {
+	if fieldOrder != nil && len(fieldOrder) != 0 {
+		var fields []*data.Field
+		for _, fieldName := range fieldOrder {
+			for _, field := range f.Fields {
+				if field.Name == fieldName {
+					fields = append(fields, field)
+				}
+			}
+		}
+		f.Fields = fields
+	}
+}
+
 type Events []map[string]any
 
 func GetConverters(events Events) []framestruct.FramestructOption {
@@ -75,17 +92,19 @@ func GetConverters(events Events) []framestruct.FramestructOption {
 			}
 		}
 	}
-	for key, v := range fieldNames {
-		// There needs to be a better way to check to see if a field is a time
-		// _bucket is defined by humio. it is a time group bucket
-		if strings.Contains(key, "time") || key == "_bucket" {
+	for key := range fieldNames {
+		switch key {
+		case "@timestamp", "@ingesttimestamp", "@timestamp.nanos", "@collect.timestamp", "_now", "_end", "_start", "_bucket":
 			converters = append(converters, framestruct.WithConverterFor(key, ConverterForStringToTime))
-			continue
-		}
-		_, err := ConverterForStringToInt64(v)
-		if err == nil {
+			break
+		case "_count", "_sum", "_avg", "_length", "_rate", "_eventFieldCount", "_eventSize", "_geodistance", "_abs", "_arccos", "_arcsin", "_arctan", "_ceil", "_cos", "_cosh", "_deg2rad", "_exp", "_expm1", "_floor", "_log", "_log10", "_log1p", "_log2", "_mod", "_pow", "_rad2deg", "_sin", "_sinh", "_spherical2cartesian", "_sqrt", "_tan", "_tanh", "_max", "_min", "_range", "_shannonentropy":
 			converters = append(converters, framestruct.WithConverterFor(key, ConverterForStringToInt64))
-			continue
+			break
+		default:
+			if strings.HasSuffix(key, "_x") {
+				converters = append(converters, framestruct.WithConverterFor(key, ConverterForStringToInt64))
+			}
+			break
 		}
 	}
 	return converters
@@ -115,7 +134,7 @@ func ConverterForStringToTime(input any) (any, error) {
 func ConverterForStringToInt64(input any) (any, error) {
 	num, err := strconv.ParseFloat(input.(string), 64)
 	if err != nil {
-		return nil, err
+		return nil, nil
 	}
 	return num, nil
 }
