@@ -16,6 +16,9 @@ export function LogScaleQueryEditor(props: Props) {
       const repositories = parseRepositoriesResponse(result);
       setRepositories(repositories);
     });
+  }, [datasource]);
+
+  useEffect(() => {
     if (datasource.defaultRepository && !query.repository) {
       onChange({ ...query, repository: datasource.defaultRepository });
     }
