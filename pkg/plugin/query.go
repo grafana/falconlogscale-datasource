@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/araddon/dateparse"
@@ -77,7 +76,7 @@ func GetConverters(events Events) []framestruct.FramestructOption {
 				fieldNames[k] = val
 				continue
 			}
-			// make sure no values are strings
+			// lets insure num val is not a string.
 			if _, ok := val.(string); !ok {
 				continue
 			}
@@ -87,9 +86,8 @@ func GetConverters(events Events) []framestruct.FramestructOption {
 		}
 	}
 	for key, v := range fieldNames {
-		// There needs to be a better way to check to see if a field is a time
-		// _bucket is defined by humio. it is a time group bucket
-		if strings.Contains(key, "time") || key == "_bucket" {
+		// Theses fields are defined by Humio and should be treated as time
+		if key == "@timestamp" || key == "@ingesttimestamp" || key == "@timestamp.nanos" || key == "@collect.timestamp" || key == "_now" || key == "_end" || key == "_start" || key == "_bucket" {
 			converters = append(converters, framestruct.WithConverterFor(key, ConverterForStringToTime))
 			continue
 		}
