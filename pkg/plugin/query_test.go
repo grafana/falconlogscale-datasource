@@ -61,6 +61,19 @@ func TestGetConverters(t *testing.T) {
 		frames, _ := framestruct.ToDataFrame("field", events, converters...)
 		experimental.CheckGoldenJSONFrame(t, "../test_data", "convert_num_second", frames, false)
 	})
+	t.Run("string fields with numbers in them return as strings", func(t *testing.T) {
+		events := []map[string]any{
+			{"stringField": "100", "numberField": "1"},
+			{"stringField": "f", "numberField": "2"},
+			{"stringField": "hellol", "numberField": "3"},
+			{"stringField": "23", "numberField": "3"},
+			{"stringField": "hello", "numberField": "4"},
+			{"stringField": "100", "numberField": "5"},
+		}
+		converters := plugin.GetConverters(events)
+		frames, _ := framestruct.ToDataFrame("field", events, converters...)
+		experimental.CheckGoldenJSONFrame(t, "../test_data", "convert_inconsistent_fields", frames, true)
+	})
 }
 
 func newFakeFalconClient() *fakeFalconClient {

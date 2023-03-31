@@ -70,7 +70,18 @@ func GetConverters(events Events) []framestruct.FramestructOption {
 	fieldNames := make(map[string]any)
 	for _, event := range events {
 		for k, val := range event {
+			if val == nil {
+				continue
+			}
 			if fieldNames[k] == nil {
+				fieldNames[k] = val
+				continue
+			}
+			// make sure no values are strings
+			if _, ok := val.(string); !ok {
+				continue
+			}
+			if _, err := strconv.ParseFloat(val.(string), 64); err != nil {
 				fieldNames[k] = val
 			}
 		}
@@ -82,9 +93,9 @@ func GetConverters(events Events) []framestruct.FramestructOption {
 			converters = append(converters, framestruct.WithConverterFor(key, ConverterForStringToTime))
 			continue
 		}
-		_, err := ConverterForStringToInt64(v)
+		_, err := ConverterForStringToFloat64(v)
 		if err == nil {
-			converters = append(converters, framestruct.WithConverterFor(key, ConverterForStringToInt64))
+			converters = append(converters, framestruct.WithConverterFor(key, ConverterForStringToFloat64))
 			continue
 		}
 	}
@@ -112,7 +123,7 @@ func ConverterForStringToTime(input any) (any, error) {
 	return &p, nil
 }
 
-func ConverterForStringToInt64(input any) (any, error) {
+func ConverterForStringToFloat64(input any) (any, error) {
 	num, err := strconv.ParseFloat(input.(string), 64)
 	if err != nil {
 		return nil, err
