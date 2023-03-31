@@ -65,14 +65,14 @@ func TestGetConverters(t *testing.T) {
 		events := []map[string]any{
 			{"stringField": "100", "numberField": "1"},
 			{"stringField": "f", "numberField": "2"},
-			{"stringField": "hellol", "numberField": "3"},
+			{"stringField": "hello", "numberField": "3"},
 			{"stringField": "23", "numberField": "3"},
 			{"stringField": "hello", "numberField": "4"},
 			{"stringField": "100", "numberField": "5"},
 		}
 		converters := plugin.GetConverters(events)
 		frames, _ := framestruct.ToDataFrame("field", events, converters...)
-		experimental.CheckGoldenJSONFrame(t, "../test_data", "convert_inconsistent_fields", frames, true)
+		experimental.CheckGoldenJSONFrame(t, "../test_data", "string_number_fields", frames, false)
 	})
 }
 
