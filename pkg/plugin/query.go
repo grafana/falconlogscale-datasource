@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/araddon/dateparse"
@@ -70,21 +69,31 @@ func GetConverters(events Events) []framestruct.FramestructOption {
 	fieldNames := make(map[string]any)
 	for _, event := range events {
 		for k, val := range event {
+			if val == nil {
+				continue
+			}
 			if fieldNames[k] == nil {
+				fieldNames[k] = val
+				continue
+			}
+			// lets insure num val is not a string.
+			if _, ok := val.(string); !ok {
+				continue
+			}
+			if _, err := strconv.ParseFloat(val.(string), 64); err != nil {
 				fieldNames[k] = val
 			}
 		}
 	}
 	for key, v := range fieldNames {
-		// There needs to be a better way to check to see if a field is a time
-		// _bucket is defined by humio. it is a time group bucket
-		if strings.Contains(key, "time") || key == "_bucket" {
+		// Theses fields are defined by Humio and should be treated as time
+		if key == "@timestamp" || key == "@ingesttimestamp" || key == "@timestamp.nanos" || key == "@collect.timestamp" || key == "_now" || key == "_end" || key == "_start" || key == "_bucket" {
 			converters = append(converters, framestruct.WithConverterFor(key, ConverterForStringToTime))
 			continue
 		}
-		_, err := ConverterForStringToInt64(v)
+		_, err := ConverterForStringToFloat64(v)
 		if err == nil {
-			converters = append(converters, framestruct.WithConverterFor(key, ConverterForStringToInt64))
+			converters = append(converters, framestruct.WithConverterFor(key, ConverterForStringToFloat64))
 			continue
 		}
 	}
@@ -112,7 +121,7 @@ func ConverterForStringToTime(input any) (any, error) {
 	return &p, nil
 }
 
-func ConverterForStringToInt64(input any) (any, error) {
+func ConverterForStringToFloat64(input any) (any, error) {
 	num, err := strconv.ParseFloat(input.(string), 64)
 	if err != nil {
 		return nil, err
