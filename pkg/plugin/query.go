@@ -38,16 +38,8 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 				continue
 			}
 
-			events := []map[string]any{
-				{"@timestamp": "2020-01-01T01:00:00Z", "stringField": "title", "numberField": "1", "trace_Id": "1234dabcd"},
-				{"@timestamp": "2020-01-01T02:00:00Z", "stringField": "f", "numberField": "2", "trace_Id": "1234abcfd"},
-				{"@timestamp": "2020-01-01T03:00:00Z", "stringField": "hello", "numberField": "3", "trace_Id": "1234aabcd"},
-				{"@timestamp": "2020-01-01T04:00:00Z", "stringField": "23", "numberField": "3", "trace_Id": "1234ab4cd"},
-				{"@timestamp": "2020-01-01T05:00:00Z", "stringField": "hello", "numberField": "4", "trace_Id": "123g4abcd"},
-				{"@timestamp": "2020-01-01T06:00:00Z", "stringField": "100", "numberField": "5", "traceId": "1234abddcd"},
-			}
-			converters := GetConverters(events)
-			f, err := h.FrameMarshaller("events", events, converters...)
+			converters := GetConverters(r.Events)
+			f, err := h.FrameMarshaller("events", r.Events, converters...)
 			if q.QueryType == "logs" {
 				f.Meta = &data.FrameMeta{
 					PreferredVisualization: data.VisTypeLogs,
