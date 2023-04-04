@@ -68,6 +68,21 @@ describe('dataLink', () => {
     expect(trace!.values.toArray()).toEqual([null, null]);
   });
 
+  it('should not add a data link because does not have field', () => {
+    const df = new MutableDataFrame({ fields: [{ name: 'traceId', values: ['id123'] }, { name: 'line2', values: ['1', '2'] }] });
+    const newFields = getDataLinks(df, [
+      {
+        matcherRegex: '(.*)',
+        field: 'traceId',
+        label: 'trace',
+        url: 'http://localhost/${__value.raw}',
+      },
+    ]);
+    const trace = newFields.find((f) => f.name === 'trace');
+    expect(trace!.values.toArray()).toEqual(["id123"]);
+  });
+
+
   it('should not add a data link because does not have matching field', () => {
     const df = new MutableDataFrame({ fields: [{ name: 'not a line', values: ['no traceId', 'traceId=foo'] }] });
     const newFields = getDataLinks(df, [
