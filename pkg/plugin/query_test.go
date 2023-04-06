@@ -135,6 +135,19 @@ func TestOrderFrameFieldsByMetaData(t *testing.T) {
 		plugin.OrderFrameFieldsByMetaData(fieldOrder, frame)
 		experimental.CheckGoldenJSONFrame(t, "../test_data", "order_frame_fields_no_meta", frame, false)
 	})
+	t.Run("string fields with numbers in them return as strings", func(t *testing.T) {
+		events := []map[string]any{
+			{"stringField": "100", "numberField": "1"},
+			{"stringField": "f", "numberField": "2"},
+			{"stringField": "hello", "numberField": "3"},
+			{"stringField": "23", "numberField": "3"},
+			{"stringField": "hello", "numberField": "4"},
+			{"stringField": "100", "numberField": "5"},
+		}
+		converters := plugin.GetConverters(events)
+		frames, _ := framestruct.ToDataFrame("field", events, converters...)
+		experimental.CheckGoldenJSONFrame(t, "../test_data", "string_number_fields", frames, false)
+	})
 }
 
 func newFakeFalconClient() *fakeFalconClient {

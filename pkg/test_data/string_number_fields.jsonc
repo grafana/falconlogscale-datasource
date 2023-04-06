@@ -1,0 +1,68 @@
+//  🌟 This was machine generated.  Do not edit. 🌟
+//  
+//  Frame[0] 
+//  Name: field
+//  Dimensions: 2 Fields by 6 Rows
+//  +-------------------+-------------------+
+//  | Name: numberField | Name: stringField |
+//  | Labels:           | Labels:           |
+//  | Type: []*float64  | Type: []*string   |
+//  +-------------------+-------------------+
+//  | 1                 | 100               |
+//  | 2                 | f                 |
+//  | 3                 | hello             |
+//  | 3                 | 23                |
+//  | 4                 | hello             |
+//  | 5                 | 100               |
+//  +-------------------+-------------------+
+//  
+//  
+//  🌟 This was machine generated.  Do not edit. 🌟
+{
+  "status": 200,
+  "frames": [
+    {
+      "schema": {
+        "name": "field",
+        "fields": [
+          {
+            "name": "numberField",
+            "type": "number",
+            "typeInfo": {
+              "frame": "float64",
+              "nullable": true
+            }
+          },
+          {
+            "name": "stringField",
+            "type": "string",
+            "typeInfo": {
+              "frame": "string",
+              "nullable": true
+            }
+          }
+        ]
+      },
+      "data": {
+        "values": [
+          [
+            1,
+            2,
+            3,
+            3,
+            4,
+            5
+          ],
+          [
+            "100",
+            "f",
+            "hello",
+            "23",
+            "hello",
+            "100"
+          ]
+        ]
+      }
+    }
+  ]
+}

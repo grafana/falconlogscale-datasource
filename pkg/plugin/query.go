@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/araddon/dateparse"
@@ -87,21 +86,32 @@ func GetConverters(events Events) []framestruct.FramestructOption {
 	fieldNames := make(map[string]any)
 	for _, event := range events {
 		for k, val := range event {
+			if val == nil {
+				continue
+			}
 			if fieldNames[k] == nil {
+				fieldNames[k] = val
+				continue
+			}
+			// lets insure num val is not a string.
+			if _, ok := val.(string); !ok {
+				continue
+			}
+			if _, err := strconv.ParseFloat(val.(string), 64); err != nil {
 				fieldNames[k] = val
 			}
 		}
 	}
-	for key := range fieldNames {
-		switch key {
-		case "@timestamp", "@ingesttimestamp", "@timestamp.nanos", "@collect.timestamp", "_now", "_end", "_start", "_bucket":
+	for key, v := range fieldNames {
+		// Theses fields are defined by Humio and should be treated as time
+		if key == "@timestamp" || key == "@ingesttimestamp" || key == "@timestamp.nanos" || key == "@collect.timestamp" || key == "_now" || key == "_end" || key == "_start" || key == "_bucket" {
 			converters = append(converters, framestruct.WithConverterFor(key, ConverterForStringToTime))
-		case "_count", "_sum", "_avg", "_length", "_rate", "_eventFieldCount", "_eventSize", "_geodistance", "_abs", "_arccos", "_arcsin", "_arctan", "_ceil", "_cos", "_cosh", "_deg2rad", "_exp", "_expm1", "_floor", "_log", "_log10", "_log1p", "_log2", "_mod", "_pow", "_rad2deg", "_sin", "_sinh", "_spherical2cartesian", "_sqrt", "_tan", "_tanh", "_max", "_min", "_range", "_shannonentropy":
-			converters = append(converters, framestruct.WithConverterFor(key, ConverterForStringToInt64))
-		default:
-			if strings.HasSuffix(key, "_x") {
-				converters = append(converters, framestruct.WithConverterFor(key, ConverterForStringToInt64))
-			}
+			continue
+		}
+		_, err := ConverterForStringToFloat64(v)
+		if err == nil {
+			converters = append(converters, framestruct.WithConverterFor(key, ConverterForStringToFloat64))
+			continue
 		}
 	}
 	return converters
@@ -128,7 +138,7 @@ func ConverterForStringToTime(input any) (any, error) {
 	return &p, nil
 }
 
-func ConverterForStringToInt64(input any) (any, error) {
+func ConverterForStringToFloat64(input any) (any, error) {
 	num, err := strconv.ParseFloat(input.(string), 64)
 	if err != nil {
 		return nil, nil
