@@ -17,8 +17,8 @@
     },
     "keywords": ["datasource", "humio", "falcon logscale"],
     "logos": {
-      "small": "img/humio_logo.svg",
-      "large": "img/humio_logo.svg"
+      "small": "img/crowd_strike_logo.png",
+      "large": "img/crowd_strike_logo.png"
     },
     "links": [
       {
