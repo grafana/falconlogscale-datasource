@@ -45,6 +45,6 @@
     "Millis",
     "rawstring",
     "ingesttimestamp",
-    "nanos"
+    "nanos",
   ]
 }
