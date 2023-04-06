@@ -45,11 +45,6 @@
     "Millis",
     "rawstring",
     "ingesttimestamp",
-    "nanos",
-    "geodistance",
-    "arccos",
-    "arcsin",
-    "arctan",
-    "shannonentropy"
+    "nanos"
   ]
 }
