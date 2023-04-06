@@ -141,7 +141,7 @@ func ConverterForStringToTime(input any) (any, error) {
 func ConverterForStringToFloat64(input any) (any, error) {
 	num, err := strconv.ParseFloat(input.(string), 64)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 	return num, nil
 }
