@@ -82,7 +82,7 @@ describe('dataLink', () => {
     expect(trace!.values.toArray()).toEqual([null, null]);
   });
 
-  it('should a null add a data link because there is no value', () => {
+  it('should not add a data link because there is no value', () => {
     const df = new MutableDataFrame({ fields: [{ name: 'traceId', values: ['id123'] }, { name: 'line2', values: ['1', '2'] }] });
     const newFields = getDataLinks(df, [
       {
