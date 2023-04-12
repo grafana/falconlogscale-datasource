@@ -9,7 +9,12 @@ export type Props = QueryEditorProps<DataSource, LogScaleQuery, LogScaleOptions>
 
 export function QueryEditor(props: Props) {
   const { query, onChange, onRunQuery } = props;
-  const [isLogFormat, setIsLogFormat] = useState<boolean>(query.queryType === 'logs');
+  const [isLogFormat, setIsLogFormat] = useState<boolean>(!query.queryType || query.queryType === 'logs');
+
+  // Set default query type to logs in explore view
+  if (!query.queryType) {
+    onChange({ ...query, queryType: 'logs' });
+  }
 
   const onIsExploreChange = (val: boolean) => {
     setIsLogFormat(val);

@@ -18,6 +18,7 @@ export function getDataLinks(dataFrame: DataFrame, dataLinkConfigs: DataLinkConf
   dataLinks.forEach((dl) => {
     dl.lineField?.values.toArray().forEach((line) => {
       if (!line) {
+        dl.newField.values.add(null);
         return;
       }
       const logMatch = line.match(dl.dataLinkConfig.matcherRegex);
