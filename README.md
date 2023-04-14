@@ -8,6 +8,7 @@ For instructions on how to install the plugin on Grafana Cloud or locally, refer
 
 ## Configure the data source in Grafana
 
+NEEDS WORK. not all of the config settings are being used. need to figure out which ones are needed and which ones are not.
 get api key
 set up api key
 make a service account
@@ -21,22 +22,6 @@ set up user/pass auth
 | URL           | The URL of the Falcon LogScale instance. |
 | Allow Cookies | Defines which cookies are forwarded to the data source. Grafana Proxy deletes all other cookies. |
 | Timeout      | The HTTP request timeout in seconds. |
-
-#### Metrics Authentication fields
-
-| Field                  | Description                                                                                                                                        |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Basic auth             | Enter an Falcon LogScale user name and password.                                                                                                       |
-| TLS Client Auth        | Built-in option for authenticating using Transport Layer Security.                                                                                 |
-| Skip TLS Verify        | Enable to skip TLS verification.                                                                                                                   |
-| With Credentials       | Enable to send credentials such as cookies or auth headers with cross-site requests.                                                               |
-| With CA Cert           | Enable to verify self-signed TLS Certs.                                                                                                            |
-
-Custom HTTP Header Data sources managed by provisioning within Grafana can be configured to add HTTP headers to all requests going to that datasource. The header name is configured in the `jsonData` field and the header value should be configured in secureJsonData.
-
-#### LogScale Token Authentication fields
-
-
 
 ### Configure data links
 
