@@ -1,0 +1,85 @@
+//  🌟 This was machine generated.  Do not edit. 🌟
+//  
+//  Frame[0] 
+//  Name: field
+//  Dimensions: 4 Fields by 3 Rows
+//  +-------------------------------+------------------+------------------+-------------------+
+//  | Name: @timestamp              | Name: _count     | Name: extraField | Name: stringField |
+//  | Labels:                       | Labels:          | Labels:          | Labels:           |
+//  | Type: []*time.Time            | Type: []*float64 | Type: []*string  | Type: []*string   |
+//  +-------------------------------+------------------+------------------+-------------------+
+//  | 2020-01-01 00:00:00 +0000 UTC | 100              | extra            | hello             |
+//  | null                          | 100              | null             | hello             |
+//  | null                          | null             | null             | hello             |
+//  +-------------------------------+------------------+------------------+-------------------+
+//  
+//  
+//  🌟 This was machine generated.  Do not edit. 🌟
+{
+  "status": 200,
+  "frames": [
+    {
+      "schema": {
+        "name": "field",
+        "fields": [
+          {
+            "name": "@timestamp",
+            "type": "time",
+            "typeInfo": {
+              "frame": "time.Time",
+              "nullable": true
+            }
+          },
+          {
+            "name": "_count",
+            "type": "number",
+            "typeInfo": {
+              "frame": "float64",
+              "nullable": true
+            }
+          },
+          {
+            "name": "extraField",
+            "type": "string",
+            "typeInfo": {
+              "frame": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "stringField",
+            "type": "string",
+            "typeInfo": {
+              "frame": "string",
+              "nullable": true
+            }
+          }
+        ]
+      },
+      "data": {
+        "values": [
+          [
+            1577836800000,
+            null,
+            null
+          ],
+          [
+            100,
+            100,
+            null
+          ],
+          [
+            "extra",
+            null,
+            null
+          ],
+          [
+            "hello",
+            "hello",
+            "hello"
+          ]
+        ]
+      }
+    }
+  ]
+}
