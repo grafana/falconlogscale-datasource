@@ -8,20 +8,35 @@ For instructions on how to install the plugin on Grafana Cloud or locally, refer
 
 ## Configure the data source in Grafana
 
-NEEDS WORK. not all of the config settings are being used. need to figure out which ones are needed and which ones are not.
-get api key
-set up api key
-make a service account
-set up user/pass auth
+[Add a data source](https://grafana.com/docs/grafana/latest/datasources/add-a-data-source/) by filling in the following fields:
 
-#### Basic fields
+### Basic fields
 
-| Field         | Description |
-| ------------- | ----------- |
-| Name          | The name of the data source. |
-| URL           | The URL of the Falcon LogScale instance. |
-| Allow Cookies | Defines which cookies are forwarded to the data source. Grafana Proxy deletes all other cookies. |
-| Timeout      | The HTTP request timeout in seconds. |
+| Field   | Description                                                                       |
+| ------- | --------------------------------------------------------------------------------- |
+| Name    | A name for this particular Falcon LogScale data source.                           |
+| URL     | Where Falcon LogScale is hosted, for example `https://cloud.community.humio.com`. |
+| Timeout | HTTP request timeout in seconds.                                                  |
+
+### Authentication fields
+
+| Field            | Description                                                                          |
+| ---------------- | ------------------------------------------------------------------------------------ |
+| Basic auth       | Enter an Falcon LogScale user name and password.                                     |
+| TLS Client Auth  | Built-in option for authenticating using Transport Layer Security.                   |
+| Skip TLS Verify  | Enable to skip TLS verification.                                                     |
+| With Credentials | Enable to send credentials such as cookies or auth headers with cross-site requests. |
+| With CA Cert     | Enable to verify self-signed TLS Certs.                                              |
+
+Custom HTTP Header Data sources managed by provisioning within Grafana can be configured to add HTTP headers to all requests going to that datasource. The header name is configured in the `jsonData` field and the header value should be configured in secureJsonData.
+
+### LogScale Token Authentication
+
+You can authenticate using your personal LogScale Token Authentication. To generate a personal access token, log into LogScale and navigate to User Menu > Manage Account > Personal API Token. Then, set or reset your token. Copy and paste the token into the Token field.
+
+### Default LogScale Repository
+
+You can set a default LogScale repository to use for your queries. If you do not set a default repository, you will need to select a repository for each query.
 
 ### Configure data links
 
@@ -48,13 +63,13 @@ Here are some provisioning examples for this data source using basic authenticat
 ```yaml
 apiVersion: 1
 datasources:
-    - name: Falcon LogScale
-      type: grafana-falconlogscale-datasource
-      jsonData:
-          baseUrl: https://cloud.us.humio.com
-          defaultRepository: <defaultRepository or blank>
-      secureJsonData:
-          accessToken: <accessToken>
+  - name: Falcon LogScale
+    type: grafana-falconlogscale-datasource
+    jsonData:
+      baseUrl: https://cloud.us.humio.com
+      defaultRepository: <defaultRepository or blank>
+    secureJsonData:
+      accessToken: <accessToken>
 ```
 
 ## Query the data source
