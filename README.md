@@ -22,7 +22,7 @@ For instructions on how to install the plugin on Grafana Cloud or locally, refer
 
 | Field            | Description                                                                          |
 | ---------------- | ------------------------------------------------------------------------------------ |
-| Basic auth       | Enter an Falcon LogScale user name and password.                                     |
+| Basic auth       | Enter a Falcon LogScale user name and password.                                     |
 | TLS Client Auth  | Built-in option for authenticating using Transport Layer Security.                   |
 | Skip TLS Verify  | Enable to skip TLS verification.                                                     |
 | With Credentials | Enable to send credentials such as cookies or auth headers with cross-site requests. |
