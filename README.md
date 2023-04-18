@@ -56,7 +56,7 @@ To configure a data link, click the add button in the data links section of the 
 
 ### Configure the data source with provisioning
 
-It is possible to configure data sources using configuration files with Grafana’s provisioning system. To read about how it works, including and all the settings that you can set for this data source, refer to [Provisioning grafana data sources](https://grafana.com/docs/grafana/latest/administration/provisioning/#data-sources)
+It is possible to configure data sources using configuration files with Grafana’s provisioning system. To read about how it works, including all the settings that you can set for this data source, refer to [Provisioning Grafana data sources](https://grafana.com/docs/grafana/latest/administration/provisioning/#data-sources)
 
 Here are some provisioning examples for this data source using basic authentication:
 
