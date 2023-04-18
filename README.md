@@ -32,7 +32,7 @@ Custom HTTP Header Data sources managed by provisioning within Grafana can be co
 
 ### LogScale Token Authentication
 
-You can authenticate using your personal LogScale Token Authentication. To generate a personal access token, log into LogScale and navigate to User Menu > Manage Account > Personal API Token. Then, set or reset your token. Copy and paste the token into the Token field.
+You can authenticate using your personal LogScale token. To generate a personal access token, log into LogScale and navigate to User Menu > Manage Account > Personal API Token. Then, set or reset your token. Copy and paste the token into the token field.
 
 ### Default LogScale Repository
 
