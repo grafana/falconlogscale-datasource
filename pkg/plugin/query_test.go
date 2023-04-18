@@ -50,16 +50,90 @@ func setup(opts ...plugin.HandlerOption) (*plugin.Handler, testContext) {
 
 func TestGetConverters(t *testing.T) {
 	t.Run("gets all types", func(t *testing.T) {
-		events := []map[string]any{{"numberField": "100", "stringField": "hello"}}
+		events := []map[string]any{{"_count": "100", "stringField": "hello", "@timestamp": "2020-01-01T00:00:00Z"}}
 		converters := plugin.GetConverters(events)
 		frames, _ := framestruct.ToDataFrame("field", events, converters...)
-		experimental.CheckGoldenJSONFrame(t, "../test_data", "converter_all_field_types", frames, false)
+		experimental.CheckGoldenJSONFrame(t, "../test_data", "converter_all_field_types", frames, true)
 	})
 	t.Run("gets number in second entry", func(t *testing.T) {
-		events := []map[string]any{{}, {"numberField": "3"}}
+		events := []map[string]any{{}, {"_count": "3"}}
 		converters := plugin.GetConverters(events)
 		frames, _ := framestruct.ToDataFrame("field", events, converters...)
-		experimental.CheckGoldenJSONFrame(t, "../test_data", "convert_num_second", frames, false)
+		experimental.CheckGoldenJSONFrame(t, "../test_data", "convert_num_second", frames, true)
+	})
+	t.Run("gets inconsistent fields", func(t *testing.T) {
+		events := []map[string]any{
+			{"_count": "100", "stringField": "hello", "@timestamp": "2020-01-01T00:00:00Z"},
+			{"stringField": "hello", "extraField": "extra"},
+		}
+		converters := plugin.GetConverters(events)
+		frames, _ := framestruct.ToDataFrame("field", events, converters...)
+		experimental.CheckGoldenJSONFrame(t, "../test_data", "convert_inconsistent_fields", frames, true)
+	})
+	t.Run("gets inconsistent fields with nulls", func(t *testing.T) {
+		events := []map[string]any{
+			{"_count": "100", "stringField": "hello", "@timestamp": "2020-01-01T00:00:00Z"},
+			{"_count": nil, "stringField": "hello", "extraField": "extra", "@timestamp": nil},
+			{"_count": "100", "stringField": "hello", "extraField": nil},
+		}
+		converters := plugin.GetConverters(events)
+		frames, _ := framestruct.ToDataFrame("field", events, converters...)
+		experimental.CheckGoldenJSONFrame(t, "../test_data", "convert_inconsistent_fields_null", frames, true)
+	})
+}
+
+func TestOrderFrameFieldsByMetaData(t *testing.T) {
+	t.Run("orders fields by meta data", func(t *testing.T) {
+		frame := data.NewFrame("test",
+			data.NewField("b", nil, []string{"a", "b", "c"}),
+			data.NewField("c", nil, []string{"d", "e", "f"}),
+			data.NewField("a", nil, []string{"g", "h", "i"}),
+		)
+		fieldOrder := []string{
+			"a",
+			"b",
+			"c",
+		}
+		plugin.OrderFrameFieldsByMetaData(fieldOrder, frame)
+		experimental.CheckGoldenJSONFrame(t, "../test_data", "order_frame_fields", frame, false)
+	})
+	t.Run("orders fields by meta data with missing fields", func(t *testing.T) {
+		frame := data.NewFrame("test",
+			data.NewField("b", nil, []string{"a", "b", "c"}),
+			data.NewField("c", nil, []string{"d", "e", "f"}),
+			data.NewField("a", nil, []string{"g", "h", "i"}),
+		)
+		fieldOrder := []string{
+			"a",
+			"b",
+			"c",
+			"d",
+		}
+		plugin.OrderFrameFieldsByMetaData(fieldOrder, frame)
+		experimental.CheckGoldenJSONFrame(t, "../test_data", "order_frame_fields_missing", frame, false)
+	})
+	t.Run("orders fields by meta data with extra fields", func(t *testing.T) {
+		frame := data.NewFrame("test",
+			data.NewField("b", nil, []string{"a", "b", "c"}),
+			data.NewField("c", nil, []string{"d", "e", "f"}),
+			data.NewField("a", nil, []string{"g", "h", "i"}),
+		)
+		fieldOrder := []string{
+			"a",
+			"b",
+		}
+		plugin.OrderFrameFieldsByMetaData(fieldOrder, frame)
+		experimental.CheckGoldenJSONFrame(t, "../test_data", "order_frame_fields_extra", frame, false)
+	})
+	t.Run("do not order fields if no meta data", func(t *testing.T) {
+		frame := data.NewFrame("test",
+			data.NewField("b", nil, []string{"a", "b", "c"}),
+			data.NewField("c", nil, []string{"d", "e", "f"}),
+			data.NewField("a", nil, []string{"g", "h", "i"}),
+		)
+		fieldOrder := []string{}
+		plugin.OrderFrameFieldsByMetaData(fieldOrder, frame)
+		experimental.CheckGoldenJSONFrame(t, "../test_data", "order_frame_fields_no_meta", frame, false)
 	})
 	t.Run("string fields with numbers in them return as strings", func(t *testing.T) {
 		events := []map[string]any{
