@@ -4,7 +4,7 @@ The CrowdStrike Falcon LogScale data source plugin allows you to query and visua
 
 ## Install the plugin
 
-For instructions on how to install the plugin on Grafana Cloud or locally, refer to [Plugin installation docs][plugin installation docs].
+To install the data source, refer to [Installation](https://grafana.com/grafana/plugins/grafana-falconlogscale-datasource/?tab=installation).
 
 ## Configure the data source in Grafana
 
@@ -28,7 +28,7 @@ For instructions on how to install the plugin on Grafana Cloud or locally, refer
 | With Credentials | Enable to send credentials such as cookies or auth headers with cross-site requests. |
 | With CA Cert     | Enable to verify self-signed TLS Certs.                                              |
 
-Custom HTTP Header Data sources managed by provisioning within Grafana can be configured to add HTTP headers to all requests going to that datasource. The header name is configured in the `jsonData` field and the header value should be configured in secureJsonData.
+Custom HTTP Header Data sources managed by provisioning within Grafana can be configured to add HTTP headers to all requests going to that datasource. The header name is configured in the `jsonData` field and the header value should be configured in secureJsonData. For more information about custom HTTP headers, refer to [Custom HTTP Headers](https://grafana.com/docs/grafana/latest/administration/provisioning/#custom-http-headers-for-data-sources).
 
 ### LogScale Token Authentication
 
