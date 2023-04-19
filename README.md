@@ -1,79 +1,110 @@
-## Falcon Logscale grafana data source plugin
+# Falcon LogScale data source for Grafana
 
-**Available examples:**
-- [datasource-basic](https://github.com/grafana/grafana-plugin-examples/blob/master/examples/datasource-basic) - demonstrates how to build a basic data source plugin with a backend
-- [datasource-http](https://github.com/grafana/grafana-plugin-examples/blob/master/examples/datasource-http) - demonstrates how to query data from HTTP-based APIs.
-- [datasource-streaming-websocket](https://github.com/grafana/grafana-plugin-examples/blob/master/examples/datasource-streaming-websocket) - demonstrates how to create an event-based data source plugin using RxJS and web sockets.
+The CrowdStrike Falcon LogScale data source plugin allows you to query and visualize Falcon LogScale data from within Grafana.
 
----
+## Install the plugin
 
-# Grafana Data Source Backend Plugin Template
+To install the data source, refer to [Installation](https://grafana.com/grafana/plugins/grafana-falconlogscale-datasource/?tab=installation).
 
-[![Build](https://github.com/grafana/falconlogscale-datasource-backend/workflows/CI/badge.svg)](https://github.com/grafana/grafana-datasource-backend/actions?query=workflow%3A%22CI%22)
+## Configure the data source in Grafana
 
-This template is a starting point for building Grafana Data Source Backend Plugins
+[Add a data source](https://grafana.com/docs/grafana/latest/datasources/add-a-data-source/) by filling in the following fields:
 
-## What is Grafana Data Source Backend Plugin?
+### Basic fields
 
-Grafana supports a wide range of data sources, including Prometheus, MySQL, and even Datadog. There’s a good chance you can already visualize metrics from the systems you have set up. In some cases, though, you already have an in-house metrics solution that you’d like to add to your Grafana dashboards. Grafana Data Source Plugins enables integrating such solutions with Grafana.
+| Field   | Description                                                                       |
+| ------- | --------------------------------------------------------------------------------- |
+| Name    | A name for this particular Falcon LogScale data source.                           |
+| URL     | Where Falcon LogScale is hosted, for example `https://cloud.community.humio.com`. |
+| Timeout | HTTP request timeout in seconds.                                                  |
 
-For more information about backend plugins, refer to the documentation on [Backend plugins](https://grafana.com/docs/grafana/latest/developers/plugins/backend/).
+### Authentication fields
 
-## Getting started
+| Field            | Description                                                                          |
+| ---------------- | ------------------------------------------------------------------------------------ |
+| Basic auth       | Enter a Falcon LogScale user name and password.                                     |
+| TLS Client Auth  | Built-in option for authenticating using Transport Layer Security.                   |
+| Skip TLS Verify  | Enable to skip TLS verification.                                                     |
+| With Credentials | Enable to send credentials such as cookies or auth headers with cross-site requests. |
+| With CA Cert     | Enable to verify self-signed TLS Certs.                                              |
 
-A data source backend plugin consists of both frontend and backend components.
+Custom HTTP Header Data sources managed by provisioning within Grafana can be configured to add HTTP headers to all requests going to that datasource. The header name is configured in the `jsonData` field and the header value should be configured in secureJsonData. For more information about custom HTTP headers, refer to [Custom HTTP Headers](https://grafana.com/docs/grafana/latest/administration/provisioning/#custom-http-headers-for-data-sources).
 
-### Frontend
+### LogScale Token Authentication
 
-1. Install dependencies
+You can authenticate using your personal LogScale token. To generate a personal access token, log into LogScale and navigate to User Menu > Manage Account > Personal API Token. Then, set or reset your token. Copy and paste the token into the token field.
 
-   ```bash
-   yarn install
-   ```
+### Default LogScale Repository
 
-2. Build plugin in development mode or run in watch mode
+You can set a default LogScale repository to use for your queries. If you do not set a default repository, you will need to select a repository for each query.
 
-   ```bash
-   yarn dev
-   ```
+### Configure data links
 
-   or
+Data links allow you to link to other data sources from your Grafana panels. For more information about data links, refer to [Data links](https://grafana.com/docs/grafana/latest/explore/logs-integration/).
 
-   ```bash
-   yarn watch
-   ```
+To configure a data link, click the add button in the data links section of the data source configuration page. Fill out the fields as follows:
 
-3. Build plugin in production mode
+| Field         | Description                                                                                                                                                                                            |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Field         | The field that you want to link to. This can be the exact name or a regex pattern.                                                                                                                     |
+| Label         | This provides a meaningful name to the data link.                                                                                                                                                      |
+| Regex         | A regular expression to match the field value. If you want the entire value use `(.*)`                                                                                                                 |
+| URL or Query  | A URL link or query provided to a selected data source. You can use variables in the URLs or queries. For more information on data link variables refer to [Configure data links][configure data link] |
+| Internal link | Select this option to link to a Grafana data source.                                                                                                                                                   |
 
-   ```bash
-   yarn build
-   ```
+[configure data link]: https://grafana.com/docs/grafana/latest/panels-visualizations/configure-data-links/
 
-### Backend
+### Configure the data source with provisioning
 
-1. Update [Grafana plugin SDK for Go](https://grafana.com/docs/grafana/latest/developers/plugins/backend/grafana-plugin-sdk-for-go/) dependency to the latest minor version:
+It is possible to configure data sources using configuration files with Grafana’s provisioning system. To read about how it works, including all the settings that you can set for this data source, refer to [Provisioning Grafana data sources](https://grafana.com/docs/grafana/latest/administration/provisioning/#data-sources)
 
-   ```bash
-   go get -u github.com/grafana/grafana-plugin-sdk-go
-   go mod tidy
-   ```
+Here are some provisioning examples for this data source using basic authentication:
 
-2. Build backend plugin binaries for Linux, Windows and Darwin:
+```yaml
+apiVersion: 1
+datasources:
+  - name: Falcon LogScale
+    type: grafana-falconlogscale-datasource
+    jsonData:
+      baseUrl: https://cloud.us.humio.com
+      defaultRepository: <defaultRepository or blank>
+    secureJsonData:
+      accessToken: <accessToken>
+```
 
-   ```bash
-   mage -v
-   ```
+## Query the data source
 
-3. List all available Mage targets for additional commands:
+The query editor allows you to write LogScale Query Language (LQL) queries. For more information about writing LQL queries refer to [Query Language Syntax](https://library.humio.com/falcon-logscale/syntax.html). Select a repository from the drop-down menu to query. You will only see repositories that your data source account have access to.
 
-   ```bash
-   mage -l
-   ```
+You can use your LogScale saved queries in Grafana. For more information about saved queries, refer to [User Functions](https://library.humio.com/falcon-logscale/syntax-function.html#syntax-function-user).
+
+Here are some useful LQL functions to get you started with Grafana visualizations:
+
+| Function                                                                        | Description                                                                          | Example                                |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------- |
+| [timeChart](https://library.humio.com/falcon-logscale/functions-timechart.html) | Groups data into time buckets. This is useful for time series panels.                | `timeChart(span=1h, function=count())` |
+| [table](https://library.humio.com/falcon-logscale/functions-table.html)         | Returns a table with the provided fields.                                            | `table([statuscode, responsetime])`    |
+| [groupBy](https://library.humio.com/falcon-logscale/functions-groupby.html)     | Group results by field values. This is useful for bar chart, stat, and gauge panels. | `groupBy(_field, function=count())`    |
+
+### Explore view
+
+The Explore view allows you to run LQL queries and visualize the results as logs or a chart. For more information about Explore, refer to [Explore](https://grafana.com/docs/grafana/latest/features/explore/). For more information about Logs in Explore, refer to [Explore logs](https://grafana.com/docs/grafana/latest/explore/logs-integration/).
+
+### Templates and variables
+
+To add a new Falcon LogScale query variable, refer to [Add a query variable](https://grafana.com/docs/grafana/latest/variables/variable-types/add-query-variable/). Use your Falcon LogScale data source as your data source. Fill out the query field with your LQL query and select a Repository from the drop-down menu. The template variable will be populated with the first column from the results of your LQL query.
+
+After creating a variable, you can use it in your Falcon LogScale queries by using [Variable syntax](https://grafana.com/docs/grafana/latest/variables/syntax/). For more information about variables, refer to [Templates and variables](https://grafana.com/docs/grafana/latest/variables/).
+
+### Import a dashboard for Falcon LogScale
+
+Follow these [instructions](https://grafana.com/docs/grafana/latest/dashboards/export-import/#importing-a-dashboard) for importing a dashboard.
+
+Imported dashboards can be found in Configuration > Data Sources > select your Falcon LogScale data source > select the Dashboards tab to see available pre-made dashboards.
 
 ## Learn more
 
-- [Build a data source backend plugin tutorial](https://grafana.com/tutorials/build-a-data-source-backend-plugin)
-- [Grafana documentation](https://grafana.com/docs/)
-- [Grafana Tutorials](https://grafana.com/tutorials/) - Grafana Tutorials are step-by-step guides that help you make the most of Grafana
-- [Grafana UI Library](https://developers.grafana.com/ui) - UI components to help you build interfaces using Grafana Design System
-- [Grafana plugin SDK for Go](https://grafana.com/docs/grafana/latest/developers/plugins/backend/grafana-plugin-sdk-for-go/)
+- Add [Annotations](https://grafana.com/docs/grafana/latest/dashboards/annotations/).
+- Configure and use [Templates and variables](https://grafana.com/docs/grafana/latest/variables/).
+- Add [Transformations](https://grafana.com/docs/grafana/latest/panels/transformations/).
+- Set up alerting; refer to [Alerts overview](https://grafana.com/docs/grafana/latest/alerting/).
