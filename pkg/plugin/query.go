@@ -40,6 +40,9 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 
 			converters := GetConverters(r.Events)
 			f, err := h.FrameMarshaller("events", r.Events, converters...)
+
+			OrderFrameFieldsByMetaData(r.Metadata.FieldOrder, f)
+
 			if q.QueryType == "logs" {
 				f.Meta = &data.FrameMeta{
 					PreferredVisualization: data.VisTypeLogs,
@@ -59,6 +62,20 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 	}
 
 	return response, nil
+}
+
+func OrderFrameFieldsByMetaData(fieldOrder []string, f *data.Frame) {
+	if len(fieldOrder) != 0 {
+		var fields []*data.Field
+		for _, fieldName := range fieldOrder {
+			for _, field := range f.Fields {
+				if field.Name == fieldName {
+					fields = append(fields, field)
+				}
+			}
+		}
+		f.Fields = fields
+	}
 }
 
 type Events []map[string]any

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { QueryEditorProps } from '@grafana/data';
 import { DataSource } from '../DataSource';
 import { LogScaleOptions, LogScaleQuery } from '../types';
@@ -9,18 +9,23 @@ export type Props = QueryEditorProps<DataSource, LogScaleQuery, LogScaleOptions>
 
 export function QueryEditor(props: Props) {
   const { query, onChange, onRunQuery } = props;
-  const [isLogFormat, setIsLogFormat] = useState<boolean>(!query.queryType || query.queryType === 'logs');
+  const [isLogFormat, setIsLogFormat] = useState<boolean>(query.queryType === 'logs');
 
-  // Set default query type to logs in explore view
-  if (!query.queryType) {
-    onChange({ ...query, queryType: 'logs' });
-  }
-
+  // This sets the query type to logs if the user is in Explore and the query type is not set
+  useEffect(() => {
+    if (props.app === 'explore' && !query.queryType ) {
+      onChange({ ...query, queryType: 'logs' });
+      setIsLogFormat(true);
+      onRunQuery();
+    }
+  }, [props.app, query, onChange, onRunQuery]);
+  
   const onIsExploreChange = (val: boolean) => {
     setIsLogFormat(val);
     onChange({ ...query, queryType: val ? 'logs' : 'metrics' });
     onRunQuery();
   };
+
   return (
     <div>
       <LogScaleQueryEditor {...props} />
