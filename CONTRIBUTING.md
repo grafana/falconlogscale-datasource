@@ -5,5 +5,5 @@ Thank you for your interest in contributing to this repository. We are glad you 
 
 This project adheres to the [Grafana Code of Conduct](https://github.com/grafana/grafana/blob/main/CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
 
-To disclose security issues, refer to [SECURITY.md](https://github.com/grafana/grafana/blob/main/CODE_OF_CONDUCT.md).
+To disclose security issues, refer to [SECURITY](https://github.com/grafana/grafana/blob/main/SECURITY.md).
 
