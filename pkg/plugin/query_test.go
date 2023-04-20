@@ -2,6 +2,7 @@ package plugin_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/grafana/falconlogscale-datasource-backend/pkg/humio"
 	"github.com/grafana/falconlogscale-datasource-backend/pkg/plugin"
@@ -147,6 +148,28 @@ func TestOrderFrameFieldsByMetaData(t *testing.T) {
 		converters := plugin.GetConverters(events)
 		frames, _ := framestruct.ToDataFrame("field", events, converters...)
 		experimental.CheckGoldenJSONFrame(t, "../test_data", "string_number_fields", frames, false)
+	})
+}
+
+func TestConvertToWideFormat(t *testing.T) {
+	t.Run("wide format with no fields", func(t *testing.T) {
+		frame := data.NewFrame("test")
+		plugin.ConvertToWideFormat(frame)
+		experimental.CheckGoldenJSONFrame(t, "../test_data", "wide_format_no_fields", frame, false)
+	})
+	t.Run("wide format with fields", func(t *testing.T) {
+		frame := data.NewFrame("test",
+			//time fields
+			data.NewField("time", nil, []time.Time{
+				time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
+				time.Date(2020, 1, 1, 1, 0, 0, 0, time.UTC),
+				time.Date(2020, 1, 1, 2, 0, 0, 0, time.UTC),
+			}),
+			data.NewField("num", nil, []float64{1, 2, 3}),
+			data.NewField("label", nil, []string{"g", "h", "i"}),
+		)
+		plugin.ConvertToWideFormat(frame)
+		experimental.CheckGoldenJSONFrame(t, "../test_data", "wide_format_fields", frame, false)
 	})
 }
 

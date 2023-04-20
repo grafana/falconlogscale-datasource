@@ -9,9 +9,11 @@ import (
 )
 
 type Settings struct {
-	BaseURL               string `json:"baseURL"`
-	AccessToken           string `json:"accessToken,omitempty"`
-	AuthenticateWithToken bool   `json:"authenticateWithToken,omitempty"`
+	BaseURL               string   `json:"baseURL"`
+	AccessToken           string   `json:"accessToken,omitempty"`
+	AuthenticateWithToken bool     `json:"authenticateWithToken,omitempty"`
+	KeepCookies           []string `json:"keepCookies,omitempty"`
+	Timeout               uint     `json:"timeout,omitempty"`
 	GraphqlEndpoint       string
 	RestEndpoint          string
 	BasicAuthUser         string
