@@ -9,6 +9,7 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/grafana/grafana-plugin-sdk-go/data/framestruct"
 	"github.com/grafana/grafana-plugin-sdk-go/experimental"
+	"github.com/stretchr/testify/require"
 )
 
 type testContext struct {
@@ -154,7 +155,8 @@ func TestOrderFrameFieldsByMetaData(t *testing.T) {
 func TestConvertToWideFormat(t *testing.T) {
 	t.Run("wide format with no fields", func(t *testing.T) {
 		frame := data.NewFrame("test")
-		plugin.ConvertToWideFormat(frame)
+		frame, err := plugin.ConvertToWideFormat(frame)
+		require.NoError(t, err)
 		experimental.CheckGoldenJSONFrame(t, "../test_data", "wide_format_no_fields", frame, false)
 	})
 	t.Run("wide format with fields", func(t *testing.T) {
@@ -168,7 +170,8 @@ func TestConvertToWideFormat(t *testing.T) {
 			data.NewField("num", nil, []float64{1, 2, 3}),
 			data.NewField("label", nil, []string{"g", "h", "i"}),
 		)
-		plugin.ConvertToWideFormat(frame)
+		frame, err := plugin.ConvertToWideFormat(frame)
+		require.NoError(t, err)
 		experimental.CheckGoldenJSONFrame(t, "../test_data", "wide_format_fields", frame, false)
 	})
 }

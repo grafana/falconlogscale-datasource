@@ -1,17 +1,23 @@
 //  🌟 This was machine generated.  Do not edit. 🌟
 //  
-//  Frame[0] 
+//  Frame[0] {
+//      "type": "timeseries-wide",
+//      "typeVersion": [
+//          0,
+//          0
+//      ]
+//  }
 //  Name: test
-//  Dimensions: 3 Fields by 3 Rows
-//  +-------------------------------+-----------------+----------------+
-//  | Name: time                    | Name: num       | Name: label    |
-//  | Labels:                       | Labels:         | Labels:        |
-//  | Type: []time.Time             | Type: []float64 | Type: []string |
-//  +-------------------------------+-----------------+----------------+
-//  | 2020-01-01 00:00:00 +0000 UTC | 1               | g              |
-//  | 2020-01-01 01:00:00 +0000 UTC | 2               | h              |
-//  | 2020-01-01 02:00:00 +0000 UTC | 3               | i              |
-//  +-------------------------------+-----------------+----------------+
+//  Dimensions: 4 Fields by 3 Rows
+//  +-------------------------------+------------------+------------------+------------------+
+//  | Name: time                    | Name: num        | Name: num        | Name: num        |
+//  | Labels:                       | Labels: label=g  | Labels: label=h  | Labels: label=i  |
+//  | Type: []time.Time             | Type: []*float64 | Type: []*float64 | Type: []*float64 |
+//  +-------------------------------+------------------+------------------+------------------+
+//  | 2020-01-01 00:00:00 +0000 UTC | 1                | null             | null             |
+//  | 2020-01-01 01:00:00 +0000 UTC | null             | 2                | null             |
+//  | 2020-01-01 02:00:00 +0000 UTC | null             | null             | 3                |
+//  +-------------------------------+------------------+------------------+------------------+
 //  
 //  
 //  🌟 This was machine generated.  Do not edit. 🌟
@@ -21,6 +27,13 @@
     {
       "schema": {
         "name": "test",
+        "meta": {
+          "type": "timeseries-wide",
+          "typeVersion": [
+            0,
+            0
+          ]
+        },
         "fields": [
           {
             "name": "time",
@@ -33,14 +46,33 @@
             "name": "num",
             "type": "number",
             "typeInfo": {
-              "frame": "float64"
+              "frame": "float64",
+              "nullable": true
+            },
+            "labels": {
+              "label": "g"
             }
           },
           {
-            "name": "label",
-            "type": "string",
+            "name": "num",
+            "type": "number",
             "typeInfo": {
-              "frame": "string"
+              "frame": "float64",
+              "nullable": true
+            },
+            "labels": {
+              "label": "h"
+            }
+          },
+          {
+            "name": "num",
+            "type": "number",
+            "typeInfo": {
+              "frame": "float64",
+              "nullable": true
+            },
+            "labels": {
+              "label": "i"
             }
           }
         ]
@@ -54,13 +86,18 @@
           ],
           [
             1,
-            2,
-            3
+            null,
+            null
           ],
           [
-            "g",
-            "h",
-            "i"
+            null,
+            2,
+            null
+          ],
+          [
+            null,
+            null,
+            3
           ]
         ]
       }
