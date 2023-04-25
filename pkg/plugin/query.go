@@ -43,6 +43,13 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 
 			OrderFrameFieldsByMetaData(r.Metadata.FieldOrder, f)
 
+			if _, ok := r.Events[0]["_bucket"]; ok {
+				f, err = ConvertToWideFormat(f)
+			}
+			if err != nil {
+				return nil, err
+			}
+
 			if q.QueryType == "logs" {
 				f.Meta = &data.FrameMeta{
 					PreferredVisualization: data.VisTypeLogs,
@@ -62,6 +69,17 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 	}
 
 	return response, nil
+}
+
+func ConvertToWideFormat(frame *data.Frame) (*data.Frame, error) {
+	if frame.TimeSeriesSchema().Type == data.TimeSeriesTypeLong {
+		var err error
+		frame, err = data.LongToWide(frame, &data.FillMissing{Mode: data.FillModeNull})
+		if err != nil {
+			return nil, err
+		}
+	}
+	return frame, nil
 }
 
 func OrderFrameFieldsByMetaData(fieldOrder []string, f *data.Frame) {

@@ -1,0 +1,106 @@
+//  🌟 This was machine generated.  Do not edit. 🌟
+//  
+//  Frame[0] {
+//      "type": "timeseries-wide",
+//      "typeVersion": [
+//          0,
+//          0
+//      ]
+//  }
+//  Name: test
+//  Dimensions: 4 Fields by 3 Rows
+//  +-------------------------------+------------------+------------------+------------------+
+//  | Name: time                    | Name: num        | Name: num        | Name: num        |
+//  | Labels:                       | Labels: label=g  | Labels: label=h  | Labels: label=i  |
+//  | Type: []time.Time             | Type: []*float64 | Type: []*float64 | Type: []*float64 |
+//  +-------------------------------+------------------+------------------+------------------+
+//  | 2020-01-01 00:00:00 +0000 UTC | 1                | null             | null             |
+//  | 2020-01-01 01:00:00 +0000 UTC | null             | 2                | null             |
+//  | 2020-01-01 02:00:00 +0000 UTC | null             | null             | 3                |
+//  +-------------------------------+------------------+------------------+------------------+
+//  
+//  
+//  🌟 This was machine generated.  Do not edit. 🌟
+{
+  "status": 200,
+  "frames": [
+    {
+      "schema": {
+        "name": "test",
+        "meta": {
+          "type": "timeseries-wide",
+          "typeVersion": [
+            0,
+            0
+          ]
+        },
+        "fields": [
+          {
+            "name": "time",
+            "type": "time",
+            "typeInfo": {
+              "frame": "time.Time"
+            }
+          },
+          {
+            "name": "num",
+            "type": "number",
+            "typeInfo": {
+              "frame": "float64",
+              "nullable": true
+            },
+            "labels": {
+              "label": "g"
+            }
+          },
+          {
+            "name": "num",
+            "type": "number",
+            "typeInfo": {
+              "frame": "float64",
+              "nullable": true
+            },
+            "labels": {
+              "label": "h"
+            }
+          },
+          {
+            "name": "num",
+            "type": "number",
+            "typeInfo": {
+              "frame": "float64",
+              "nullable": true
+            },
+            "labels": {
+              "label": "i"
+            }
+          }
+        ]
+      },
+      "data": {
+        "values": [
+          [
+            1577836800000,
+            1577840400000,
+            1577844000000
+          ],
+          [
+            1,
+            null,
+            null
+          ],
+          [
+            null,
+            2,
+            null
+          ],
+          [
+            null,
+            null,
+            3
+          ]
+        ]
+      }
+    }
+  ]
+}
