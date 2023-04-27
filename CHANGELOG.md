@@ -4,7 +4,7 @@
 
 - Documentation
 - A default repository can be selected in the data source config.
-- Abstract queries
+- Support added for abstract queries.
 - Fields are ordered according meta data response from LogScale. '@rawString' is always the first field.
 - Logo is not official Falcon LogScale logo
 - Log view is the default option in Explore.
