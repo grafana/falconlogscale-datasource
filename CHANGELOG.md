@@ -5,7 +5,7 @@
 - Documentation
 - A default repository can be selected in the data source config.
 - Support added for abstract queries.
-- Fields are ordered according meta data response from LogScale. '@rawString' is always the first field.
+- Fields are ordered according to meta-data response from LogScale. '@rawString' is always the first field.
 - Logo is not official Falcon LogScale logo
 - Log view is the default option in Explore.
 - Grafana data frames are converted to wide format when using a LogScale group by function to support multiline time series.
