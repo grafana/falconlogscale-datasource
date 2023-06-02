@@ -1,6 +1,8 @@
 package plugin
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"net/url"
 
 	"github.com/grafana/falconlogscale-datasource-backend/pkg/humio"
@@ -37,6 +39,32 @@ func client(accessToken string, baseURL string, user string, pass string) (*humi
 		return nil, err
 	}
 	return humio.NewClient(humio.Config{Address: address, Token: accessToken}), nil
+}
+
+// getTLSConfig returns tlsConfig from settings
+// logic reused from https://github.com/grafana/grafana/blob/615c153b3a2e4d80cff263e67424af6edb992211/pkg/models/datasource_cache.go#L211
+func getTLSConfig(settings Settings) (*tls.Config, error) {
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: settings.InsecureSkipVerify,
+		ServerName:         settings.Server,
+	}
+	if settings.TlsClientAuth || settings.TlsAuthWithCACert {
+		if settings.TlsAuthWithCACert && len(settings.TlsCACert) > 0 {
+			caPool := x509.NewCertPool()
+			if ok := caPool.AppendCertsFromPEM([]byte(settings.TlsCACert)); !ok {
+				return nil, ErrorInvalidCACertificate
+			}
+			tlsConfig.RootCAs = caPool
+		}
+		if settings.TlsClientAuth {
+			cert, err := tls.X509KeyPair([]byte(settings.TlsClientCert), []byte(settings.TlsClientKey))
+			if err != nil {
+				return nil, err
+			}
+			tlsConfig.Certificates = []tls.Certificate{cert}
+		}
+	}
+	return tlsConfig, nil
 }
 
 func (h *Handler) Dispose() {
