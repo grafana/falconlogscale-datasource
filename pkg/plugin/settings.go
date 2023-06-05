@@ -15,11 +15,11 @@ type Settings struct {
 	AccessToken           string   `json:"accessToken,omitempty"`
 	AuthenticateWithToken bool     `json:"authenticateWithToken,omitempty"`
 	KeepCookies           []string `json:"keepCookies,omitempty"`
-	Timeout               uint     `json:"timeout,omitempty"`
-	GraphqlEndpoint       string
-	RestEndpoint          string
-	BasicAuthUser         string
-	BasicAuthPass         string
+	//Timeout               uint     `json:"timeout,omitempty"`
+	GraphqlEndpoint string
+	RestEndpoint    string
+	BasicAuthUser   string
+	BasicAuthPass   string
 
 	InsecureSkipVerify bool `json:"tlsSkipVerify,omitempty"`
 	TlsClientAuth      bool `json:"tlsAuth,omitempty"`

@@ -3,12 +3,15 @@ package humio
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/shurcooL/graphql"
 )
@@ -24,7 +27,6 @@ type Config struct {
 }
 
 func (c *Client) CreateJob(repo string, query Query) (string, error) {
-
 	var jsonResponse struct {
 		ID string `json:"id"`
 	}
@@ -108,18 +110,57 @@ func NewClient(config Config) *Client {
 	return client
 }
 
-func newHTTPClientWithHeaders(authToken string) *http.Client {
+// set up an https server and connect with tls settings. if it returns a 404 tls settings worked
+func newHTTPClientWithHeaders(setting Settings) *http.Client {
 	headers := map[string]string{
-		"Authorization": fmt.Sprintf("Bearer %s", authToken),
+		"Authorization": fmt.Sprintf("Bearer %s", setting.AccessToken),
 		"Content-Type":  "application/json",
 	}
+
+	tlsConfig, err := ds.GetTLSConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	tlsConfig.Renegotiation = tls.RenegotiateFreelyAsClient
+
+	rt := &http.Transport{
+		TLSClientConfig: tlsConfig,
+		Proxy:           http.ProxyFromEnvironment,
+		Dial: (&net.Dialer{
+			Timeout:   time.Duration(setting.DataProxyTimeout) * time.Second,
+			KeepAlive: time.Duration(setting.DataProxyKeepAlive) * time.Second,
+		}).Dial,
+		TLSHandshakeTimeout:   time.Duration(setting.DataProxyTLSHandshakeTimeout) * time.Second,
+		ExpectContinueTimeout: time.Duration(setting.DataProxyExpectContinueTimeout) * time.Second,
+		MaxIdleConns:          setting.DataProxyMaxIdleConns,
+		IdleConnTimeout:       time.Duration(setting.DataProxyIdleConnTimeout) * time.Second,
+	}
+
 	return &http.Client{
 		Transport: &HttpHeaderTransport{
-			rt:      http.DefaultTransport,
+			rt:      rt,
 			headers: headers,
 		},
 	}
 }
+
+// tlsConfig.Renegotiation = tls.RenegotiateFreelyAsClient
+
+// // Create transport which adds all
+// customHeaders := ds.getCustomHeaders()
+// transport := &http.Transport{
+// 	TLSClientConfig: tlsConfig,
+// 	Proxy:           http.ProxyFromEnvironment,
+// 	Dial: (&net.Dialer{
+// 		Timeout:   time.Duration(setting.DataProxyTimeout) * time.Second,
+// 		KeepAlive: time.Duration(setting.DataProxyKeepAlive) * time.Second,
+// 	}).Dial,
+// 	TLSHandshakeTimeout:   time.Duration(setting.DataProxyTLSHandshakeTimeout) * time.Second,
+// 	ExpectContinueTimeout: time.Duration(setting.DataProxyExpectContinueTimeout) * time.Second,
+// 	MaxIdleConns:          setting.DataProxyMaxIdleConns,
+// 	IdleConnTimeout:       time.Duration(setting.DataProxyIdleConnTimeout) * time.Second,
+// }
 
 type ErrorResponse struct {
 	Detail string `json:"detail"`
