@@ -16,7 +16,7 @@ func NewDataSourceInstance(settings backend.DataSourceInstanceSettings) (instanc
 		return nil, err
 	}
 
-	client, err := client(s.AccessToken, s.BaseURL, s.BasicAuthUser, s.BasicAuthPass)
+	client, err := client(s)
 	if err != nil {
 		return nil, err
 	}
@@ -31,12 +31,22 @@ func NewDataSourceInstance(settings backend.DataSourceInstanceSettings) (instanc
 	), nil
 }
 
-func client(accessToken string, baseURL string, user string, pass string) (*humio.Client, error) {
-	address, err := url.Parse(baseURL)
+func client(settings Settings) (*humio.Client, error) {
+	address, err := url.Parse(settings.BaseURL)
 	if err != nil {
 		return nil, err
 	}
-	return humio.NewClient(humio.Config{Address: address, Token: accessToken}), nil
+	return humio.NewClient(humio.Config{
+		Address:            address,
+		Token:              settings.AccessToken,
+		InsecureSkipVerify: settings.InsecureSkipVerify,
+		TlsClientAuth:      settings.TlsClientAuth,
+		TlsAuthWithCACert:  settings.TlsAuthWithCACert,
+		TlsCACert:          settings.TlsCACert,
+		TlsClientCert:      settings.TlsClientCert,
+		TlsClientKey:       settings.TlsClientKey,
+		TlsServerName:      settings.TlsServerName,
+	})
 }
 
 func (h *Handler) Dispose() {
