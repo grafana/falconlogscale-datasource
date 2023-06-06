@@ -4,14 +4,14 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"net"
 	"net/http"
 	"net/url"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/shurcooL/graphql"
 )
@@ -22,8 +22,15 @@ type Client struct {
 }
 
 type Config struct {
-	Address *url.URL
-	Token   string
+	Address            *url.URL
+	Token              string
+	InsecureSkipVerify bool
+	TlsClientAuth      bool
+	TlsAuthWithCACert  bool
+	TlsCACert          string
+	TlsClientCert      string
+	TlsClientKey       string
+	TlsServerName      string
 }
 
 func (c *Client) CreateJob(repo string, query Query) (string, error) {
@@ -102,65 +109,66 @@ func (c *Client) GraphQLQuery(query interface{}, variables map[string]interface{
 	return client.Query(context.Background(), query, variables)
 }
 
-func NewClient(config Config) *Client {
+func NewClient(config Config) (*Client, error) {
 	client := &Client{
 		URL: config.Address,
 	}
-	client.HTTPClient = newHTTPClientWithHeaders(config.Token)
-	return client
+	c, err := newHTTPClientWithHeaders(config)
+	if err != nil {
+		return nil, err
+	}
+	client.HTTPClient = c
+	return client, nil
 }
 
 // set up an https server and connect with tls settings. if it returns a 404 tls settings worked
-func newHTTPClientWithHeaders(setting Settings) *http.Client {
+func newHTTPClientWithHeaders(config Config) (*http.Client, error) {
 	headers := map[string]string{
-		"Authorization": fmt.Sprintf("Bearer %s", setting.AccessToken),
+		"Authorization": fmt.Sprintf("Bearer %s", config.Token),
 		"Content-Type":  "application/json",
 	}
 
-	tlsConfig, err := ds.GetTLSConfig()
+	tlsConfig, err := getTLSConfig(config)
 	if err != nil {
 		return nil, err
 	}
 
-	tlsConfig.Renegotiation = tls.RenegotiateFreelyAsClient
-
-	rt := &http.Transport{
-		TLSClientConfig: tlsConfig,
-		Proxy:           http.ProxyFromEnvironment,
-		Dial: (&net.Dialer{
-			Timeout:   time.Duration(setting.DataProxyTimeout) * time.Second,
-			KeepAlive: time.Duration(setting.DataProxyKeepAlive) * time.Second,
-		}).Dial,
-		TLSHandshakeTimeout:   time.Duration(setting.DataProxyTLSHandshakeTimeout) * time.Second,
-		ExpectContinueTimeout: time.Duration(setting.DataProxyExpectContinueTimeout) * time.Second,
-		MaxIdleConns:          setting.DataProxyMaxIdleConns,
-		IdleConnTimeout:       time.Duration(setting.DataProxyIdleConnTimeout) * time.Second,
-	}
+	rt := http.DefaultTransport.(*http.Transport).Clone()
+	rt.TLSClientConfig = tlsConfig
 
 	return &http.Client{
 		Transport: &HttpHeaderTransport{
 			rt:      rt,
 			headers: headers,
 		},
-	}
+	}, nil
 }
 
-// tlsConfig.Renegotiation = tls.RenegotiateFreelyAsClient
-
-// // Create transport which adds all
-// customHeaders := ds.getCustomHeaders()
-// transport := &http.Transport{
-// 	TLSClientConfig: tlsConfig,
-// 	Proxy:           http.ProxyFromEnvironment,
-// 	Dial: (&net.Dialer{
-// 		Timeout:   time.Duration(setting.DataProxyTimeout) * time.Second,
-// 		KeepAlive: time.Duration(setting.DataProxyKeepAlive) * time.Second,
-// 	}).Dial,
-// 	TLSHandshakeTimeout:   time.Duration(setting.DataProxyTLSHandshakeTimeout) * time.Second,
-// 	ExpectContinueTimeout: time.Duration(setting.DataProxyExpectContinueTimeout) * time.Second,
-// 	MaxIdleConns:          setting.DataProxyMaxIdleConns,
-// 	IdleConnTimeout:       time.Duration(setting.DataProxyIdleConnTimeout) * time.Second,
-// }
+// getTLSConfig returns tlsConfig from settings
+// logic reused from https://github.com/grafana/grafana/blob/615c153b3a2e4d80cff263e67424af6edb992211/pkg/models/datasource_cache.go#L211
+func getTLSConfig(config Config) (*tls.Config, error) {
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: config.InsecureSkipVerify,
+		ServerName:         config.TlsServerName,
+	}
+	if config.TlsClientAuth || config.TlsAuthWithCACert {
+		if config.TlsAuthWithCACert && len(config.TlsCACert) > 0 {
+			caPool := x509.NewCertPool()
+			if ok := caPool.AppendCertsFromPEM([]byte(config.TlsCACert)); !ok {
+				return nil, errors.New("failed to parse TLS CA PEM certificate")
+			}
+			tlsConfig.RootCAs = caPool
+		}
+		if config.TlsClientAuth {
+			cert, err := tls.X509KeyPair([]byte(config.TlsClientCert), []byte(config.TlsClientKey))
+			if err != nil {
+				return nil, err
+			}
+			tlsConfig.Certificates = []tls.Certificate{cert}
+		}
+	}
+	return tlsConfig, nil
+}
 
 type ErrorResponse struct {
 	Detail string `json:"detail"`

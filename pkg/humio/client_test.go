@@ -94,7 +94,11 @@ func setupClientTest() {
 
 	url, _ := url.Parse(testServer.URL)
 	config := humio.Config{Address: url, Token: "testToken"}
-	testClient = humio.NewClient(config)
+	var err error
+	testClient, err = humio.NewClient(config)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func teardownClientTest() {

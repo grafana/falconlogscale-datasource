@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 )
@@ -27,10 +26,7 @@ type Settings struct {
 	TlsCACert          string
 	TlsClientCert      string
 	TlsClientKey       string
-	Secure             bool   `json:"secure,omitempty"`
-	Timeout            string `json:"timeout,omitempty"`
-	QueryTimeout       string `json:"queryTimeout,omitempty"`
-	Protocol           string `json:"protocol"`
+	TlsServerName      string
 }
 
 var (
@@ -66,9 +62,13 @@ func LoadSettings(config backend.DataSourceInstanceSettings) (Settings, error) {
 	settings.BasicAuthUser = config.BasicAuthUser
 	settings.BasicAuthPass = secureSettings["basicAuthPassword"]
 
+	return loadTlsSettings(config, settings)
+}
+
+func loadTlsSettings(config backend.DataSourceInstanceSettings, settings Settings) (Settings, error) {
 	var jsonData map[string]interface{}
 	if err := json.Unmarshal(config.JSONData, &jsonData); err != nil {
-		return settings, fmt.Errorf("%s: %w", err.Error(), "could not parse json")
+		return settings, fmt.Errorf("%s: could not parse json", err.Error())
 	}
 
 	if jsonData["tlsSkipVerify"] != nil {
@@ -82,6 +82,7 @@ func LoadSettings(config backend.DataSourceInstanceSettings) (Settings, error) {
 			settings.InsecureSkipVerify = jsonData["tlsSkipVerify"].(bool)
 		}
 	}
+
 	if jsonData["tlsAuth"] != nil {
 		if tlsAuth, ok := jsonData["tlsAuth"].(string); ok {
 			var err error
@@ -93,6 +94,7 @@ func LoadSettings(config backend.DataSourceInstanceSettings) (Settings, error) {
 			settings.TlsClientAuth = jsonData["tlsAuth"].(bool)
 		}
 	}
+
 	if jsonData["tlsAuthWithCACert"] != nil {
 		if tlsAuthWithCACert, ok := jsonData["tlsAuthWithCACert"].(string); ok {
 			var err error
@@ -104,45 +106,22 @@ func LoadSettings(config backend.DataSourceInstanceSettings) (Settings, error) {
 			settings.TlsAuthWithCACert = jsonData["tlsAuthWithCACert"].(bool)
 		}
 	}
-	if jsonData["secure"] != nil {
-		if secure, ok := jsonData["secure"].(string); ok {
-			var err error
-			settings.Secure, err = strconv.ParseBool(secure)
-			if err != nil {
-				return settings, fmt.Errorf("could not parse secure value: %w", err)
-			}
-		} else {
-			settings.Secure = jsonData["secure"].(bool)
-		}
+
+	if jsonData["serverName"] != nil {
+		settings.TlsServerName = jsonData["serverName"].(string)
 	}
 
-	if jsonData["timeout"] != nil {
-		settings.Timeout = jsonData["timeout"].(string)
-	}
-	if jsonData["queryTimeout"] != nil {
-		settings.QueryTimeout = jsonData["queryTimeout"].(string)
-	}
-	if jsonData["protocol"] != nil {
-		settings.Protocol = jsonData["protocol"].(string)
-	}
-
-	if strings.TrimSpace(settings.Timeout) == "" {
-		settings.Timeout = "10"
-	}
-	if strings.TrimSpace(settings.QueryTimeout) == "" {
-		settings.QueryTimeout = "60"
-	}
-	tlsCACert, ok := config.DecryptedSecureJSONData["tlsCACert"]
-	if ok {
+	if tlsCACert, ok := config.DecryptedSecureJSONData["tlsCACert"]; ok {
 		settings.TlsCACert = tlsCACert
 	}
-	tlsClientCert, ok := config.DecryptedSecureJSONData["tlsClientCert"]
-	if ok {
+
+	if tlsClientCert, ok := config.DecryptedSecureJSONData["tlsClientCert"]; ok {
 		settings.TlsClientCert = tlsClientCert
 	}
-	tlsClientKey, ok := config.DecryptedSecureJSONData["tlsClientKey"]
-	if ok {
+
+	if tlsClientKey, ok := config.DecryptedSecureJSONData["tlsClientKey"]; ok {
 		settings.TlsClientKey = tlsClientKey
 	}
+
 	return settings, nil
 }
