@@ -6,7 +6,7 @@ import {
   DataSourceInstanceSettings,
   DataSourceWithQueryImportSupport,
   MetricFindValue,
-  ScopedVar,
+  ScopedVars,
   vectorator,
 } from '@grafana/data';
 import { DataSourceWithBackend, getTemplateSrv, TemplateSrv } from '@grafana/runtime';
@@ -65,7 +65,7 @@ export class DataSource extends DataSourceWithBackend<LogScaleQuery, LogScaleOpt
     return vectorator(frame.fields[0].values).map((v) => ({ text: v }));
   }
 
-  applyTemplateVariables(query: LogScaleQuery, scopedVars: ScopedVar): Record<string, any> {
+  applyTemplateVariables(query: LogScaleQuery, scopedVars: ScopedVars): LogScaleQuery {
     return {
       ...query,
       lsql: getTemplateSrv().replace(query.lsql, scopedVars),

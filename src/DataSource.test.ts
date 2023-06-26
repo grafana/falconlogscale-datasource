@@ -1,8 +1,10 @@
-import { DataQueryResponse, ArrayVector, FieldType } from '@grafana/data';
+import { DataQueryResponse, ArrayVector, FieldType, DataSourceInstanceSettings, ScopedVars } from '@grafana/data';
 import * as grafanaRuntime from '@grafana/runtime';
 import { mockDatasourceInstanceSettings, mockDataQuery } from 'grafana-plugin-ui';
 import { from } from 'rxjs';
 import { DataSource } from './DataSource';
+import { LogScaleOptions } from 'types';
+import { TemplateSrv } from '@grafana/runtime';
 
 const getDataSource = () => {
   return new DataSource({
@@ -11,7 +13,7 @@ const getDataSource = () => {
       baseUrl: 'https://test-datasource.com',
       authenticateWithToken: false,
     },
-  });
+  } as DataSourceInstanceSettings<LogScaleOptions>);
 };
 
 describe('DataSource', () => {
@@ -59,7 +61,7 @@ describe('DataSource', () => {
       replace: () => 'result string after replace',
       getVariables: jest.fn(),
       updateTimeRange: jest.fn(),
-    }));
+    } as unknown as TemplateSrv));
 
     const ds = getDataSource();
     const query = {
@@ -68,7 +70,7 @@ describe('DataSource', () => {
       lsql: '',
     };
 
-    expect(ds.applyTemplateVariables(query, { text: '', value: '' })).toStrictEqual({
+    expect(ds.applyTemplateVariables(query, { text: '', value: '' } as unknown as ScopedVars)).toStrictEqual({
       ...query,
       lsql: 'result string after replace',
     });

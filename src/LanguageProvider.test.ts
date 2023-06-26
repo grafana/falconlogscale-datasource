@@ -73,7 +73,7 @@ export function createDataSource(
 ) {
   const { jsonData, ...rest } = settings;
 
-  const instanceSettings: DataSourceInstanceSettings<LogScaleOptions> = {
+  const instanceSettings = {
     id: 1,
     meta: {
       id: 'id',
@@ -92,7 +92,7 @@ export function createDataSource(
     },
     database: '[test-]YYYY.MM.DD',
     ...rest,
-  };
+  } as DataSourceInstanceSettings<LogScaleOptions>;
 
   return new DataSource(instanceSettings, templateSrv);
 }
