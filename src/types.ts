@@ -16,4 +16,5 @@ export interface LogScaleQuery extends DataQuery {
   repository: string;
   lsql: string;
   live?: boolean;
+  queryType?: string;
 }

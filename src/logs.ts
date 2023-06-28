@@ -25,7 +25,7 @@ export function transformBackendResult(
 
 function processFrames(frames: DataFrame[], dataLinkConfigs: DataLinkConfig[], request: DataQueryRequest<LogScaleQuery>): DataFrame[] {
   return frames.map((frame) => {
-    const targetQuery = request.targets.find(x => x.refId === frame.refId);
+    const targetQuery = request.targets.find(x => (x as any).refId === frame.refId);
     if (!targetQuery || targetQuery.queryType !== "logs") {
       return {
         ...frame,
