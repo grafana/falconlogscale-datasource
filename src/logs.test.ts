@@ -1,5 +1,6 @@
 import { MutableDataFrame } from '@grafana/data';
 import { transformBackendResult } from 'logs';
+import { expect } from '@jest/globals';
 
 describe('logs', () => {
   it('should order backend results to have @rawstring first', () => {

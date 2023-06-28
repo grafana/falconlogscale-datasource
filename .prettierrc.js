@@ -1,3 +1,5 @@
 module.exports = {
-  ...require("./node_modules/@grafana/toolkit/src/config/prettier.plugin.config.json"),
+  // Prettier configuration provided by @grafana/create-plugin
+  ...require('./.config/.prettierrc.js'),
+  semi: false,
 };
