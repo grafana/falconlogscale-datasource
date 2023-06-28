@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.1
+
+- Bug: TLS option are now correctly passed to the LogScale client.
+
 ## 1.0.0
 
 - Documentation
