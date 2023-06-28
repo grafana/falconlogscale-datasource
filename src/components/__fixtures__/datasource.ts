@@ -1,4 +1,4 @@
-import { mockDatasourceInstanceSettings } from 'grafana-plugin-ui';
+import { mockDatasourceInstanceSettings } from '@grafana/plugin-ui';
 import { DataSource, } from '../../DataSource';
 import { DataSourceInstanceSettings } from '@grafana/data';
 import { LogScaleOptions } from '../../types';

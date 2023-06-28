@@ -2,7 +2,7 @@ import React from 'react';
 import { render, waitFor, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { getMockDatasource } from './__fixtures__/datasource';
-import { mockDataQuery } from 'grafana-plugin-ui';
+import { mockDataQuery } from '@grafana/plugin-ui';
 import { LogScaleQueryEditor, Props } from './LogScaleQueryEditor';
 
 const getDefaultProps = (): Props => {

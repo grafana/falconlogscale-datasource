@@ -25,7 +25,7 @@ export function LogScaleQueryEditor(props: Props) {
   }, [datasource, onChange, query]);
 
   return (
-    <div className="query-editor-row" can-collapse="true">
+    <div className="query-editor-row">
       <div className="gf-form-inline gf-form-inline--nowrap">
         <div className="gf-form gf-form--grow flex-shrink-1">
           <InlineFormLabel width={6}>Query</InlineFormLabel>
