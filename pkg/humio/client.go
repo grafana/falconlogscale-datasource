@@ -20,15 +20,8 @@ type Client struct {
 }
 
 type Config struct {
-	Address            *url.URL
-	Token              string
-	InsecureSkipVerify bool
-	TlsClientAuth      bool
-	TlsAuthWithCACert  bool
-	TlsCACert          string
-	TlsClientCert      string
-	TlsClientKey       string
-	TlsServerName      string
+	Address *url.URL
+	Token   string
 }
 
 func (c *Client) CreateJob(repo string, query Query) (string, error) {
