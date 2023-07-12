@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/grafana/falconlogscale-datasource-backend/pkg/humio"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
 	"github.com/stretchr/testify/require"
 )
 
@@ -76,6 +77,21 @@ func TestClient(t *testing.T) {
 		require.Nil(t, err)
 		require.Len(t, r, 2)
 	})
+
+	t.Run("it adds the token as the auth header if ForwardHTTPHeaders is false", func(t *testing.T) {
+		setupClientTest()
+		defer teardownClientTest()
+		testMux.HandleFunc("/graphql", func(w http.ResponseWriter, req *http.Request) {
+			tokenHeader := "Bearer testToken"
+			reqTokenHeader := req.Header["Authorization"][0]
+			if reqTokenHeader != tokenHeader {
+				t.Errorf("Token header: got %s, want %s", reqTokenHeader, tokenHeader)
+			}
+			fmt.Fprint(w, "{}")
+		})
+		_, err := testClient.ListRepos()
+		require.Nil(t, err)
+	})
 }
 
 var (
@@ -93,9 +109,11 @@ func setupClientTest() {
 	testServer = httptest.NewServer(testMux)
 
 	url, _ := url.Parse(testServer.URL)
-	config := humio.Config{Address: url, Token: "testToken"}
+	token := "testToken"
+	config := humio.Config{Address: url, Token: token}
+	httpOpts := httpclient.Options{Headers: map[string]string{}}
 	var err error
-	testClient, err = humio.NewClient(config)
+	testClient, err = humio.NewClient(config, httpOpts)
 	if err != nil {
 		panic(err)
 	}

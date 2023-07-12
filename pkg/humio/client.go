@@ -3,16 +3,14 @@ package humio
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"sort"
 	"strings"
 
+	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
 	"github.com/shurcooL/graphql"
 )
 
@@ -109,65 +107,22 @@ func (c *Client) GraphQLQuery(query interface{}, variables map[string]interface{
 	return client.Query(context.Background(), query, variables)
 }
 
-func NewClient(config Config) (*Client, error) {
+func NewClient(config Config, httpOpts httpclient.Options) (*Client, error) {
 	client := &Client{
 		URL: config.Address,
 	}
-	c, err := newHTTPClientWithHeaders(config)
+
+	httpOpts.Headers["Content-Type"] = "application/json"
+	if !httpOpts.ForwardHTTPHeaders {
+		httpOpts.Headers["Authorization"] = fmt.Sprintf("Bearer %s", config.Token)
+	}
+
+	c, err := httpclient.NewProvider().New(httpOpts)
 	if err != nil {
 		return nil, err
 	}
 	client.HTTPClient = c
 	return client, nil
-}
-
-// set up an https server and connect with tls settings. if it returns a 404 tls settings worked
-func newHTTPClientWithHeaders(config Config) (*http.Client, error) {
-	headers := map[string]string{
-		"Authorization": fmt.Sprintf("Bearer %s", config.Token),
-		"Content-Type":  "application/json",
-	}
-
-	tlsConfig, err := getTLSConfig(config)
-	if err != nil {
-		return nil, err
-	}
-
-	rt := http.DefaultTransport.(*http.Transport).Clone()
-	rt.TLSClientConfig = tlsConfig
-
-	return &http.Client{
-		Transport: &HttpHeaderTransport{
-			rt:      rt,
-			headers: headers,
-		},
-	}, nil
-}
-
-// getTLSConfig returns tlsConfig from settings
-// logic reused from https://github.com/grafana/grafana/blob/615c153b3a2e4d80cff263e67424af6edb992211/pkg/models/datasource_cache.go#L211
-func getTLSConfig(config Config) (*tls.Config, error) {
-	tlsConfig := &tls.Config{
-		InsecureSkipVerify: config.InsecureSkipVerify,
-		ServerName:         config.TlsServerName,
-	}
-	if config.TlsClientAuth || config.TlsAuthWithCACert {
-		if config.TlsAuthWithCACert && len(config.TlsCACert) > 0 {
-			caPool := x509.NewCertPool()
-			if ok := caPool.AppendCertsFromPEM([]byte(config.TlsCACert)); !ok {
-				return nil, errors.New("failed to parse TLS CA PEM certificate")
-			}
-			tlsConfig.RootCAs = caPool
-		}
-		if config.TlsClientAuth {
-			cert, err := tls.X509KeyPair([]byte(config.TlsClientCert), []byte(config.TlsClientKey))
-			if err != nil {
-				return nil, err
-			}
-			tlsConfig.Certificates = []tls.Certificate{cert}
-		}
-	}
-	return tlsConfig, nil
 }
 
 type ErrorResponse struct {
