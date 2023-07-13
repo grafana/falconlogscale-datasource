@@ -20,6 +20,7 @@ func NewDataSourceInstance(settings backend.DataSourceInstanceSettings) (instanc
 	if err != nil {
 		return nil, err
 	}
+	httpOpts.ForwardHTTPHeaders = s.OAuthPassThru
 
 	client, err := client(s, httpOpts)
 	if err != nil {

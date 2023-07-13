@@ -29,6 +29,14 @@
       "runtimeArgs": ["run", "jest", "--runInBand", "${file}"],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "Debug backend plugin",
+      "type": "go",
+      "request": "attach",
+      "mode": "remote",
+      "port": 3222,
+      "host": "127.0.0.1"
     }
   ]
 }

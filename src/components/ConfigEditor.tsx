@@ -84,7 +84,7 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
         defaultUrl={'https://cloud.humio.com'}
         dataSourceConfig={options}
         showAccessOptions={false}
-        showForwardOAuthIdentityOption={false}
+        showForwardOAuthIdentityOption={true}
         onChange={(newValue) => {
           onOptionsChange({
             ...newValue,
@@ -124,6 +124,7 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
             isConfigured={options.jsonData.authenticateWithToken}
             onReset={onTokenReset}
             required={false}
+            tooltip={'If the Forward OAuth Identity option is enabled then this token will not be used.'}
           />
         </div>
       </div>
