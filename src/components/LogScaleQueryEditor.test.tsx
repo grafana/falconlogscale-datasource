@@ -2,7 +2,6 @@ import React from 'react';
 import { render, waitFor, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { getMockDatasource } from './__fixtures__/datasource';
-import { mockDataQuery } from 'grafana-plugin-ui';
 import { LogScaleQueryEditor, Props } from './LogScaleQueryEditor';
 
 const getDefaultProps = (): Props => {
@@ -11,10 +10,9 @@ const getDefaultProps = (): Props => {
     onChange: jest.fn(),
     onRunQuery: jest.fn(),
     query: {
-      ...mockDataQuery(),
       repository: '',
       lsql: '',
-    },
+    } as any,
   };
 
   props.datasource.getRepositories = async (): Promise<string[]> => ['repository_1', 'repository_2', 'repository_3'];

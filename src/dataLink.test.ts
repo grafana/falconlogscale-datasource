@@ -1,5 +1,6 @@
 import { MutableDataFrame } from '@grafana/data';
 import { getDataLinks } from 'dataLink';
+import { expect } from '@jest/globals';
 
 jest.mock('@grafana/runtime', () => ({
   // @ts-ignore

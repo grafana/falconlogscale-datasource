@@ -1,6 +1,6 @@
 import { DataFrame, DataQueryRequest, DataQueryResponse, Field, isDataFrame, Vector } from "@grafana/data";
 import { getDataLinks } from "dataLink";
-import { DataLinkConfig } from "grafana-plugin-ui";
+import { DataLinkConfig } from '@grafana/plugin-ui';
 import { LogScaleQuery } from "types";
 
 export function transformBackendResult(
