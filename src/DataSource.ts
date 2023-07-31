@@ -23,7 +23,7 @@ export class DataSource extends DataSourceWithBackend<LogScaleQuery, LogScaleOpt
 
   constructor(
     private instanceSettings: DataSourceInstanceSettings<LogScaleOptions>,
-    readonly templateSrv: TemplateSrv = getTemplateSrv()
+    private readonly templateSrv: TemplateSrv = getTemplateSrv()
   ) {
     super(instanceSettings);
     this.defaultRepository = instanceSettings.jsonData.defaultRepository;
@@ -68,11 +68,37 @@ export class DataSource extends DataSourceWithBackend<LogScaleQuery, LogScaleOpt
   applyTemplateVariables(query: LogScaleQuery, scopedVars: ScopedVar): Record<string, any> {
     return {
       ...query,
-      lsql: getTemplateSrv().replace(query.lsql, scopedVars),
+      lsql: this.templateSrv.replace(query.lsql, scopedVars),
     };
   }
 
   async importFromAbstractQueries(abstractQueries: AbstractQuery[]): Promise<LogScaleQuery[]> {
     return abstractQueries.map((abstractQuery) => this.languageProvider.importFromAbstractQuery(abstractQuery));
+  }
+
+  modifyQuery(
+    query: LogScaleQuery,
+    action: { type: 'ADD_FILTER' | 'ADD_FILTER_OUT'; options: { key: string; value: any } }): LogScaleQuery {
+    if (!action.options) {
+      return query;
+    }
+    let expression = query.lsql ?? '';
+    switch (action.type) {
+      case 'ADD_FILTER': {
+        if (expression.length > 0) {
+          expression += ' AND ';
+        }
+        expression += `${action.options.key}="${action.options.value}"`;
+        break;
+      }
+      case 'ADD_FILTER_OUT': {
+        if (expression.length > 0) {
+          expression += ' AND ';
+        }
+        expression += `${action.options.key}!="${action.options.value}"`;
+        break;
+      }
+    }
+    return { ...query, lsql: expression };
   }
 }
