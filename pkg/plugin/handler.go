@@ -11,8 +11,8 @@ type humioClient interface {
 }
 
 type queryRunner interface {
-	Run(humio.Query) ([]humio.QueryResult, error)
-	GetAllRepoNames() ([]string, error)
+	Run(humio.Query, humio.AuthHeaders) ([]humio.QueryResult, error)
+	GetAllRepoNames(authHeaders humio.AuthHeaders) ([]string, error)
 }
 
 // Handler encapsulates the lifecycle management of the handler components.

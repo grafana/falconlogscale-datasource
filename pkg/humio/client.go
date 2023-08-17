@@ -11,12 +11,14 @@ import (
 	"strings"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
-	"github.com/shurcooL/graphql"
+	"github.com/hasura/go-graphql-client"
 )
 
 type Client struct {
-	URL        *url.URL
-	HTTPClient *http.Client
+	URL           *url.URL
+	HTTPClient    *http.Client
+	OAuthPassThru bool
+	AccessToken   string
 }
 
 type Config struct {
@@ -24,7 +26,9 @@ type Config struct {
 	Token   string
 }
 
-func (c *Client) CreateJob(repo string, query Query) (string, error) {
+type AuthHeaders map[string]string
+
+func (c *Client) CreateJob(repo string, query Query, authHeaders AuthHeaders) (string, error) {
 	var jsonResponse struct {
 		ID string `json:"id"`
 	}
@@ -42,7 +46,7 @@ func (c *Client) CreateJob(repo string, query Query) (string, error) {
 		return "", err
 	}
 
-	err = c.Fetch(http.MethodPost, "api/v1/repositories/"+url.QueryEscape(repo)+"/queryjobs", &buf, &jsonResponse)
+	err = c.Fetch(http.MethodPost, "api/v1/repositories/"+url.QueryEscape(repo)+"/queryjobs", &buf, &jsonResponse, authHeaders)
 	if err != nil {
 		return "", err
 	}
@@ -50,14 +54,14 @@ func (c *Client) CreateJob(repo string, query Query) (string, error) {
 	return jsonResponse.ID, nil
 }
 
-func (c *Client) DeleteJob(repo string, id string) error {
-	return c.Fetch(http.MethodDelete, "api/v1/repositories/"+url.QueryEscape(repo)+"/queryjobs/"+id, nil, nil)
+func (c *Client) DeleteJob(repo string, id string, authHeaders AuthHeaders) error {
+	return c.Fetch(http.MethodDelete, "api/v1/repositories/"+url.QueryEscape(repo)+"/queryjobs/"+id, nil, nil, authHeaders)
 }
 
-func (c *Client) PollJob(repo string, id string) (QueryResult, error) {
+func (c *Client) PollJob(repo string, id string, authHeaders AuthHeaders) (QueryResult, error) {
 	var jsonResponse QueryResult
 
-	err := c.Fetch(http.MethodGet, "api/v1/repositories/"+url.QueryEscape(repo)+"/queryjobs/"+id, nil, &jsonResponse)
+	err := c.Fetch(http.MethodGet, "api/v1/repositories/"+url.QueryEscape(repo)+"/queryjobs/"+id, nil, &jsonResponse, authHeaders)
 	if err != nil {
 		return QueryResult{}, err
 	}
@@ -69,12 +73,12 @@ type RepoListItem struct {
 	Name string
 }
 
-func (c *Client) ListRepos() ([]string, error) {
+func (c *Client) ListRepos(authHeaders AuthHeaders) ([]string, error) {
 	var query struct {
 		Views []RepoListItem `graphql:"searchDomains"`
 	}
 
-	err := c.GraphQLQuery(&query, nil)
+	err := c.GraphQLQuery(&query, nil, authHeaders)
 
 	sort.Slice(query.Views, func(i, j int) bool {
 		return strings.ToLower(query.Views[i].Name) < strings.ToLower(query.Views[j].Name)
@@ -87,13 +91,20 @@ func (c *Client) ListRepos() ([]string, error) {
 	return f, err
 }
 
-func (c *Client) newGraphQLClient() (*graphql.Client, error) {
-	graphqlURL, _ := c.URL.Parse("graphql")
-	return graphql.NewClient(graphqlURL.String(), c.HTTPClient), nil
+func (c *Client) setAuthHeaders(authHeaders AuthHeaders) graphql.RequestModifier {
+	return func(req *http.Request) {
+		c.addAuthHeaders(req, authHeaders)
+	}
 }
 
-func (c *Client) GraphQLQuery(query interface{}, variables map[string]interface{}) error {
-	client, err := c.newGraphQLClient()
+func (c *Client) newGraphQLClient(authHeaders AuthHeaders) (*graphql.Client, error) {
+	graphqlURL, _ := c.URL.Parse("graphql")
+
+	return graphql.NewClient(graphqlURL.String(), c.HTTPClient).WithRequestModifier(c.setAuthHeaders(authHeaders)), nil
+}
+
+func (c *Client) GraphQLQuery(query interface{}, variables map[string]interface{}, authHeaders AuthHeaders) error {
+	client, err := c.newGraphQLClient(authHeaders)
 	if err != nil {
 		return err
 	}
@@ -102,19 +113,19 @@ func (c *Client) GraphQLQuery(query interface{}, variables map[string]interface{
 
 func NewClient(config Config, httpOpts httpclient.Options) (*Client, error) {
 	client := &Client{
-		URL: config.Address,
+		URL:           config.Address,
+		OAuthPassThru: httpOpts.ForwardHTTPHeaders,
+		AccessToken:   config.Token,
 	}
 
 	httpOpts.Headers["Content-Type"] = "application/json"
-	if !httpOpts.ForwardHTTPHeaders {
-		httpOpts.Headers["Authorization"] = fmt.Sprintf("Bearer %s", config.Token)
-	}
 
 	c, err := httpclient.NewProvider().New(httpOpts)
 	if err != nil {
 		return nil, err
 	}
 	client.HTTPClient = c
+
 	return client, nil
 }
 
@@ -122,7 +133,20 @@ type ErrorResponse struct {
 	Detail string `json:"detail"`
 }
 
-func (c *Client) Fetch(method string, path string, body *bytes.Buffer, out interface{}) error {
+func (c *Client) addAuthHeaders(req *http.Request, authHeaders AuthHeaders) *http.Request {
+	authHeader := authHeaders["Authorization"]
+	idTokenHeader := authHeaders["X-Id-Token"]
+	if c.OAuthPassThru && authHeader != "" && idTokenHeader != "" {
+		req.Header.Set("Authorization", authHeader)
+		req.Header.Set("X-Id-Token", idTokenHeader)
+	} else {
+		req.Header.Set("Authorization", c.AccessToken)
+	}
+
+	return req
+}
+
+func (c *Client) Fetch(method string, path string, body *bytes.Buffer, out interface{}, authHeaders AuthHeaders) error {
 	url, err := url.JoinPath(c.URL.String(), path)
 	if err != nil {
 		return err
@@ -131,14 +155,13 @@ func (c *Client) Fetch(method string, path string, body *bytes.Buffer, out inter
 	var req *http.Request
 	if body == nil {
 		req, err = http.NewRequest(method, url, bytes.NewReader(nil))
-
 	} else {
 		req, err = http.NewRequest(method, url, body)
 	}
 	if err != nil {
 		return err
 	}
-
+	req = c.addAuthHeaders(req, authHeaders)
 	res, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return err

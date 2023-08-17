@@ -26,7 +26,11 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 			continue
 		}
 
-		res, err := h.QueryRunner.Run(qr)
+		authHeaders := humio.AuthHeaders{
+			"Authorization": req.GetHTTPHeader("Authorization"),
+			"X-Id-Token":    req.GetHTTPHeader("X-Id-Token"),
+		}
+		res, err := h.QueryRunner.Run(qr, authHeaders)
 		if err != nil {
 			response.Responses[q.RefID] = backend.DataResponse{Error: err}
 			continue

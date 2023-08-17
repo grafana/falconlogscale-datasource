@@ -11,10 +11,10 @@ import (
 )
 
 type JobQuerier interface {
-	CreateJob(repo string, query Query) (string, error)
-	DeleteJob(repo string, id string) error
-	PollJob(repo string, id string) (QueryResult, error)
-	ListRepos() ([]string, error)
+	CreateJob(repo string, query Query, authHeaders AuthHeaders) (string, error)
+	DeleteJob(repo string, id string, authHeaders AuthHeaders) error
+	PollJob(repo string, id string, authHeaders AuthHeaders) (QueryResult, error)
+	ListRepos(authHeaders AuthHeaders) ([]string, error)
 }
 
 type QueryRunner struct {
@@ -36,13 +36,13 @@ func NewQueryRunner(c JobQuerier, opts ...QueryRunnerOption) *QueryRunner {
 	return qr
 }
 
-func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
+func (qj *QueryRunner) Run(query Query, authHeaders AuthHeaders) ([]QueryResult, error) {
 	repository := query.Repository
 
 	ctx := contextCancelledOnInterrupt(context.Background())
 	// run in lambda func to be able to defer and delete the query job
 	result, err := func() (*QueryResult, error) {
-		id, err := qj.jobQuerier.CreateJob(repository, query)
+		id, err := qj.jobQuerier.CreateJob(repository, query, authHeaders)
 
 		if err != nil {
 			return nil, err
@@ -50,7 +50,7 @@ func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
 
 		defer func(id string) {
 			// Humio will eventually delete the query when we stop polling and we can't do much about errors here.
-			_ = qj.jobQuerier.DeleteJob(repository, id)
+			_ = qj.jobQuerier.DeleteJob(repository, id, authHeaders)
 		}(id)
 
 		var result QueryResult
@@ -59,14 +59,14 @@ func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
 			repository: repository,
 			id:         id,
 		}
-		result, err = poller.WaitAndPollContext(ctx)
+		result, err = poller.WaitAndPollContext(ctx, authHeaders)
 
 		if err != nil {
 			return nil, err
 		}
 
 		for !result.Done {
-			result, err = poller.WaitAndPollContext(ctx)
+			result, err = poller.WaitAndPollContext(ctx, authHeaders)
 			if err != nil {
 				return nil, err
 			}
@@ -87,8 +87,8 @@ func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
 	return []QueryResult{r}, nil
 }
 
-func (qr *QueryRunner) GetAllRepoNames() ([]string, error) {
-	return qr.jobQuerier.ListRepos()
+func (qr *QueryRunner) GetAllRepoNames(authHeaders AuthHeaders) ([]string, error) {
+	return qr.jobQuerier.ListRepos(authHeaders)
 }
 
 func humioToDatasourceResult(r QueryResult) QueryResult {
@@ -106,14 +106,14 @@ type queryJobPoller struct {
 	nextPoll   time.Time
 }
 
-func (q *queryJobPoller) WaitAndPollContext(ctx context.Context) (QueryResult, error) {
+func (q *queryJobPoller) WaitAndPollContext(ctx context.Context, authHeaders AuthHeaders) (QueryResult, error) {
 	select {
 	case <-time.After(time.Until(q.nextPoll)):
 	case <-ctx.Done():
 		return QueryResult{}, ctx.Err()
 	}
 
-	result, err := (*q.queryJobs).PollJob(q.repository, q.id)
+	result, err := (*q.queryJobs).PollJob(q.repository, q.id, authHeaders)
 	if err != nil {
 		return result, err
 	}

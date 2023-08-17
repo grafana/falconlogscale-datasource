@@ -25,9 +25,13 @@ func ResourceHandler(c *humio.Client) http.Handler {
 	return r
 }
 
-func handleRepositories(repositories func() ([]string, error)) func(w http.ResponseWriter, req *http.Request) {
+func handleRepositories(repositories func(humio.AuthHeaders) ([]string, error)) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
-		resp, err := repositories()
+		authHeaders := humio.AuthHeaders{
+			"Authorization": req.Header.Get("Authorization"),
+			"X-Id-Token":    req.Header.Get("X-Id-Token"),
+		}
+		resp, err := repositories(authHeaders)
 		writeResponse(resp, err, w)
 	}
 }
