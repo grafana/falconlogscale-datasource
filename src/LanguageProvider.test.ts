@@ -4,6 +4,7 @@ import LanguageProvider from './LanguageProvider';
 import { DataSource } from './DataSource';
 import { LogScaleOptions, LogScaleQuery } from './types';
 import { TemplateSrv } from '@grafana/runtime';
+import { expect } from '@jest/globals';
 
 describe('transform abstract query to a LogScale query', () => {
   let datasource: DataSource;

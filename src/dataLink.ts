@@ -1,6 +1,6 @@
 import { ArrayVector, DataFrame, DataLink, Field, FieldType } from '@grafana/data';
 import { getDataSourceSrv } from '@grafana/runtime';
-import { DataLinkConfig } from 'grafana-plugin-ui';
+import { DataLinkConfig } from '@grafana/plugin-ui';
 
 export function getDataLinks(dataFrame: DataFrame, dataLinkConfigs: DataLinkConfig[]): Field[] {
   if (!dataLinkConfigs.length) {

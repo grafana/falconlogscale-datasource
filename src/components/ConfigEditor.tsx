@@ -10,7 +10,7 @@ import { DataSourceHttpSettings, LegacyForms } from '@grafana/ui';
 const { SecretFormField } = LegacyForms;
 
 import { LogScaleOptions, SecretLogScaleOptions } from '../types';
-import { DataLinks } from 'grafana-plugin-ui';
+import { DataLinks } from '@grafana/plugin-ui';
 import { getBackendSrv } from '@grafana/runtime';
 import { lastValueFrom } from 'rxjs';
 import { parseRepositoriesResponse } from 'utils/utils';

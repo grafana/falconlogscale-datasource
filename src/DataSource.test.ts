@@ -1,8 +1,9 @@
 import { DataQueryResponse, ArrayVector, FieldType } from '@grafana/data';
 import * as grafanaRuntime from '@grafana/runtime';
-import { mockDatasourceInstanceSettings, mockDataQuery } from 'grafana-plugin-ui';
+import { mockDatasourceInstanceSettings, mockDataQuery } from '@grafana/plugin-ui';
 import { from } from 'rxjs';
 import { DataSource } from './DataSource';
+import { expect } from '@jest/globals';
 
 const getDataSource = () => {
   return new DataSource({
