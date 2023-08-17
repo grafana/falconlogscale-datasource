@@ -87,8 +87,10 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
         showForwardOAuthIdentityOption={true}
         onChange={(newValue) => {
           onOptionsChange({
+            ...options,
             ...newValue,
             jsonData: {
+              ...options.jsonData,
               ...newValue.jsonData,
               baseUrl: newValue.url,
             },
