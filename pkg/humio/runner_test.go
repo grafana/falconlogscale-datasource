@@ -49,5 +49,5 @@ func (t TestJobQuerier) ListRepos() ([]string, error) {
 }
 
 func (t TestJobQuerier) SetAuthHeaders(authHeaders map[string]string) {
-	t.SetAuthHeaders(authHeaders)
+	return
 }
