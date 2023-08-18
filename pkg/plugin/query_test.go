@@ -191,7 +191,7 @@ type fakeQueryRunner struct {
 	viewsErr error
 }
 
-func (qr *fakeQueryRunner) Run(req humio.Query, authHeaders humio.AuthHeaders) ([]humio.QueryResult, error) {
+func (qr *fakeQueryRunner) Run(req humio.Query) ([]humio.QueryResult, error) {
 	qr.req = req
 
 	var ret humio.QueryResult
@@ -203,7 +203,7 @@ func (qr *fakeQueryRunner) Run(req humio.Query, authHeaders humio.AuthHeaders) (
 	}
 }
 
-func (qr *fakeQueryRunner) GetAllRepoNames(authHeaders humio.AuthHeaders) ([]string, error) {
+func (qr *fakeQueryRunner) GetAllRepoNames() ([]string, error) {
 	return qr.views, qr.viewsErr
 }
 
@@ -214,6 +214,9 @@ func (qr *fakeQueryRunner) err() error {
 	default:
 		return nil
 	}
+}
+
+func (qr *fakeQueryRunner) SetAuthHeaders(authHeaders map[string]string) {
 }
 
 type fakeFrameMarshaller struct {
