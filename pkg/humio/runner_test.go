@@ -12,7 +12,7 @@ func TestRunner(t *testing.T) {
 		testResult := humio.QueryResult{Cancelled: false, Done: true, Events: []map[string]any{{"field": "value"}}, Metadata: humio.QueryResultMetadata{}}
 		jq := TestJobQuerier{id: "testId", queryResult: testResult}
 		qr := humio.NewQueryRunner(jq)
-		r, err := qr.Run(humio.Query{LSQL: ""})
+		r, err := qr.Run(humio.Query{LSQL: ""}, humio.AuthHeaders{})
 		require.Nil(t, err)
 		require.Equal(t, testResult, r[0])
 	})
@@ -20,7 +20,7 @@ func TestRunner(t *testing.T) {
 		repos := []string{"repo1", "repo2"}
 		jq := TestJobQuerier{repos: repos}
 		qr := humio.NewQueryRunner(jq)
-		r, err := qr.GetAllRepoNames()
+		r, err := qr.GetAllRepoNames(humio.AuthHeaders{})
 		require.Nil(t, err)
 		require.Equal(t, repos, r)
 	})
@@ -32,18 +32,18 @@ type TestJobQuerier struct {
 	repos       []string
 }
 
-func (t TestJobQuerier) CreateJob(repo string, query humio.Query) (string, error) {
+func (t TestJobQuerier) CreateJob(repo string, query humio.Query, authHeaders humio.AuthHeaders) (string, error) {
 	return t.id, nil
 }
 
-func (t TestJobQuerier) DeleteJob(repo string, id string) error {
+func (t TestJobQuerier) DeleteJob(repo string, id string, authHeaders humio.AuthHeaders) error {
 	return nil
 }
 
-func (t TestJobQuerier) PollJob(repo string, id string) (humio.QueryResult, error) {
+func (t TestJobQuerier) PollJob(repo string, id string, authHeaders humio.AuthHeaders) (humio.QueryResult, error) {
 	return t.queryResult, nil
 }
 
-func (t TestJobQuerier) ListRepos() ([]string, error) {
+func (t TestJobQuerier) ListRepos(authHeaders humio.AuthHeaders) ([]string, error) {
 	return t.repos, nil
 }

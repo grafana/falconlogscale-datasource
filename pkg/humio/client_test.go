@@ -21,7 +21,7 @@ func TestClient(t *testing.T) {
 			fmt.Fprint(w, `{"id":"testid"}`)
 		})
 
-		id, err := testClient.CreateJob("repo", humio.Query{})
+		id, err := testClient.CreateJob("repo", humio.Query{}, humio.AuthHeaders{})
 		require.Nil(t, err)
 		require.Equal(t, "testid", id)
 	})
@@ -33,7 +33,7 @@ func TestClient(t *testing.T) {
 			fmt.Fprint(w, "{}")
 		})
 
-		err := testClient.DeleteJob("repo", "testid")
+		err := testClient.DeleteJob("repo", "testid", humio.AuthHeaders{})
 		require.Nil(t, err)
 	})
 	t.Run("it polls a job", func(t *testing.T) {
@@ -51,7 +51,7 @@ func TestClient(t *testing.T) {
 			)
 		})
 
-		r, err := testClient.PollJob("repo", "testid")
+		r, err := testClient.PollJob("repo", "testid", humio.AuthHeaders{})
 		require.Nil(t, err)
 		require.Equal(t, false, r.Done)
 		require.Equal(t, false, r.Cancelled)
@@ -73,7 +73,7 @@ func TestClient(t *testing.T) {
 			)
 		})
 
-		r, err := testClient.ListRepos()
+		r, err := testClient.ListRepos(humio.AuthHeaders{})
 		require.Nil(t, err)
 		require.Len(t, r, 2)
 	})
@@ -89,7 +89,7 @@ func TestClient(t *testing.T) {
 			}
 			fmt.Fprint(w, "{}")
 		})
-		_, err := testClient.ListRepos()
+		_, err := testClient.ListRepos(humio.AuthHeaders{})
 		require.Nil(t, err)
 	})
 }
