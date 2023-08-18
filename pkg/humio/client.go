@@ -140,7 +140,7 @@ func (c *Client) addAuthHeaders(req *http.Request, authHeaders AuthHeaders) *htt
 		req.Header.Set("Authorization", authHeader)
 		req.Header.Set("X-Id-Token", idTokenHeader)
 	} else {
-		req.Header.Set("Authorization", c.AccessToken)
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.AccessToken))
 	}
 
 	return req
