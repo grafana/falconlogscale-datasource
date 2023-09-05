@@ -1,23 +1,22 @@
-import React from 'react';
-import { render, waitFor } from '@testing-library/react';
-import { mockDataQuery } from '@grafana/plugin-ui';
-import { getMockDatasource } from './__fixtures__/datasource';
-import { QueryEditor, Props } from './QueryEditor';
+import React from 'react'
+import { render, waitFor } from '@testing-library/react'
+import { mockDatasource, mockQuery } from './__fixtures__/datasource'
+import { QueryEditor, Props } from './QueryEditor'
 
 const getDefaultProps = (): Props => {
   const props: Props = {
-    datasource: getMockDatasource(),
+    datasource: mockDatasource(),
     query: {
-      ...mockDataQuery(),
+      ...mockQuery(),
       repository: '',
       lsql: '',
     },
     onChange: jest.fn(),
     onRunQuery: jest.fn(),
-  };
+  }
 
-  return props;
-};
+  return props
+}
 
 /**
  * Since QueryEditor is just a wrapper component for the
@@ -26,8 +25,8 @@ const getDefaultProps = (): Props => {
  */
 describe('<QueryEditor />', () => {
   it('should render', async () => {
-    const { container } = render(<QueryEditor {...getDefaultProps()} />);
+    const { container } = render(<QueryEditor {...getDefaultProps()} />)
 
-    await waitFor(() => expect(container).not.toBeEmptyDOMElement());
-  });
-});
+    await waitFor(() => expect(container).not.toBeEmptyDOMElement())
+  })
+})

@@ -1,22 +1,21 @@
-import React from 'react';
-import { render, waitFor } from '@testing-library/react';
-import { mockDataQuery } from '@grafana/plugin-ui';
-import { getMockDatasource } from './__fixtures__/datasource';
-import { VariableQueryEditor, Props } from './VariableQueryEditor';
+import React from 'react'
+import { render, waitFor } from '@testing-library/react'
+import { mockDatasource, mockQuery } from './__fixtures__/datasource'
+import { VariableQueryEditor, Props } from './VariableQueryEditor'
 
 const getDefaultProps = (): Props => {
   const props: Props = {
-    datasource: getMockDatasource(),
+    datasource: mockDatasource(),
     query: {
-      ...mockDataQuery(),
+      ...mockQuery(),
       repository: '',
       lsql: '',
     },
     onChange: jest.fn(),
-  };
+  }
 
-  return props;
-};
+  return props
+}
 
 /**
  * Since VariableQueryEditor is just a wrapper component for the
@@ -25,8 +24,8 @@ const getDefaultProps = (): Props => {
  */
 describe('<VariableQueryEditor />', () => {
   it('should render', async () => {
-    const { container } = render(<VariableQueryEditor {...getDefaultProps()} />);
+    const { container } = render(<VariableQueryEditor {...getDefaultProps()} />)
 
-    await waitFor(() => expect(container).not.toBeEmptyDOMElement());
-  });
-});
+    await waitFor(() => expect(container).not.toBeEmptyDOMElement())
+  })
+})

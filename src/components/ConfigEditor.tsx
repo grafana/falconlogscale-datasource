@@ -6,11 +6,12 @@ import {
   updateDatasourcePluginOption,
 } from '@grafana/data'
 import { Divider, Field, SecretInput } from '@grafana/ui'
-import { DataLinks } from '@grafana/plugin-ui'
+import { DataLinks } from './DataLinks'
 import { getBackendSrv } from '@grafana/runtime'
 import {
   AdvancedHttpSettings,
   Auth,
+  AuthMethod,
   ConfigSection,
   ConnectionSettings,
   DataSourceDescription,
@@ -139,7 +140,7 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
           setTokenAuthSelected(method === 'custom-token')
         }}
         selectedMethod={tokenAuthSelected ? 'custom-token' : newAuthProps.selectedMethod}
-        visibleMethods={['custom-token']}
+        visibleMethods={['custom-token', AuthMethod.BasicAuth]}
       />
       <Divider />
       <ConfigSection
