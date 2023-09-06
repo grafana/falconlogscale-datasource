@@ -5,7 +5,7 @@ import {
   SelectableValue,
   updateDatasourcePluginOption,
 } from '@grafana/data'
-import { Divider, Field, SecretInput } from '@grafana/ui'
+import { Field, SecretInput } from '@grafana/ui'
 import { DataLinks } from './DataLinks'
 import { getBackendSrv } from '@grafana/runtime'
 import {
@@ -22,6 +22,7 @@ import { LogScaleOptions, SecretLogScaleOptions } from '../types'
 import { lastValueFrom } from 'rxjs'
 import { parseRepositoriesResponse } from 'utils/utils'
 import { DefaultRepository } from './DefaultRepository'
+import { Divider } from './Divider'
 
 export interface Props extends DataSourcePluginOptionsEditorProps<LogScaleOptions, SecretLogScaleOptions> {}
 
