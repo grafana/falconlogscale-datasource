@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
 import {
   DataSourcePluginOptionsEditorProps,
   DataSourceSettings,
   SelectableValue,
   updateDatasourcePluginOption,
-} from '@grafana/data'
-import { Field, SecretInput } from '@grafana/ui'
-import { DataLinks } from './DataLinks'
-import { getBackendSrv } from '@grafana/runtime'
+} from '@grafana/data';
+import { Field, SecretInput } from '@grafana/ui';
+import { DataLinks } from './DataLinks';
+import { getBackendSrv } from '@grafana/runtime';
 import {
   AdvancedHttpSettings,
   Auth,
@@ -16,69 +16,69 @@ import {
   ConnectionSettings,
   DataSourceDescription,
   convertLegacyAuthProps,
-} from '@grafana/experimental'
+} from '@grafana/experimental';
 
-import { LogScaleOptions, SecretLogScaleOptions } from '../types'
-import { lastValueFrom } from 'rxjs'
-import { parseRepositoriesResponse } from 'utils/utils'
-import { DefaultRepository } from './DefaultRepository'
-import { Divider } from './Divider'
+import { LogScaleOptions, SecretLogScaleOptions } from '../types';
+import { lastValueFrom } from 'rxjs';
+import { parseRepositoriesResponse } from 'utils/utils';
+import { DefaultRepository } from './DefaultRepository';
+import { Divider } from './Divider';
 
 export interface Props extends DataSourcePluginOptionsEditorProps<LogScaleOptions, SecretLogScaleOptions> {}
 
 export const ConfigEditor: React.FC<Props> = (props: Props) => {
-  const { onOptionsChange, options } = props
+  const { onOptionsChange, options } = props;
   const onTokenReset = () => {
-    setUnsaved(true)
+    setUnsaved(true);
     onOptionsChange({
       ...options,
       jsonData: { ...options.jsonData, authenticateWithToken: false, defaultRepository: undefined },
       secureJsonData: undefined,
       secureJsonFields: {},
-    })
-  }
+    });
+  };
 
-  const [disabled, setDisabled] = useState<boolean>(true)
-  const [repositories, setRepositories] = useState<SelectableValue[]>([])
-  const [unsaved, setUnsaved] = useState<boolean>(true)
+  const [disabled, setDisabled] = useState<boolean>(true);
+  const [repositories, setRepositories] = useState<SelectableValue[]>([]);
+  const [unsaved, setUnsaved] = useState<boolean>(true);
 
   const saveOptions = async (): Promise<void> => {
     if (unsaved) {
       await getBackendSrv()
         .put(`/api/datasources/${options.id}`, options)
         .then((result: { datasource: DataSourceSettings<LogScaleOptions> }) => {
-          updateDatasourcePluginOption(props, 'version', result.datasource.version)
-          return result.datasource.version
-        })
-      setUnsaved(false)
+          updateDatasourcePluginOption(props, 'version', result.datasource.version);
+          return result.datasource.version;
+        });
+      setUnsaved(false);
     }
-  }
+  };
 
   const getRepositories = async () => {
     try {
-      await saveOptions()
+      await saveOptions();
       const res = await lastValueFrom(
         getBackendSrv().fetch({ url: `/api/datasources/uid/${options.uid}/resources/repositories`, method: 'GET' })
-      )
-      return parseRepositoriesResponse(res)
+      );
+      return parseRepositoriesResponse(res);
     } catch (err) {
-      return Promise.resolve([])
+      return Promise.resolve([]);
     }
-  }
+  };
 
   const onRepositoryChange = (value: SelectableValue | undefined) => {
     onOptionsChange({
       ...options,
       jsonData: { ...options.jsonData, defaultRepository: value ? value.value : undefined },
-    })
-  }
+    });
+  };
 
   useEffect(() => {
-    setDisabled(true)
+    setDisabled(true);
     if (options.jsonData.baseUrl && (options.secureJsonFields?.accessToken || options.secureJsonData?.accessToken)) {
-      setDisabled(false)
+      setDisabled(false);
     }
-  }, [options])
+  }, [options]);
 
   const logscaleTokenComponent = (
     <Field label={'Token'}>
@@ -99,7 +99,7 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
                 authenticateWithToken: true,
               },
               secureJsonData: { accessToken: event.currentTarget.value },
-            })
+            });
           }
         }}
         isConfigured={options.jsonData.authenticateWithToken}
@@ -107,14 +107,14 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
         required={false}
       />
     </Field>
-  )
+  );
 
   const newAuthProps = convertLegacyAuthProps({
     config: props.options,
     onChange: onOptionsChange,
-  })
+  });
 
-  const [tokenAuthSelected, setTokenAuthSelected] = useState(true)
+  const [tokenAuthSelected, setTokenAuthSelected] = useState(true);
 
   return (
     <>
@@ -137,8 +137,8 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
           },
         ]}
         onAuthMethodSelect={(method) => {
-          newAuthProps.onAuthMethodSelect(method)
-          setTokenAuthSelected(method === 'custom-token')
+          newAuthProps.onAuthMethodSelect(method);
+          setTokenAuthSelected(method === 'custom-token');
         }}
         selectedMethod={tokenAuthSelected ? 'custom-token' : newAuthProps.selectedMethod}
         visibleMethods={['custom-token', AuthMethod.BasicAuth]}
@@ -176,10 +176,10 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
                 ...options.jsonData,
                 dataLinks: newValue,
               },
-            })
+            });
           }}
         />
       </ConfigSection>
     </>
-  )
-}
+  );
+};

@@ -4,27 +4,27 @@ import {
   DataSourceInstanceSettings,
   DataSourcePluginMeta,
   PluginType,
-} from '@grafana/data'
+} from '@grafana/data';
 
-import LanguageProvider from './LanguageProvider'
-import { DataSource } from './DataSource'
-import { LogScaleOptions, LogScaleQuery } from './types'
-import { TemplateSrv } from '@grafana/runtime'
-import { expect } from '@jest/globals'
+import LanguageProvider from './LanguageProvider';
+import { DataSource } from './DataSource';
+import { LogScaleOptions, LogScaleQuery } from './types';
+import { TemplateSrv } from '@grafana/runtime';
+import { expect } from '@jest/globals';
 
 describe('transform abstract query to a LogScale query', () => {
-  let datasource: DataSource
+  let datasource: DataSource;
   beforeEach(() => {
     const templateSrvStub = {
       getAdhocFilters: jest.fn(() => []),
       replace: jest.fn((a: string) => a),
-    } as unknown as TemplateSrv
+    } as unknown as TemplateSrv;
 
-    datasource = createDataSource({}, templateSrvStub)
-  })
+    datasource = createDataSource({}, templateSrvStub);
+  });
 
   it('with labels and a repo', () => {
-    const instance = new LanguageProvider(datasource)
+    const instance = new LanguageProvider(datasource);
     const abstractQuery: AbstractQuery = {
       refId: 'bar',
       labelMatchers: [
@@ -34,49 +34,49 @@ describe('transform abstract query to a LogScale query', () => {
         { name: 'label3', operator: AbstractLabelOperator.EqualRegEx, value: 'value3' },
         { name: 'label4', operator: AbstractLabelOperator.NotEqualRegEx, value: 'value4' },
       ],
-    }
-    const result = instance.importFromAbstractQuery(abstractQuery)
+    };
+    const result = instance.importFromAbstractQuery(abstractQuery);
 
     expect(result).toEqual({
       lsql: 'label1="value1"\n| label2 != "value2"\n| label3 = *value3*\n| label4 != *value4*',
       repository: 'repo',
       refId: abstractQuery.refId,
-    } as LogScaleQuery)
-  })
+    } as LogScaleQuery);
+  });
 
   it('with a repo', () => {
-    const instance = new LanguageProvider(datasource)
+    const instance = new LanguageProvider(datasource);
     const abstractQuery: AbstractQuery = {
       refId: 'bar',
       labelMatchers: [{ name: '__name__', operator: AbstractLabelOperator.Equal, value: 'repo' }],
-    }
-    const result = instance.importFromAbstractQuery(abstractQuery)
+    };
+    const result = instance.importFromAbstractQuery(abstractQuery);
 
     expect(result).toEqual({
       lsql: '',
       repository: 'repo',
       refId: abstractQuery.refId,
-    } as LogScaleQuery)
-  })
+    } as LogScaleQuery);
+  });
 
   it('with no labels and repo', () => {
-    const instance = new LanguageProvider(datasource)
-    const abstractQuery = { labelMatchers: [], refId: 'foo' }
-    const result = instance.importFromAbstractQuery(abstractQuery)
+    const instance = new LanguageProvider(datasource);
+    const abstractQuery = { labelMatchers: [], refId: 'foo' };
+    const result = instance.importFromAbstractQuery(abstractQuery);
 
     expect(result).toEqual({
       refId: abstractQuery.refId,
       lsql: '',
       repository: '',
-    } as LogScaleQuery)
-  })
-})
+    } as LogScaleQuery);
+  });
+});
 
 export function createDataSource(
   settings: Partial<DataSourceInstanceSettings<LogScaleOptions>> = {},
   templateSrv: TemplateSrv
 ) {
-  const { jsonData, ...rest } = settings
+  const { jsonData, ...rest } = settings;
 
   const instanceSettings: DataSourceInstanceSettings<LogScaleOptions> = {
     id: 1,
@@ -98,7 +98,7 @@ export function createDataSource(
     },
     database: '[test-]YYYY.MM.DD',
     ...rest,
-  }
+  };
 
-  return new DataSource(instanceSettings, templateSrv)
+  return new DataSource(instanceSettings, templateSrv);
 }

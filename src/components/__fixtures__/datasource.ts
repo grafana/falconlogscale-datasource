@@ -1,6 +1,6 @@
-import { LogScaleOptions, LogScaleQuery, SecretLogScaleOptions } from 'types'
-import { DataSource } from '../../DataSource'
-import { DataSourceInstanceSettings, DataSourceSettings, PluginType } from '@grafana/data'
+import { LogScaleOptions, LogScaleQuery, SecretLogScaleOptions } from 'types';
+import { DataSource } from '../../DataSource';
+import { DataSourceInstanceSettings, DataSourceSettings, PluginType } from '@grafana/data';
 
 export function mockDataSourceOptions(): DataSourceSettings<LogScaleOptions, SecretLogScaleOptions> {
   return {
@@ -27,7 +27,7 @@ export function mockDataSourceOptions(): DataSourceSettings<LogScaleOptions, Sec
     secureJsonFields: {},
     readOnly: false,
     withCredentials: false,
-  }
+  };
 }
 
 export function mockDataSourceInstanceSettings(): DataSourceInstanceSettings<LogScaleOptions> {
@@ -69,15 +69,15 @@ export function mockDataSourceInstanceSettings(): DataSourceInstanceSettings<Log
       },
       module: '',
     },
-  }
+  };
 }
 
 export const mockDatasource = () => {
-  const instanceSettings = mockDataSourceInstanceSettings()
-  const ds = new DataSource(instanceSettings)
-  ds.getResource = jest.fn().mockResolvedValue([])
-  return ds
-}
+  const instanceSettings = mockDataSourceInstanceSettings();
+  const ds = new DataSource(instanceSettings);
+  ds.getResource = jest.fn().mockResolvedValue([]);
+  return ds;
+};
 
 export const mockQuery = (): LogScaleQuery => ({
   refId: 'A',
@@ -87,4 +87,4 @@ export const mockQuery = (): LogScaleQuery => ({
   datasource: {},
   lsql: '',
   repository: '',
-})
+});

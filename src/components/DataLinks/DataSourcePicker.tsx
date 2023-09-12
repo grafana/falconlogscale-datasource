@@ -1,77 +1,77 @@
 // Libraries
-import React, { PureComponent } from 'react'
+import React, { PureComponent } from 'react';
 
 // Components
-import { HorizontalGroup, Select } from '@grafana/ui'
-import { DataSourceInstanceSettings, SelectableValue } from '@grafana/data'
-import { selectors } from '@grafana/e2e-selectors'
-import { isUnsignedPluginSignature, PluginSignatureBadge } from './PluginSignatureBadge'
-import { getDataSourceSrv, DataSourceSrv } from '@grafana/runtime'
+import { HorizontalGroup, Select } from '@grafana/ui';
+import { DataSourceInstanceSettings, SelectableValue } from '@grafana/data';
+import { selectors } from '@grafana/e2e-selectors';
+import { isUnsignedPluginSignature, PluginSignatureBadge } from './PluginSignatureBadge';
+import { getDataSourceSrv, DataSourceSrv } from '@grafana/runtime';
 
 export interface Props {
-  onChange: (ds: DataSourceInstanceSettings) => void
-  current: string | null
-  hideTextValue?: boolean
-  onBlur?: () => void
-  autoFocus?: boolean
-  openMenuOnFocus?: boolean
-  placeholder?: string
-  tracing?: boolean
-  mixed?: boolean
-  dashboard?: boolean
-  metrics?: boolean
-  annotations?: boolean
-  variables?: boolean
-  pluginId?: string
-  noDefault?: boolean
+  onChange: (ds: DataSourceInstanceSettings) => void;
+  current: string | null;
+  hideTextValue?: boolean;
+  onBlur?: () => void;
+  autoFocus?: boolean;
+  openMenuOnFocus?: boolean;
+  placeholder?: string;
+  tracing?: boolean;
+  mixed?: boolean;
+  dashboard?: boolean;
+  metrics?: boolean;
+  annotations?: boolean;
+  variables?: boolean;
+  pluginId?: string;
+  noDefault?: boolean;
 }
 
 export interface State {
-  error?: string
+  error?: string;
 }
 
 export class DataSourcePicker extends PureComponent<Props, State> {
-  dataSourceSrv: DataSourceSrv = getDataSourceSrv()
+  dataSourceSrv: DataSourceSrv = getDataSourceSrv();
 
   static defaultProps: Partial<Props> = {
     autoFocus: false,
     openMenuOnFocus: false,
     placeholder: 'Select datasource',
-  }
+  };
 
-  state: State = {}
+  state: State = {};
 
   constructor(props: Props) {
-    super(props)
+    super(props);
   }
 
   componentDidMount() {
-    const { current } = this.props
-    const dsSettings = this.dataSourceSrv.getInstanceSettings(current!)
+    const { current } = this.props;
+    const dsSettings = this.dataSourceSrv.getInstanceSettings(current!);
     if (!dsSettings) {
-      this.setState({ error: 'Could not find data source ' + current })
+      this.setState({ error: 'Could not find data source ' + current });
     }
   }
 
   onChange = (item: SelectableValue<string>) => {
-    const dsSettings = this.dataSourceSrv.getInstanceSettings(item.value!)
+    const dsSettings = this.dataSourceSrv.getInstanceSettings(item.value!);
 
     if (dsSettings) {
-      this.props.onChange(dsSettings)
-      this.setState({ error: undefined })
+      this.props.onChange(dsSettings);
+      this.setState({ error: undefined });
     }
-  }
+  };
 
   private getCurrentValue(): SelectableValue<string> {
-    const { current, hideTextValue, noDefault } = this.props
+    const { current, hideTextValue, noDefault } = this.props;
 
     if (!current && noDefault) {
       return {
         label: 'No datasources found',
-      }
+      };
     }
 
-    const ds = this.dataSourceSrv.getInstanceSettings(current!)
+    const ds = this.dataSourceSrv.getInstanceSettings(current!);
 
     if (ds) {
       return {
@@ -80,7 +80,7 @@ export class DataSourcePicker extends PureComponent<Props, State> {
         imgUrl: ds.meta.info.logos.small,
         hideText: hideTextValue,
         meta: ds.meta,
-      }
+      };
     }
 
     return {
@@ -88,7 +88,7 @@ export class DataSourcePicker extends PureComponent<Props, State> {
       value: (current ?? 'no name') + ' - not found',
       imgUrl: '',
       hideText: hideTextValue,
-    }
+    };
   }
 
   getDataSourceOptions(): Array<SelectableValue<string>> {
@@ -97,16 +97,16 @@ export class DataSourcePicker extends PureComponent<Props, State> {
       label: ds.name,
       imgUrl: ds.meta.info.logos.small,
       meta: ds.meta,
-    }))
+    }));
 
-    return options
+    return options;
   }
 
   render() {
-    const { autoFocus, onBlur, openMenuOnFocus, placeholder } = this.props
-    const { error } = this.state
-    const options = this.getDataSourceOptions()
-    const value = this.getCurrentValue()
+    const { autoFocus, onBlur, openMenuOnFocus, placeholder } = this.props;
+    const { error } = this.state;
+    const options = this.getDataSourceOptions();
+    const value = this.getCurrentValue();
 
     return (
       <div aria-label={selectors.components.DataSourcePicker.container}>
@@ -131,12 +131,12 @@ export class DataSourcePicker extends PureComponent<Props, State> {
                 <HorizontalGroup align="center" justify="space-between">
                   <span>{o.label}</span> <PluginSignatureBadge status={o.meta.signature} />
                 </HorizontalGroup>
-              )
+              );
             }
-            return o.label || ''
+            return o.label || '';
           }}
         />
       </div>
-    )
+    );
   }
 }

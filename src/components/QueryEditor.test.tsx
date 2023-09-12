@@ -1,7 +1,7 @@
-import React from 'react'
-import { render, waitFor } from '@testing-library/react'
-import { mockDatasource, mockQuery } from './__fixtures__/datasource'
-import { QueryEditor, Props } from './QueryEditor'
+import React from 'react';
+import { render, waitFor } from '@testing-library/react';
+import { mockDatasource, mockQuery } from './__fixtures__/datasource';
+import { QueryEditor, Props } from './QueryEditor';
 
 const getDefaultProps = (): Props => {
   const props: Props = {
@@ -13,10 +13,10 @@ const getDefaultProps = (): Props => {
     },
     onChange: jest.fn(),
     onRunQuery: jest.fn(),
-  }
+  };
 
-  return props
-}
+  return props;
+};
 
 /**
  * Since QueryEditor is just a wrapper component for the
@@ -25,8 +25,8 @@ const getDefaultProps = (): Props => {
  */
 describe('<QueryEditor />', () => {
   it('should render', async () => {
-    const { container } = render(<QueryEditor {...getDefaultProps()} />)
+    const { container } = render(<QueryEditor {...getDefaultProps()} />);
 
-    await waitFor(() => expect(container).not.toBeEmptyDOMElement())
-  })
-})
+    await waitFor(() => expect(container).not.toBeEmptyDOMElement());
+  });
+});

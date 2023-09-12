@@ -1,9 +1,9 @@
-import { AbstractLabelMatcher, AbstractLabelOperator, AbstractQuery, LanguageProvider } from "@grafana/data";
-import { LogScaleQuery } from "types";
-import { DataSource } from "./DataSource";
+import { AbstractLabelMatcher, AbstractLabelOperator, AbstractQuery, LanguageProvider } from '@grafana/data';
+import { LogScaleQuery } from 'types';
+import { DataSource } from './DataSource';
 
 export default class FalconLogScaleLanguageProvider extends LanguageProvider {
-  datasource: DataSource
+  datasource: DataSource;
   declare request: (url: string, params?: any) => Promise<any>;
   declare start: () => Promise<Array<Promise<any>>>;
 
@@ -16,7 +16,7 @@ export default class FalconLogScaleLanguageProvider extends LanguageProvider {
 
   importFromAbstractQuery(abstractQuery: AbstractQuery): LogScaleQuery {
     return {
-      repository: abstractQuery.labelMatchers.find(x => x.name === '__name__')?.value || '',
+      repository: abstractQuery.labelMatchers.find((x) => x.name === '__name__')?.value || '',
       lsql: this.getQuery(abstractQuery.labelMatchers),
       refId: abstractQuery.refId,
     };
@@ -43,7 +43,7 @@ export default class FalconLogScaleLanguageProvider extends LanguageProvider {
           }
         }
       })
-      .filter(x => x)
+      .filter((x) => x)
       .join('\n| ');
   }
 }

@@ -1,9 +1,9 @@
-import React from 'react'
-import { css } from '@emotion/css'
-import { Button, useTheme2 } from '@grafana/ui'
-import { GrafanaTheme2, VariableOrigin, DataLinkBuiltInVars } from '@grafana/data'
-import { DataLinkConfig } from './types'
-import { DataLink } from './DataLink'
+import React from 'react';
+import { css } from '@emotion/css';
+import { Button, useTheme2 } from '@grafana/ui';
+import { GrafanaTheme2, VariableOrigin, DataLinkBuiltInVars } from '@grafana/data';
+import { DataLinkConfig } from './types';
+import { DataLink } from './DataLink';
 
 const getStyles = (theme: GrafanaTheme2) => ({
   infoText: css`
@@ -13,16 +13,16 @@ const getStyles = (theme: GrafanaTheme2) => ({
   dataLink: css`
     margin-bottom: ${theme.v1.spacing.sm};
   `,
-})
+});
 
 type Props = {
-  value?: DataLinkConfig[]
-  onChange: (value: DataLinkConfig[]) => void
-}
+  value?: DataLinkConfig[];
+  onChange: (value: DataLinkConfig[]) => void;
+};
 export const DataLinks = (props: Props) => {
-  const { value, onChange } = props
-  const theme = useTheme2()
-  const styles = getStyles(theme)
+  const { value, onChange } = props;
+  const theme = useTheme2();
+  const styles = getStyles(theme);
 
   return (
     <>
@@ -41,14 +41,14 @@ export const DataLinks = (props: Props) => {
                 key={index}
                 value={field}
                 onChange={(newField) => {
-                  const newDataLinks = [...value]
-                  newDataLinks.splice(index, 1, newField)
-                  onChange(newDataLinks)
+                  const newDataLinks = [...value];
+                  newDataLinks.splice(index, 1, newField);
+                  onChange(newDataLinks);
                 }}
                 onDelete={() => {
-                  const newDataLinks = [...value]
-                  newDataLinks.splice(index, 1)
-                  onChange(newDataLinks)
+                  const newDataLinks = [...value];
+                  newDataLinks.splice(index, 1);
+                  onChange(newDataLinks);
                 }}
                 suggestions={[
                   {
@@ -59,7 +59,7 @@ export const DataLinks = (props: Props) => {
                   },
                 ]}
               />
-            )
+            );
           })}
         <div>
           <Button
@@ -69,9 +69,9 @@ export const DataLinks = (props: Props) => {
             `}
             icon="plus"
             onClick={(event) => {
-              event.preventDefault()
-              const newDataLinks = [...(value || []), { field: '', label: '', matcherRegex: '', url: '' }]
-              onChange(newDataLinks)
+              event.preventDefault();
+              const newDataLinks = [...(value || []), { field: '', label: '', matcherRegex: '', url: '' }];
+              onChange(newDataLinks);
             }}
           >
             Add
@@ -79,5 +79,5 @@ export const DataLinks = (props: Props) => {
         </div>
       </div>
     </>
-  )
-}
+  );
+};

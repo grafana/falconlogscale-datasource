@@ -33,7 +33,7 @@ describe('DataLinks', () => {
     ]
     `
   );
-  
+
   let originalGetSelection: typeof window.getSelection;
   beforeAll(() => {
     originalGetSelection = window.getSelection;
@@ -49,7 +49,7 @@ describe('DataLinks', () => {
     await act(async () => {
       await render(<DataLinks onChange={onChangeMock} />);
     });
-    expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument();
   });
 
   it('renders correctly when there are fields', async () => {
@@ -57,7 +57,7 @@ describe('DataLinks', () => {
     await act(async () => {
       await render(<DataLinks value={testValue} onChange={onChangeMock} />);
     });
-    testValue.forEach(v => {
+    testValue.forEach((v) => {
       expect(screen.getByText(v.url)).toBeInTheDocument();
       expect(screen.getByDisplayValue(v.field)).toBeInTheDocument();
     });

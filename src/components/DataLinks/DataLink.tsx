@@ -1,11 +1,11 @@
-import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
-import { css } from '@emotion/css'
-import { VariableSuggestion, DataSourceInstanceSettings, DataSourceJsonData } from '@grafana/data'
-import { Button, LegacyForms, DataLinkInput, stylesFactory } from '@grafana/ui'
-const { FormField, Switch } = LegacyForms
-import { DataLinkConfig } from './types'
-import { usePrevious } from 'react-use'
-import { DataSourcePicker } from './DataSourcePicker'
+import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { css } from '@emotion/css';
+import { VariableSuggestion, DataSourceInstanceSettings, DataSourceJsonData } from '@grafana/data';
+import { Button, LegacyForms, DataLinkInput, stylesFactory } from '@grafana/ui';
+const { FormField, Switch } = LegacyForms;
+import { DataLinkConfig } from './types';
+import { usePrevious } from 'react-use';
+import { DataSourcePicker } from './DataSourcePicker';
 
 const getStyles = stylesFactory(() => ({
   firstRow: css`
@@ -21,27 +21,27 @@ const getStyles = stylesFactory(() => ({
     display: flex;
     align-items: baseline;
   `,
-}))
+}));
 
 type Props = {
-  value: DataLinkConfig
-  datasources?: Array<DataSourceInstanceSettings<DataSourceJsonData>>
-  onChange: (value: DataLinkConfig) => void
-  onDelete: () => void
-  suggestions: VariableSuggestion[]
-  className?: string
-}
+  value: DataLinkConfig;
+  datasources?: Array<DataSourceInstanceSettings<DataSourceJsonData>>;
+  onChange: (value: DataLinkConfig) => void;
+  onDelete: () => void;
+  suggestions: VariableSuggestion[];
+  className?: string;
+};
 export const DataLink = (props: Props) => {
-  const { value, onChange, onDelete, suggestions, className } = props
-  const styles = getStyles()
-  const [showInternalLink, setShowInternalLink] = useInternalLink(value.datasourceUid)
+  const { value, onChange, onDelete, suggestions, className } = props;
+  const styles = getStyles();
+  const [showInternalLink, setShowInternalLink] = useInternalLink(value.datasourceUid);
 
   const handleChange = (field: keyof typeof value) => (event: React.ChangeEvent<HTMLInputElement>) => {
     onChange({
       ...value,
       [field]: event.currentTarget.value,
-    })
-  }
+    });
+  };
 
   return (
     <div className={className}>
@@ -62,8 +62,8 @@ export const DataLink = (props: Props) => {
           title="Remove field"
           icon="times"
           onClick={(event) => {
-            event.preventDefault()
-            onDelete()
+            event.preventDefault();
+            onDelete();
           }}
         />
       </div>
@@ -122,9 +122,9 @@ export const DataLink = (props: Props) => {
               onChange({
                 ...value,
                 datasourceUid: undefined,
-              })
+              });
             }
-            setShowInternalLink(!showInternalLink)
+            setShowInternalLink(!showInternalLink);
           }}
         />
         {showInternalLink && (
@@ -134,29 +134,29 @@ export const DataLink = (props: Props) => {
               onChange({
                 ...value,
                 datasourceUid: ds.uid,
-              })
+              });
             }}
             current={value.datasourceUid}
           />
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
 function useInternalLink(datasourceUid?: string): [boolean, Dispatch<SetStateAction<boolean>>] {
-  const [showInternalLink, setShowInternalLink] = useState<boolean>(!!datasourceUid)
-  const previousUid = usePrevious(datasourceUid)
+  const [showInternalLink, setShowInternalLink] = useState<boolean>(!!datasourceUid);
+  const previousUid = usePrevious(datasourceUid);
 
   // Force internal link visibility change if uid changed outside of this component.
   useEffect(() => {
     if (!previousUid && datasourceUid && !showInternalLink) {
-      setShowInternalLink(true)
+      setShowInternalLink(true);
     }
     if (previousUid && !datasourceUid && showInternalLink) {
-      setShowInternalLink(false)
+      setShowInternalLink(false);
     }
-  }, [previousUid, datasourceUid, showInternalLink])
+  }, [previousUid, datasourceUid, showInternalLink]);
 
-  return [showInternalLink, setShowInternalLink]
+  return [showInternalLink, setShowInternalLink];
 }

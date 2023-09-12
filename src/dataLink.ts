@@ -1,10 +1,10 @@
-import { ArrayVector, DataFrame, DataLink, Field, FieldType } from '@grafana/data'
-import { getDataSourceSrv } from '@grafana/runtime'
-import { DataLinkConfig } from './components/DataLinks'
+import { ArrayVector, DataFrame, DataLink, Field, FieldType } from '@grafana/data';
+import { getDataSourceSrv } from '@grafana/runtime';
+import { DataLinkConfig } from './components/DataLinks';
 
 export function getDataLinks(dataFrame: DataFrame, dataLinkConfigs: DataLinkConfig[]): Field[] {
   if (!dataLinkConfigs.length) {
-    return []
+    return [];
   }
 
   const dataLinks = dataLinkConfigs.map((dl) => {
@@ -12,29 +12,29 @@ export function getDataLinks(dataFrame: DataFrame, dataLinkConfigs: DataLinkConf
       dataLinkConfig: dl,
       newField: dataLinkConfigToDataFrameField(dl),
       lineField: dataFrame.fields.find((f) => f.type === FieldType.string && f.name === dl.field),
-    }
-  })
+    };
+  });
 
   dataLinks.forEach((dl) => {
     dl.lineField?.values.toArray().forEach((line) => {
       if (!line) {
-        dl.newField.values.add(null)
-        return
+        dl.newField.values.add(null);
+        return;
       }
-      const logMatch = line.match(dl.dataLinkConfig.matcherRegex)
-      dl.newField.values.add(logMatch && logMatch[1])
-    })
-  })
+      const logMatch = line.match(dl.dataLinkConfig.matcherRegex);
+      dl.newField.values.add(logMatch && logMatch[1]);
+    });
+  });
 
-  return dataLinks.map((f) => f.newField)
+  return dataLinks.map((f) => f.newField);
 }
 
 function dataLinkConfigToDataFrameField(dataLinkConfig: DataLinkConfig): Field<any, ArrayVector> {
-  const dataSourceSrv = getDataSourceSrv()
+  const dataSourceSrv = getDataSourceSrv();
 
-  let dataLink = {} as DataLink
+  let dataLink = {} as DataLink;
   if (dataLinkConfig.datasourceUid) {
-    const dsSettings = dataSourceSrv.getInstanceSettings(dataLinkConfig.datasourceUid)
+    const dsSettings = dataSourceSrv.getInstanceSettings(dataLinkConfig.datasourceUid);
 
     dataLink = {
       title: '',
@@ -44,12 +44,12 @@ function dataLinkConfigToDataFrameField(dataLinkConfig: DataLinkConfig): Field<a
         datasourceUid: dataLinkConfig.datasourceUid,
         datasourceName: dsSettings?.name ?? dataLinkConfig.label,
       },
-    }
+    };
   } else if (dataLinkConfig.url) {
     dataLink = {
       title: '',
       url: dataLinkConfig.url,
-    }
+    };
   }
   return {
     name: dataLinkConfig.label,
@@ -59,5 +59,5 @@ function dataLinkConfigToDataFrameField(dataLinkConfig: DataLinkConfig): Field<a
     },
     // We are adding values later on
     values: new ArrayVector<string>([]),
-  }
+  };
 }
