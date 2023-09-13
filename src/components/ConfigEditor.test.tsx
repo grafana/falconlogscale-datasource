@@ -11,6 +11,9 @@ const getDefaultProps = (): Props => {
       authenticateWithToken: false,
     },
     secureJsonData: {},
+    secureJsonFields: {
+      basicAuthPassword: false,
+    },
   };
 
   return {
@@ -62,6 +65,9 @@ describe('<ConfigEditor />', () => {
       },
       secureJsonData: {
         accessToken: 'TEST_TOKEN',
+      },
+      secureJsonFields: {
+        basicAuthPassword: false,
       },
     });
   });

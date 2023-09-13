@@ -1,18 +1,18 @@
 import { ArrayVector, DataFrame, DataLink, Field, FieldType } from '@grafana/data';
 import { getDataSourceSrv } from '@grafana/runtime';
-import { DataLinkConfig } from '@grafana/plugin-ui';
+import { DataLinkConfig } from './components/DataLinks';
 
 export function getDataLinks(dataFrame: DataFrame, dataLinkConfigs: DataLinkConfig[]): Field[] {
   if (!dataLinkConfigs.length) {
     return [];
   }
 
-  const dataLinks = dataLinkConfigs.map(dl => {
+  const dataLinks = dataLinkConfigs.map((dl) => {
     return {
       dataLinkConfig: dl,
       newField: dataLinkConfigToDataFrameField(dl),
       lineField: dataFrame.fields.find((f) => f.type === FieldType.string && f.name === dl.field),
-    }
+    };
   });
 
   dataLinks.forEach((dl) => {
@@ -23,10 +23,10 @@ export function getDataLinks(dataFrame: DataFrame, dataLinkConfigs: DataLinkConf
       }
       const logMatch = line.match(dl.dataLinkConfig.matcherRegex);
       dl.newField.values.add(logMatch && logMatch[1]);
-    })
+    });
   });
 
-  return dataLinks.map(f => f.newField);
+  return dataLinks.map((f) => f.newField);
 }
 
 function dataLinkConfigToDataFrameField(dataLinkConfig: DataLinkConfig): Field<any, ArrayVector> {
