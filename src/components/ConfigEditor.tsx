@@ -67,7 +67,10 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
 
   useEffect(() => {
     setDisabled(true);
-    if (options.jsonData.baseUrl && (options.secureJsonFields?.accessToken || options.secureJsonData?.accessToken)) {
+    if (
+      (options.jsonData.baseUrl && (options.secureJsonFields?.accessToken || options.secureJsonData?.accessToken)) ||
+      options.jsonData.oauthPassThru
+    ) {
       setDisabled(false);
     }
   }, [options]);

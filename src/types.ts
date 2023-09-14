@@ -3,6 +3,7 @@ import { DataLinkConfig } from 'grafana-plugin-ui';
 
 export interface LogScaleOptions extends DataSourceJsonData {
   baseUrl?: string;
+  oauthPassThru?: boolean;
   authenticateWithToken: boolean;
   dataLinks?: DataLinkConfig[];
   defaultRepository?: string;
