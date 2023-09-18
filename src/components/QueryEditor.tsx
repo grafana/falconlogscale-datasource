@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { QueryEditorProps } from '@grafana/data';
+import { EditorRow } from '@grafana/experimental';
 import { DataSource } from '../DataSource';
 import { LogScaleOptions, LogScaleQuery } from '../types';
 import { LogScaleQueryEditor } from 'components/LogScaleQueryEditor';
-import { InlineSwitch } from '@grafana/ui';
+import { Field, Switch } from '@grafana/ui';
 
 export type Props = QueryEditorProps<DataSource, LogScaleQuery, LogScaleOptions>;
 
@@ -30,14 +31,15 @@ export function QueryEditor(props: Props) {
     <div>
       <LogScaleQueryEditor {...props} />
       {props.app === 'explore' ? (
-        <InlineSwitch
-          aria-label="formatLogs"
-          label="Format as logs"
-          showLabel={true}
-          value={isLogFormat || false}
-          onChange={(e) => onIsExploreChange(e.currentTarget.checked)}
-          transparent={true}
-        />
+        <EditorRow>
+          <Field label="Format as logs">
+            <Switch
+              id="formatLogs"
+              value={isLogFormat || false}
+              onChange={(e) => onIsExploreChange(e.currentTarget.checked)}
+            />
+          </Field>
+        </EditorRow>
       ) : (
         ''
       )}
