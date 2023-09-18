@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0
+
+- Minimum Grafana required version is now **9.5.0**
+- Logs in explore view can be filtered for a value or filtered out by a value.
+- The settings UI has been overhauled to use the new Grafana form and authentication components.
+
 ## 1.0.1
 
 - Bug: TLS option are now correctly passed to the LogScale client.
