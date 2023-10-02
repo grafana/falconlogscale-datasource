@@ -47,7 +47,7 @@
     "jest-environment-jsdom": "^29.5.0",
     "jest-fetch-mock": "^3.0.3",
     "jest-mock-extended": "^1.0.10",
-    "prettier": "^2.8.7",
+    "prettier": "^3.0.3",
     "replace-in-file-webpack-plugin": "^1.0.6",
     "sass": "1.63.2",
     "sass-loader": "13.3.1",
