@@ -1,6 +1,7 @@
 package plugin
 
 import (
+	"context"
 	"net/url"
 
 	"github.com/grafana/falconlogscale-datasource-backend/pkg/humio"
@@ -10,7 +11,7 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/data/framestruct"
 )
 
-func NewDataSourceInstance(settings backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
+func NewDataSourceInstance(ctx context.Context, settings backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
 	s, err := LoadSettings(settings)
 	if err != nil {
 		return nil, err
