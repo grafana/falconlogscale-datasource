@@ -35,7 +35,6 @@ func handleRepositories(c *humio.Client, repositories func() ([]string, error)) 
 			"Authorization": authorizationHeader,
 			"X-Id-Token":    idTokenHeader,
 		}
-		}
 		c.SetAuthHeaders(authHeaders)
 		resp, err := repositories()
 		writeResponse(resp, err, w)
