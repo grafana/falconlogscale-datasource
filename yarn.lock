@@ -2226,10 +2226,17 @@
     systemjs "0.20.19"
     tslib "2.6.0"
 
-"@grafana/schema@10.1.1", "@grafana/schema@^10.1.1":
+"@grafana/schema@10.1.1":
   version "10.1.1"
   resolved "https://registry.yarnpkg.com/@grafana/schema/-/schema-10.1.1.tgz#e41d64234523579e5c9e321c0665a9a89b951c84"
   integrity sha512-W2dB5Pca+mlFKmZ+NktOlWyy8XQX1RTR/HFPoGY6xM8TZkWojJo1PQFD/YOLbGsNzi+dp2sUKrngZBcJrzO1xA==
+  dependencies:
+    tslib "2.6.0"
+
+"@grafana/schema@^10.1.5":
+  version "10.1.5"
+  resolved "https://registry.yarnpkg.com/@grafana/schema/-/schema-10.1.5.tgz#f3c431cc84bb48b6002218c46849a5a1bfdfb8a4"
+  integrity sha512-mrahunqx5rR8ZGcba1AqNNkU5ToSFjmdezqpba2xY0WOFunlHFIBKr9xr9RPftQ9e9tV6JSnSdjcVRXPZ2bQ7w==
   dependencies:
     tslib "2.6.0"
 
@@ -10853,7 +10860,7 @@ tsconfig-paths@^4.2.0:
     minimist "^1.2.6"
     strip-bom "^3.0.0"
 
-tslib@2.4.0, tslib@^2.1.0, tslib@^2.4.0:
+tslib@2.4.0:
   version "2.4.0"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.4.0.tgz#7cecaa7f073ce680a05847aa77be941098f36dc3"
   integrity sha512-d6xOpEDfsi2CZVlPQzGeux8XMwLT9hssAsaPYExaQMuYskwb+x1x7J371tWlbBdWHroy99KnVB6qIkUbs5X3UQ==
@@ -10863,7 +10870,7 @@ tslib@2.5.3:
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.5.3.tgz#24944ba2d990940e6e982c4bea147aba80209913"
   integrity sha512-mSxlJJwl3BMEQCUNnxXBU9jP4JBktcEGhURcPR6VQVlnP0FdDEsIaz0C35dXNGLyRfrATNofF0F5p2KPxQgB+w==
 
-tslib@2.6.0:
+tslib@2.6.0, tslib@^2.1.0, tslib@^2.4.0:
   version "2.6.0"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.6.0.tgz#b295854684dbda164e181d259a22cd779dcd7bc3"
   integrity sha512-7At1WUettjcSRHXCyYtTselblcHl9PJFFVKiCAy/bY97+BPZXSQ2wbq0P9s8tK2G7dFQfNnlJnPAiArVBVBsfA==
