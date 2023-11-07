@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
-	github.com/gorilla/mux v1.8.0
+	github.com/gorilla/mux v1.8.1
 	github.com/grafana/grafana-plugin-sdk-go v0.180.0
 	github.com/humio/cli v0.32.3
 	github.com/stretchr/testify v1.8.4
