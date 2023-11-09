@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.0
+
+- Bug: Issue where users were unable to select default repository is fixed.
+
 ## 1.1.0
 
 - Minimum Grafana required version is now **9.5.0**
