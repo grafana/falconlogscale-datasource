@@ -106,9 +106,7 @@ func NewClient(config Config, httpOpts httpclient.Options) (*Client, error) {
 	}
 
 	httpOpts.Headers["Content-Type"] = "application/json"
-	if !httpOpts.ForwardHTTPHeaders {
-		httpOpts.Headers["Authorization"] = fmt.Sprintf("Bearer %s", config.Token)
-	}
+	httpOpts.Headers["Authorization"] = fmt.Sprintf("Bearer %s", config.Token)
 
 	c, err := httpclient.NewProvider().New(httpOpts)
 	if err != nil {
