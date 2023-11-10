@@ -32,6 +32,7 @@
     "framestruct",
     "grafana",
     "httpadapter",
+    "httpclient",
     "humio",
     "ingesttimestamp",
     "instancemgmt",
