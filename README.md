@@ -65,9 +65,10 @@ apiVersion: 1
 datasources:
   - name: Falcon LogScale
     type: grafana-falconlogscale-datasource
+    url: https://cloud.us.humio.com
     jsonData:
-      baseUrl: https://cloud.us.humio.com
       defaultRepository: <defaultRepository or blank>
+      authenticateWithToken: true
     secureJsonData:
       accessToken: <accessToken>
 ```
