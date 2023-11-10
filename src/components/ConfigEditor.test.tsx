@@ -7,10 +7,13 @@ import { selectors } from 'e2e/selectors';
 const getDefaultProps = (): Props => {
   const options: Partial<Props['options']> = {
     jsonData: {
-      baseUrl: 'https://test-default.com',
       authenticateWithToken: false,
     },
     secureJsonData: {},
+    secureJsonFields: {
+      basicAuthPassword: false,
+    },
+    url: 'https://test-default.com',
   };
 
   return {
@@ -30,7 +33,7 @@ describe('<ConfigEditor />', () => {
 
   it('should render URL when it is passed', () => {
     const props = getDefaultProps();
-    props.options.url = props.options.jsonData.baseUrl = 'http://humio-test.test';
+    props.options.url = 'http://humio-test.test';
 
     render(<ConfigEditor {...props} />);
 
@@ -56,12 +59,16 @@ describe('<ConfigEditor />', () => {
     await userEvent.tab();
 
     expect(props.onOptionsChange).toHaveBeenCalledWith({
+      ...props.options,
       jsonData: {
         ...props.options.jsonData,
         authenticateWithToken: true,
       },
       secureJsonData: {
         accessToken: 'TEST_TOKEN',
+      },
+      secureJsonFields: {
+        basicAuthPassword: false,
       },
     });
   });
@@ -75,6 +82,7 @@ describe('<ConfigEditor />', () => {
     await userEvent.click(screen.getByText('Reset'));
 
     expect(props.onOptionsChange).toHaveBeenCalledWith({
+      ...props.options,
       jsonData: {
         ...props.options.jsonData,
         authenticateWithToken: false,

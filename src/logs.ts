@@ -1,7 +1,7 @@
-import { DataFrame, DataQueryRequest, DataQueryResponse, Field, isDataFrame, Vector } from "@grafana/data";
-import { getDataLinks } from "dataLink";
-import { DataLinkConfig } from "grafana-plugin-ui";
-import { LogScaleQuery } from "types";
+import { DataFrame, DataQueryRequest, DataQueryResponse, Field, isDataFrame, Vector } from '@grafana/data';
+import { getDataLinks } from 'dataLink';
+import { DataLinkConfig } from './components/DataLinks';
+import { LogScaleQuery } from 'types';
 
 export function transformBackendResult(
   response: DataQueryResponse,
@@ -23,30 +23,34 @@ export function transformBackendResult(
   };
 }
 
-function processFrames(frames: DataFrame[], dataLinkConfigs: DataLinkConfig[], request: DataQueryRequest<LogScaleQuery>): DataFrame[] {
+function processFrames(
+  frames: DataFrame[],
+  dataLinkConfigs: DataLinkConfig[],
+  request: DataQueryRequest<LogScaleQuery>
+): DataFrame[] {
   return frames.map((frame) => {
-    const targetQuery = request.targets.find(x => x.refId === frame.refId);
-    if (!targetQuery || targetQuery.queryType !== "logs") {
+    const targetQuery = request.targets.find((x) => x.refId === frame.refId);
+    if (!targetQuery || targetQuery.queryType !== 'logs') {
       return {
         ...frame,
         fields: [...orderFields(frame.fields)],
-      }
+      };
     }
     return {
       ...frame,
       fields: [...orderFields(frame.fields), ...getDataLinks(frame, dataLinkConfigs)],
-    }
+    };
   });
 }
 
 function orderFields(fields: Array<Field<any, Vector<any>>>): Array<Field<any, Vector<any>>> {
-  const rawstringFieldIndex = fields.findIndex(x => x.name === "@rawstring");
+  const rawstringFieldIndex = fields.findIndex((x) => x.name === '@rawstring');
   if (rawstringFieldIndex === -1) {
     return fields;
   }
   const rawstringField = fields.splice(rawstringFieldIndex, 1)[0];
   if (rawstringField) {
-    return [rawstringField, ...fields]
+    return [rawstringField, ...fields];
   }
   return fields;
 }

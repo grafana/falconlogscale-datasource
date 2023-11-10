@@ -1,20 +1,18 @@
 import React from 'react';
 import { render, waitFor, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { getMockDatasource } from './__fixtures__/datasource';
-import { mockDataQuery } from 'grafana-plugin-ui';
+import { mockDatasource } from './__fixtures__/datasource';
 import { LogScaleQueryEditor, Props } from './LogScaleQueryEditor';
 
 const getDefaultProps = (): Props => {
   const props: Props = {
-    datasource: getMockDatasource(),
+    datasource: mockDatasource(),
     onChange: jest.fn(),
     onRunQuery: jest.fn(),
     query: {
-      ...mockDataQuery(),
       repository: '',
       lsql: '',
-    },
+    } as any,
   };
 
   props.datasource.getRepositories = async (): Promise<string[]> => ['repository_1', 'repository_2', 'repository_3'];
