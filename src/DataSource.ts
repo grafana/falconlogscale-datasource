@@ -6,7 +6,7 @@ import {
   DataSourceInstanceSettings,
   DataSourceWithQueryImportSupport,
   MetricFindValue,
-  ScopedVar,
+  ScopedVars,
   vectorator,
 } from '@grafana/data';
 import { DataSourceWithBackend, getTemplateSrv, TemplateSrv } from '@grafana/runtime';
@@ -16,7 +16,10 @@ import { map } from 'rxjs/operators';
 import LanguageProvider from 'LanguageProvider';
 import { transformBackendResult } from './logs';
 
-export class DataSource extends DataSourceWithBackend<LogScaleQuery, LogScaleOptions> implements DataSourceWithQueryImportSupport<LogScaleQuery> {
+export class DataSource
+  extends DataSourceWithBackend<LogScaleQuery, LogScaleOptions>
+  implements DataSourceWithQueryImportSupport<LogScaleQuery>
+{
   // This enables default annotation support for 7.2+
   annotations = {};
   defaultRepository: string | undefined = undefined;
@@ -44,7 +47,9 @@ export class DataSource extends DataSourceWithBackend<LogScaleQuery, LogScaleOpt
 
     return super
       .query(request)
-      .pipe(map((response) => transformBackendResult(response, this.instanceSettings.jsonData.dataLinks ?? [], request)));
+      .pipe(
+        map((response) => transformBackendResult(response, this.instanceSettings.jsonData.dataLinks ?? [], request))
+      );
   }
 
   getRepositories(): Promise<string[]> {
@@ -65,7 +70,7 @@ export class DataSource extends DataSourceWithBackend<LogScaleQuery, LogScaleOpt
     return vectorator(frame.fields[0].values).map((v) => ({ text: v }));
   }
 
-  applyTemplateVariables(query: LogScaleQuery, scopedVars: ScopedVar): Record<string, any> {
+  applyTemplateVariables(query: LogScaleQuery, scopedVars: ScopedVars): Record<string, any> {
     return {
       ...query,
       lsql: this.templateSrv.replace(query.lsql, scopedVars),
@@ -78,7 +83,8 @@ export class DataSource extends DataSourceWithBackend<LogScaleQuery, LogScaleOpt
 
   modifyQuery(
     query: LogScaleQuery,
-    action: { type: 'ADD_FILTER' | 'ADD_FILTER_OUT'; options: { key: string; value: any } }): LogScaleQuery {
+    action: { type: 'ADD_FILTER' | 'ADD_FILTER_OUT'; options: { key: string; value: any } }
+  ): LogScaleQuery {
     if (!action.options) {
       return query;
     }

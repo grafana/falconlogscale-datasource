@@ -1,5 +1,5 @@
 import { SelectableValue } from '@grafana/data';
-import { InlineField, Select, Button } from '@grafana/ui';
+import { Select, Button, Field } from '@grafana/ui';
 import { selectors } from 'e2e/selectors';
 import React, { useReducer, useEffect } from 'react';
 
@@ -53,16 +53,8 @@ export const DefaultRepository = ({
     }
   };
   return (
-    <div className="gf-form-group">
-      <h5> Default LogScale Repository </h5>
-      <p>
-        Select the datasources default repository. This repository will be used for features such as traces to logs.{' '}
-      </p>
-      <InlineField
-        label="Default Repository"
-        labelWidth={20}
-        data-testid={selectors.components.configEditor.defaultRepository.input}
-      >
+    <>
+      <Field label="Default Repository" data-testid={selectors.components.configEditor.defaultRepository.input}>
         <div className="width-30" style={{ display: 'flex', gap: '4px' }}>
           <Select
             className="width-15"
@@ -82,7 +74,7 @@ export const DefaultRepository = ({
             Load Repositories
           </Button>
         </div>
-      </InlineField>
-    </div>
+      </Field>
+    </>
   );
 };

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
-import { Select, QueryField, InlineFormLabel } from '@grafana/ui';
+import { Select, QueryField } from '@grafana/ui';
+import { EditorRows, EditorRow, EditorField } from '@grafana/experimental';
 import { DataSource } from '../DataSource';
 import { LogScaleOptions, LogScaleQuery } from './../types';
 import { parseRepositoriesResponse } from '../utils/utils';
@@ -25,10 +26,9 @@ export function LogScaleQueryEditor(props: Props) {
   }, [datasource, onChange, query]);
 
   return (
-    <div className="query-editor-row">
-      <div className="gf-form-inline gf-form-inline--nowrap">
-        <div className="gf-form gf-form--grow flex-shrink-1">
-          <InlineFormLabel width={6}>Query</InlineFormLabel>
+    <EditorRows>
+      <EditorRow>
+        <EditorField label="Query" width={'100%'}>
           <QueryField
             query={query.lsql}
             onChange={(val) => onChange({ ...query, lsql: val })}
@@ -36,18 +36,18 @@ export function LogScaleQueryEditor(props: Props) {
             placeholder="Enter a LogScale query (run with Shift+Enter)"
             portalOrigin="LogScale"
           />
-        </div>
-      </div>
-
-      <div className="gf-form gf-form--grow flex-shrink-1">
-        <InlineFormLabel width={6}>Repository</InlineFormLabel>
-        <Select
-          width={30}
-          options={repositories}
-          value={query.repository}
-          onChange={(val) => onChange({ ...query, repository: val.value!.toString() })}
-        />
-      </div>
-    </div>
+        </EditorField>
+      </EditorRow>
+      <EditorRow>
+        <EditorField label="Repository">
+          <Select
+            width={30}
+            options={repositories}
+            value={query.repository}
+            onChange={(val) => onChange({ ...query, repository: val.value!.toString() })}
+          />
+        </EditorField>
+      </EditorRow>
+    </EditorRows>
   );
 }
