@@ -17,7 +17,7 @@ func NewDataSourceInstance(ctx context.Context, settings backend.DataSourceInsta
 	if err != nil {
 		return nil, err
 	}
-	httpOpts, err := settings.HTTPClientOptions()
+	httpOpts, err := settings.HTTPClientOptions(ctx)
 	if err != nil {
 		return nil, err
 	}
