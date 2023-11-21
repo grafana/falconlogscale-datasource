@@ -2226,10 +2226,17 @@
   dependencies:
     tslib "2.6.0"
 
-"@grafana/schema@10.2.1", "@grafana/schema@^10.2.1":
+"@grafana/schema@10.2.1":
   version "10.2.1"
   resolved "https://registry.yarnpkg.com/@grafana/schema/-/schema-10.2.1.tgz#85c0c6eb2f30400e6a87f99f1a93328160535f59"
   integrity sha512-yyytYasg2nZzTiwq5QQ4NW+iuC+qNp3ZXgm7LuzH8WZPq9t6P8fxWS+QW9icL4dmocFardn1jVW1s/tpVqHgaw==
+  dependencies:
+    tslib "2.6.0"
+
+"@grafana/schema@^10.2.2":
+  version "10.2.2"
+  resolved "https://registry.yarnpkg.com/@grafana/schema/-/schema-10.2.2.tgz#7bcb44ffccd72c2a30f99c85bcc188dd4bddfd19"
+  integrity sha512-VDMO2Ev/mSsQxOkwo2u3uQocoyfxJGaGTfAMRGgeejmYJVQsK3Ka6/ImGmqvCViE5uade5/rx7kKfLnj6Yc0Yg==
   dependencies:
     tslib "2.6.0"
 
