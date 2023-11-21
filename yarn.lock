@@ -2104,6 +2104,15 @@
     tslib "2.6.0"
     typescript "4.8.4"
 
+"@grafana/e2e-selectors@10.2.2":
+  version "10.2.2"
+  resolved "https://registry.yarnpkg.com/@grafana/e2e-selectors/-/e2e-selectors-10.2.2.tgz#6707e3c6d501cb5e971daf052d6c17d99cbffd32"
+  integrity sha512-Ee/+AfjHSoEshdlm7WeLzWpTSLGuhsarx9Q3K9ar8NxfQmDYFHyp1dW3YGyWsxiDHdnEYt9jLw8wbvr5kM6iOA==
+  dependencies:
+    "@grafana/tsconfig" "^1.2.0-rc1"
+    tslib "2.6.0"
+    typescript "4.8.4"
+
 "@grafana/e2e@10.1.1":
   version "10.1.1"
   resolved "https://registry.yarnpkg.com/@grafana/e2e/-/e2e-10.1.1.tgz#4e303a4478c1cbfd31156b06e2bbc06e547699d3"
