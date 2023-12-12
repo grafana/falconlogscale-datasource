@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.0
+
+- Bump github.com/grafana/grafana-plugin-sdk-go from 0.180.0 to 0.195.0
+- Other minor dependency updates
+
 ## 1.2.0
 
 - Bug: Issue where users were unable to select default repository is fixed.
