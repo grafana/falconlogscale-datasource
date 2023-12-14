@@ -27,7 +27,7 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 			continue
 		}
 
-		err = validateQuery(qr)
+		err = ValidateQuery(qr)
 		if err != nil {
 			response.Responses[q.RefID] = backend.DataResponse{Error: err}
 			continue
@@ -186,7 +186,7 @@ func (h *Handler) queryRequest(q backend.DataQuery) (humio.Query, error) {
 	return gr, nil
 }
 
-func validateQuery(q humio.Query) error {
+func ValidateQuery(q humio.Query) error {
 	if q.Repository == "" {
 		return errors.New("select a repository")
 	}

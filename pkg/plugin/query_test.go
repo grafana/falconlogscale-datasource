@@ -176,6 +176,23 @@ func TestConvertToWideFormat(t *testing.T) {
 	})
 }
 
+func TestValidateQuery(t *testing.T) {
+	t.Run("query is valid", func(t *testing.T) {
+		query := humio.Query{
+			Repository: "repo",
+		}
+		err := plugin.ValidateQuery(query)
+		require.NoError(t, err)
+	})
+	t.Run("no repository in query returns an error", func(t *testing.T) {
+		query := humio.Query{
+			Repository: "",
+		}
+		err := plugin.ValidateQuery(query)
+		require.Error(t, err, "select a repository")
+	})
+}
+
 func newFakeFalconClient() *fakeFalconClient {
 	return &fakeFalconClient{}
 }
