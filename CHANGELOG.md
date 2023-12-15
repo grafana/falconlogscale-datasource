@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.1
+
+- Error message is more descriptive when a repository has not been selected.
+
 ## 1.3.0
 
 - Bump github.com/grafana/grafana-plugin-sdk-go from 0.180.0 to 0.195.0
