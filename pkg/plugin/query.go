@@ -3,6 +3,7 @@ package plugin
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"strconv"
 	"time"
 
@@ -21,6 +22,12 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 	// loop over queries and execute them individually.
 	for _, q := range req.Queries {
 		qr, err := h.queryRequest(q)
+		if err != nil {
+			response.Responses[q.RefID] = backend.DataResponse{Error: err}
+			continue
+		}
+
+		err = ValidateQuery(qr)
 		if err != nil {
 			response.Responses[q.RefID] = backend.DataResponse{Error: err}
 			continue
@@ -177,4 +184,11 @@ func (h *Handler) queryRequest(q backend.DataQuery) (humio.Query, error) {
 	gr.End = endTime
 
 	return gr, nil
+}
+
+func ValidateQuery(q humio.Query) error {
+	if q.Repository == "" {
+		return errors.New("select a repository")
+	}
+	return nil
 }
