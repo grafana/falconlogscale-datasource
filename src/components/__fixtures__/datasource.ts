@@ -33,8 +33,8 @@ export function mockDataSourceOptions(): DataSourceSettings<LogScaleOptions, Sec
 export function mockDataSourceInstanceSettings(): DataSourceInstanceSettings<LogScaleOptions> {
   return {
     id: 1,
-    uid: 'adx-id',
-    name: 'ADX Data source',
+    uid: 'logscale-id',
+    name: 'Falcon logscale Data source',
     type: '',
     access: 'direct',
     url: '',
