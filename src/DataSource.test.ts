@@ -1,4 +1,4 @@
-import { DataQueryResponse, FieldType } from '@grafana/data';
+import { DataQueryResponse, ArrayVector, FieldType } from '@grafana/data';
 import * as grafanaRuntime from '@grafana/runtime';
 import { from } from 'rxjs';
 import { DataSource } from './DataSource';
@@ -33,7 +33,7 @@ describe('DataSource', () => {
         {
           fields: [
             {
-              values: new Array(['test_one', 'test_two', 'test_three']),
+              values: new ArrayVector(['test_one', 'test_two', 'test_three']),
               type: FieldType.string,
               name: 'name',
               config: {},
