@@ -34,22 +34,27 @@ export class DataSource
   }
 
   query(request: DataQueryRequest<LogScaleQuery>): Observable<DataQueryResponse> {
-    if (request.targets) {
-      const hasRepositories = request.targets.every((req) => req.repository);
-      if (!hasRepositories) {
-        for (const query of request.targets) {
-          if (!query.repository) {
-            query.repository = this.defaultRepository ?? '';
-          }
-        }
-      }
+    const { targets } = request;
+    if (targets && targets.length > 0) {
+      this.ensureRepositories(targets);
     }
 
-    return super
-      .query(request)
+    return super.query(request)
       .pipe(
-        map((response) => transformBackendResult(response, this.instanceSettings.jsonData.dataLinks ?? [], request))
+        map((response) =>
+          transformBackendResult(response, this.instanceSettings.jsonData.dataLinks ?? [], request)
+        )
       );
+  }
+
+  ensureRepositories(targets: LogScaleQuery[]): void {
+    for (const target of targets) {
+      if (!target.repository) {
+        target.repository = this.defaultRepository ?? '';
+      } else if (target.repository === "$defaultRepo" && this.defaultRepository) {
+        target.repository = this.defaultRepository;
+      }
+    }
   }
 
   getRepositories(): Promise<string[]> {
