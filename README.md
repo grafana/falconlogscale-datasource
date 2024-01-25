@@ -77,6 +77,8 @@ datasources:
 
 The query editor allows you to write LogScale Query Language (LQL) queries. For more information about writing LQL queries, refer to [Query Language Syntax](https://library.humio.com/falcon-logscale/syntax.html). Select a repository from the drop-down menu to query. You will only see repositories that your data source account has access to.
 
+Selecting `$defaultRepo` from the Repository dropdown automatically maps to the default repository configured for the datasource which enables switching between multiple LogScale datasources.
+
 You can use your LogScale saved queries in Grafana. For more information about saved queries, refer to [User Functions](https://library.humio.com/falcon-logscale/syntax-function.html#syntax-function-user).
 
 Here are some useful LQL functions to get you started with Grafana visualizations:
