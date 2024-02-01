@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.0
+
+- Add $defaultRepo option to Repository dropdown.
+- Other minor dependency updates
+
 ## 1.3.1
 
 - Error message is more descriptive when a repository has not been selected.
