@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"slices"
 	"strconv"
 	"time"
 
@@ -49,6 +50,7 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 			f, err := h.FrameMarshaller("events", r.Events, converters...)
 
 			OrderFrameFieldsByMetaData(r.Metadata.FieldOrder, f)
+			PrependTimestampField(f)
 
 			if _, ok := r.Events[0]["_bucket"]; ok {
 				f, err = ConvertToWideFormat(f)
@@ -100,6 +102,20 @@ func OrderFrameFieldsByMetaData(fieldOrder []string, f *data.Frame) {
 			}
 		}
 		f.Fields = fields
+	}
+}
+
+func PrependTimestampField(f *data.Frame) {
+	timestampIndex := slices.IndexFunc[[]*data.Field, *data.Field](f.Fields, func(f *data.Field) bool {
+		if f != nil && f.Name == "@timestamp" {
+			return true
+		}
+		return false
+	})
+	if timestampIndex > -1 {
+		timestampField := f.Fields[timestampIndex]
+		removedTimestamp := slices.Delete[[]*data.Field, *data.Field](f.Fields, timestampIndex, timestampIndex+1)
+		f.Fields = append([]*data.Field{timestampField}, removedTimestamp...)
 	}
 }
 
