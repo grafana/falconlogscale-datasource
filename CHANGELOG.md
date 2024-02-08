@@ -2,7 +2,7 @@
 
 ## 1.4.1
 
-- Prepend `@timestamp` field to ensure it is always used as the timestamp value in the logs visualisation.
+- Prepend `@timestamp` field to ensure it is always used as the timestamp value in the logs visualization.
 - Dependency updates.
   
 ## 1.4.0
