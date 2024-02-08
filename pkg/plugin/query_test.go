@@ -152,6 +152,18 @@ func TestOrderFrameFieldsByMetaData(t *testing.T) {
 	})
 }
 
+func TestPrependTimestampField(t *testing.T) {
+	t.Run("places timestamp field at beginning of frame", func(t *testing.T) {
+		frame := data.NewFrame("test",
+			data.NewField("c", nil, []string{"d", "e", "f"}),
+			data.NewField("a", nil, []string{"g", "h", "i"}),
+			data.NewField("@timestamp", nil, []string{"a", "b", "c"}),
+		)
+		plugin.PrependTimestampField(frame)
+		experimental.CheckGoldenJSONFrame(t, "../test_data", "prepend_timestamp_field", frame, true)
+	})
+}
+
 func TestConvertToWideFormat(t *testing.T) {
 	t.Run("wide format with no fields", func(t *testing.T) {
 		frame := data.NewFrame("test")
