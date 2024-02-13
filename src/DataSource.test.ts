@@ -2,6 +2,7 @@ import { DataQueryResponse, ArrayVector, FieldType } from '@grafana/data';
 import * as grafanaRuntime from '@grafana/runtime';
 import { from } from 'rxjs';
 import { DataSource } from './DataSource';
+import { LogScaleQuery } from './types';
 import { expect } from '@jest/globals';
 import { mockDataSourceInstanceSettings, mockQuery } from 'components/__fixtures__/datasource';
 
@@ -74,6 +75,43 @@ describe('DataSource', () => {
     expect(ds.applyTemplateVariables(query, { var: { text: '', value: '' } })).toStrictEqual({
       ...query,
       lsql: 'result string after replace',
+    });
+  });
+
+  describe('Default repository', () => {
+    const ds = getDataSource();
+    let targets: LogScaleQuery[] = [];
+
+    beforeEach(() => {
+      targets = [
+        {
+          repository: '',
+          lsql: '',
+          refId: '',
+        }
+      ]  
+    })
+  
+    it('If a default repository is defined, use it in place of empty repository property', () => {
+      ds.defaultRepository = 'foo'
+      ds.ensureRepositories(targets)
+  
+      expect(targets[0].repository).toBe('foo')
+    });
+  
+    it('If there is no default repository defined and repository is empty, leave it empty.', () => {
+      ds.defaultRepository = ''
+      ds.ensureRepositories(targets)
+  
+      expect(targets[0].repository).toBe('')
+    });
+  
+    it('Replace string $defaultRepo with defaultRepository', () => {
+      ds.defaultRepository = 'foo'
+      targets[0].repository = '$defaultRepo'
+      ds.ensureRepositories(targets)
+  
+      expect(targets[0].repository).toBe('foo')
     });
   });
 });

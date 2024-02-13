@@ -152,6 +152,18 @@ func TestOrderFrameFieldsByMetaData(t *testing.T) {
 	})
 }
 
+func TestPrependTimestampField(t *testing.T) {
+	t.Run("places timestamp field at beginning of frame", func(t *testing.T) {
+		frame := data.NewFrame("test",
+			data.NewField("c", nil, []string{"d", "e", "f"}),
+			data.NewField("a", nil, []string{"g", "h", "i"}),
+			data.NewField("@timestamp", nil, []string{"a", "b", "c"}),
+		)
+		plugin.PrependTimestampField(frame)
+		experimental.CheckGoldenJSONFrame(t, "../test_data", "prepend_timestamp_field", frame, true)
+	})
+}
+
 func TestConvertToWideFormat(t *testing.T) {
 	t.Run("wide format with no fields", func(t *testing.T) {
 		frame := data.NewFrame("test")
@@ -173,6 +185,23 @@ func TestConvertToWideFormat(t *testing.T) {
 		frame, err := plugin.ConvertToWideFormat(frame)
 		require.NoError(t, err)
 		experimental.CheckGoldenJSONFrame(t, "../test_data", "wide_format_fields", frame, false)
+	})
+}
+
+func TestValidateQuery(t *testing.T) {
+	t.Run("query is valid", func(t *testing.T) {
+		query := humio.Query{
+			Repository: "repo",
+		}
+		err := plugin.ValidateQuery(query)
+		require.NoError(t, err)
+	})
+	t.Run("no repository in query returns an error", func(t *testing.T) {
+		query := humio.Query{
+			Repository: "",
+		}
+		err := plugin.ValidateQuery(query)
+		require.Error(t, err, "select a repository")
 	})
 }
 

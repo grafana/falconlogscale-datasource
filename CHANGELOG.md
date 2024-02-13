@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.4.1
+
+- Prepend `@timestamp` field to ensure it is always used as the timestamp value in the logs visualization.
+- Dependency updates.
+  
+## 1.4.0
+
+- Add $defaultRepo option to Repository dropdown.
+- Other minor dependency updates
+
+## 1.3.1
+
+- Error message is more descriptive when a repository has not been selected.
+
+## 1.3.0
+
+- Bump github.com/grafana/grafana-plugin-sdk-go from 0.180.0 to 0.195.0
+- Other minor dependency updates
+
 ## 1.2.0
 
 - Bug: Issue where users were unable to select default repository is fixed.

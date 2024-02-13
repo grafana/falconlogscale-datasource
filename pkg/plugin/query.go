@@ -3,6 +3,8 @@ package plugin
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"slices"
 	"strconv"
 	"time"
 
@@ -31,6 +33,12 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 			"X-Id-Token":    req.GetHTTPHeader("X-Id-Token"),
 		}
 		h.QueryRunner.SetAuthHeaders(authHeaders)
+		err = ValidateQuery(qr)
+		if err != nil {
+			response.Responses[q.RefID] = backend.DataResponse{Error: err}
+			continue
+		}
+
 		res, err := h.QueryRunner.Run(qr)
 		if err != nil {
 			response.Responses[q.RefID] = backend.DataResponse{Error: err}
@@ -47,6 +55,7 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 			f, err := h.FrameMarshaller("events", r.Events, converters...)
 
 			OrderFrameFieldsByMetaData(r.Metadata.FieldOrder, f)
+			PrependTimestampField(f)
 
 			if _, ok := r.Events[0]["_bucket"]; ok {
 				f, err = ConvertToWideFormat(f)
@@ -98,6 +107,20 @@ func OrderFrameFieldsByMetaData(fieldOrder []string, f *data.Frame) {
 			}
 		}
 		f.Fields = fields
+	}
+}
+
+func PrependTimestampField(f *data.Frame) {
+	timestampIndex := slices.IndexFunc[[]*data.Field, *data.Field](f.Fields, func(f *data.Field) bool {
+		if f != nil && f.Name == "@timestamp" {
+			return true
+		}
+		return false
+	})
+	if timestampIndex > -1 {
+		timestampField := f.Fields[timestampIndex]
+		removedTimestamp := slices.Delete[[]*data.Field, *data.Field](f.Fields, timestampIndex, timestampIndex+1)
+		f.Fields = append([]*data.Field{timestampField}, removedTimestamp...)
 	}
 }
 
@@ -182,4 +205,11 @@ func (h *Handler) queryRequest(q backend.DataQuery) (humio.Query, error) {
 	gr.End = endTime
 
 	return gr, nil
+}
+
+func ValidateQuery(q humio.Query) error {
+	if q.Repository == "" {
+		return errors.New("select a repository")
+	}
+	return nil
 }

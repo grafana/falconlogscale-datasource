@@ -15,6 +15,7 @@ export function LogScaleQueryEditor(props: Props) {
   useEffect(() => {
     datasource.getRepositories().then((result: string[]) => {
       const repositories = parseRepositoriesResponse(result);
+      repositories.unshift({ label: `$defaultRepo (${datasource.defaultRepository})`, value: '$defaultRepo' });
       setRepositories(repositories);
     });
   }, [datasource]);
