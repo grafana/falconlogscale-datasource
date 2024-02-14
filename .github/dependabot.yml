@@ -16,7 +16,7 @@ updates:
     groups:
       dependencies:
         patterns:
-          - "!(@grafana/experimental)@grafana/*"
+          - "@grafana/*"
       dev-dependencies:
         patterns:
           - "@grafana/e2e*"
