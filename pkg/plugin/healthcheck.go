@@ -7,6 +7,11 @@ import (
 )
 
 func (h *Handler) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
+	authHeaders := map[string]string{
+		"Authorization": req.GetHTTPHeader("Authorization"),
+		"X-Id-Token":    req.GetHTTPHeader("X-Id-Token"),
+	}
+	h.QueryRunner.SetAuthHeaders(authHeaders)
 	// Check if we can view our humio repos
 	_, err := h.QueryRunner.GetAllRepoNames()
 

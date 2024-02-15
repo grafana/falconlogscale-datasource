@@ -15,6 +15,7 @@ type JobQuerier interface {
 	DeleteJob(repo string, id string) error
 	PollJob(repo string, id string) (QueryResult, error)
 	ListRepos() ([]string, error)
+	SetAuthHeaders(headers map[string]string)
 }
 
 type QueryRunner struct {
@@ -89,6 +90,10 @@ func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
 
 func (qr *QueryRunner) GetAllRepoNames() ([]string, error) {
 	return qr.jobQuerier.ListRepos()
+}
+
+func (qr *QueryRunner) SetAuthHeaders(authHeaders map[string]string) {
+	qr.jobQuerier.SetAuthHeaders(authHeaders)
 }
 
 func humioToDatasourceResult(r QueryResult) QueryResult {

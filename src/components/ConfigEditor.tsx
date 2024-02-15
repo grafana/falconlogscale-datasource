@@ -76,8 +76,9 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
   useEffect(() => {
     setDisabled(true);
     if (
-      (options.jsonData.baseUrl || options.url) &&
-      (options.secureJsonFields?.accessToken || options.secureJsonData?.accessToken)
+      ((options.jsonData.baseUrl || options.url) &&
+        (options.secureJsonFields?.accessToken || options.secureJsonData?.accessToken)) ||
+      options.jsonData.oauthPassThru
     ) {
       setDisabled(false);
     }
@@ -95,11 +96,13 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
         autoComplete="new-password"
         onBlur={(event) => {
           if (event.currentTarget.value) {
+            setUnsaved(true);
             onOptionsChange({
               ...options,
               jsonData: {
                 baseUrl: options.jsonData.baseUrl,
                 authenticateWithToken: true,
+                oauthPassThru: false,
               },
               secureJsonData: { accessToken: event.currentTarget.value },
             });
@@ -142,9 +145,22 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
         onAuthMethodSelect={(method) => {
           newAuthProps.onAuthMethodSelect(method);
           setTokenAuthSelected(method === 'custom-token');
+          if (method !== 'custom-token' && options.jsonData.authenticateWithToken) {
+            onTokenReset();
+          }
+          if (method === AuthMethod.OAuthForward) {
+            onOptionsChange({
+              ...options,
+              jsonData: {
+                baseUrl: options.jsonData.baseUrl,
+                authenticateWithToken: false,
+                oauthPassThru: true,
+              },
+            });
+          }
         }}
         selectedMethod={tokenAuthSelected ? 'custom-token' : newAuthProps.selectedMethod}
-        visibleMethods={['custom-token', AuthMethod.BasicAuth]}
+        visibleMethods={['custom-token', AuthMethod.BasicAuth, AuthMethod.OAuthForward]}
       />
       <Divider />
       <ConfigSection

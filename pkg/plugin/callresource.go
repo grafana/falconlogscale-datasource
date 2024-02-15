@@ -20,13 +20,30 @@ func (h *Handler) CallResource(ctx context.Context, req *backend.CallResourceReq
 // ResourceHandler handles http calls for resources from the api
 func ResourceHandler(c *humio.Client) http.Handler {
 	r := mux.NewRouter()
-	r.HandleFunc("/repositories", handleRepositories(c.ListRepos))
+	r.HandleFunc("/repositories", handleRepositories(c, c.ListRepos))
 
 	return r
 }
 
-func handleRepositories(repositories func() ([]string, error)) func(w http.ResponseWriter, req *http.Request) {
+func handleRepositories(c *humio.Client, repositories func() ([]string, error)) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
+		authorizationHeader := ""
+		idTokenHeader := ""
+		if len(req.Header["Authorization"]) > 0 {
+			authorizationHeader = req.Header["Authorization"][0]
+		}
+
+		// We don't lint the next line as the headers are expected to be canonical but this is not the case
+		//nolint:all
+		if len(req.Header["X-ID-Token"]) > 0 {
+			idTokenHeader = req.Header["X-ID-Token"][0]
+		}
+
+		authHeaders := map[string]string{
+			"Authorization": authorizationHeader,
+			"X-Id-Token":    idTokenHeader,
+		}
+		c.SetAuthHeaders(authHeaders)
 		resp, err := repositories()
 		writeResponse(resp, err, w)
 	}

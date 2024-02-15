@@ -41,6 +41,7 @@
     "Millis",
     "nanos",
     "nolint",
+    "OIDC",
     "queryjobs",
     "rawstring",
     "responsetime",

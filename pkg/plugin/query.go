@@ -28,6 +28,11 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 			continue
 		}
 
+		authHeaders := map[string]string{
+			"Authorization": req.GetHTTPHeader("Authorization"),
+			"X-Id-Token":    req.GetHTTPHeader("X-Id-Token"),
+		}
+		h.QueryRunner.SetAuthHeaders(authHeaders)
 		err = ValidateQuery(qr)
 		if err != nil {
 			response.Responses[q.RefID] = backend.DataResponse{Error: err}

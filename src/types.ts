@@ -4,6 +4,7 @@ import { DataQuery } from '@grafana/schema';
 
 export interface LogScaleOptions extends DataSourceJsonData {
   baseUrl?: string;
+  oauthPassThru?: boolean;
   authenticateWithToken: boolean;
   dataLinks?: DataLinkConfig[];
   defaultRepository?: string;

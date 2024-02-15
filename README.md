@@ -34,6 +34,18 @@ Custom HTTP Header Data sources managed by provisioning within Grafana can be co
 
 You can authenticate using your personal LogScale token. To generate a personal access token, log into LogScale and navigate to User Menu > Manage Account > Personal API Token. Then, set or reset your token. Copy and paste the token into the token field.
 
+## Forward OAuth Identity
+
+**Note: The feature is experimental, which means it may not work as expected, it may cause Grafana to behave in an unexpected way, and breaking changes may be introduced in the future.**
+
+### Prerequisites
+
+OAuth identity forwarding is only possible with a self-hosted LogScale instance appropriately configured with the same OAuth provider as Grafana. Not all OAuth/OIDC configurations may be supported currently.
+
+With this authentication method enabled, a token will not need to be provided to make use of a LogScale data source. Instead, users that are logged in to Grafana with the same OAuth provider as the LogScale instance will have their token forwarded to the data source and that will be used to authenticate any requests.
+
+**Note: Some Grafana features will not function as expected e.g. alerting. Grafana backend features require credentials to always be in scope which will not be the case with this authentication method.**
+
 ### Default LogScale Repository
 
 You can set a default LogScale repository to use for your queries. If you do not specify a default repository, you must select a repository for each query.

@@ -11,17 +11,24 @@ import (
 	"strings"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
-	"github.com/shurcooL/graphql"
+	"github.com/hasura/go-graphql-client"
 )
 
 type Client struct {
 	URL        *url.URL
 	HTTPClient *http.Client
+	Auth
 }
 
 type Config struct {
 	Address *url.URL
 	Token   string
+}
+
+type Auth struct {
+	OAuthPassThru bool
+	AccessToken   string
+	AuthHeaders   map[string]string
 }
 
 func (c *Client) CreateJob(repo string, query Query) (string, error) {
@@ -87,9 +94,16 @@ func (c *Client) ListRepos() ([]string, error) {
 	return f, err
 }
 
+func (c *Client) setAuthHeaders() graphql.RequestModifier {
+	return func(req *http.Request) {
+		c.addAuthHeaders(req)
+	}
+}
+
 func (c *Client) newGraphQLClient() (*graphql.Client, error) {
 	graphqlURL, _ := c.URL.Parse("graphql")
-	return graphql.NewClient(graphqlURL.String(), c.HTTPClient), nil
+
+	return graphql.NewClient(graphqlURL.String(), c.HTTPClient).WithRequestModifier(c.setAuthHeaders()), nil
 }
 
 func (c *Client) GraphQLQuery(query interface{}, variables map[string]interface{}) error {
@@ -103,21 +117,42 @@ func (c *Client) GraphQLQuery(query interface{}, variables map[string]interface{
 func NewClient(config Config, httpOpts httpclient.Options) (*Client, error) {
 	client := &Client{
 		URL: config.Address,
+		Auth: Auth{
+			OAuthPassThru: httpOpts.ForwardHTTPHeaders,
+			AccessToken:   config.Token,
+		},
 	}
 
 	httpOpts.Headers["Content-Type"] = "application/json"
-	httpOpts.Headers["Authorization"] = fmt.Sprintf("Bearer %s", config.Token)
 
 	c, err := httpclient.NewProvider().New(httpOpts)
 	if err != nil {
 		return nil, err
 	}
 	client.HTTPClient = c
+
 	return client, nil
 }
 
 type ErrorResponse struct {
 	Detail string `json:"detail"`
+}
+
+func (c *Client) addAuthHeaders(req *http.Request) *http.Request {
+	authHeader := c.Auth.AuthHeaders["Authorization"]
+	idTokenHeader := c.Auth.AuthHeaders["X-Id-Token"]
+	if c.OAuthPassThru && authHeader != "" && idTokenHeader != "" {
+		req.Header.Set("Authorization", authHeader)
+		req.Header.Set("X-Id-Token", idTokenHeader)
+	} else {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.AccessToken))
+	}
+
+	return req
+}
+
+func (c *Client) SetAuthHeaders(headers map[string]string) {
+	c.Auth.AuthHeaders = headers
 }
 
 func (c *Client) Fetch(method string, path string, body *bytes.Buffer, out interface{}) error {
@@ -129,14 +164,13 @@ func (c *Client) Fetch(method string, path string, body *bytes.Buffer, out inter
 	var req *http.Request
 	if body == nil {
 		req, err = http.NewRequest(method, url, bytes.NewReader(nil))
-
 	} else {
 		req, err = http.NewRequest(method, url, body)
 	}
 	if err != nil {
 		return err
 	}
-
+	req = c.addAuthHeaders(req)
 	res, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return err
