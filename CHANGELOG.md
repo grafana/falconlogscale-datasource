@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.0
+
+- Experimental: Support OAuth token forwarding for authentication. See [here](https://github.com/grafana/falconlogscale-datasource?tab=readme-ov-file#forward-oauth-identity) for further details.
+- Dependency updates.
+
 ## 1.4.1
 
 - Prepend `@timestamp` field to ensure it is always used as the timestamp value in the logs visualization.
