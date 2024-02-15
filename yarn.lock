@@ -2104,10 +2104,10 @@
     tslib "2.6.0"
     typescript "4.8.4"
 
-"@grafana/e2e-selectors@10.3.1":
-  version "10.3.1"
-  resolved "https://registry.yarnpkg.com/@grafana/e2e-selectors/-/e2e-selectors-10.3.1.tgz#b13676250ee5d80a7f65a58269f0c3a2d63397be"
-  integrity sha512-+qWAXViafuJYH7rN54iQmt7nbCWcA+FTpMGlzfezCdXAwcU3NiIvo4PD5kxR7nYcm1+s5G5pTZ00DQHxO5vBRw==
+"@grafana/e2e-selectors@10.3.3":
+  version "10.3.3"
+  resolved "https://registry.yarnpkg.com/@grafana/e2e-selectors/-/e2e-selectors-10.3.3.tgz#3eaf6986ea10e58a6c776392ca6cc475ba373097"
+  integrity sha512-VsvdMldC3ARQp5axUAHWVHpUoYwZSTf9wfcT21zh+hxGbuiPbdDS9VqZFKpwVtJtHGjtvnKBtWKODD7ArQyOOw==
   dependencies:
     "@grafana/tsconfig" "^1.2.0-rc1"
     tslib "2.6.0"
@@ -2238,10 +2238,10 @@
   dependencies:
     tslib "2.6.0"
 
-"@grafana/schema@^10.3.1":
-  version "10.3.1"
-  resolved "https://registry.yarnpkg.com/@grafana/schema/-/schema-10.3.1.tgz#c8b43c064b13dfb02e0a4fc604593d370a412845"
-  integrity sha512-newt0qGm3ZNQxOFApYBzyTLh0HTslWEfkp+DiKLK/W0Fyxl+RlSYf99gh7gv+/QlIa0wpQRaGIknSlI85Ho7yA==
+"@grafana/schema@^10.3.3":
+  version "10.3.3"
+  resolved "https://registry.yarnpkg.com/@grafana/schema/-/schema-10.3.3.tgz#fee2a07d087a7c6c5ea0a92d64168bf20bbf5f43"
+  integrity sha512-u5jIBZe6lLsGoFmERJZ35+NTP72gJYYKgUKdiO48l78uSFAmPFgR/t2MeNlY5wJTRgi54GB7giMwzrXnM4qlFg==
   dependencies:
     tslib "2.6.0"
 
