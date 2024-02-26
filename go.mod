@@ -67,7 +67,7 @@ require (
 	github.com/hashicorp/go-hclog v1.6.2 // indirect
 	github.com/hashicorp/go-plugin v1.6.0 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
-	github.com/hasura/go-graphql-client v0.10.0
+	github.com/hasura/go-graphql-client v0.12.0
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.16.7 // indirect
@@ -104,5 +104,5 @@ require (
 	google.golang.org/protobuf v1.32.0 // indirect
 	gopkg.in/fsnotify/fsnotify.v1 v1.4.7 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	nhooyr.io/websocket v1.8.7 // indirect
+	nhooyr.io/websocket v1.8.10 // indirect
 )
