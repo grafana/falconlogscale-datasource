@@ -8,14 +8,14 @@ require (
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/gorilla/mux v1.8.1
 	github.com/grafana/grafana-plugin-sdk-go v0.211.0
-	github.com/humio/cli v0.32.3
+	github.com/humio/cli v0.33.0
 	github.com/stretchr/testify v1.8.4
 )
 
 require (
 	github.com/apache/arrow/go/v15 v15.0.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
-	github.com/cli/shurcooL-graphql v0.0.3 // indirect
+	github.com/cli/shurcooL-graphql v0.0.4 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
