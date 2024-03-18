@@ -1,29 +1,23 @@
 import { DataSource } from 'DataSource';
-import React, { useState } from 'react';
+import React from 'react';
 import { LogScaleQuery } from 'types';
 import { LogScaleQueryEditor } from 'components/LogScaleQueryEditor';
 
 export type Props = {
   query: LogScaleQuery;
-  onChange: (q: LogScaleQuery, desc: string) => void;
+  onChange: (q: LogScaleQuery) => void;
   datasource: DataSource;
 };
 
 export function VariableQueryEditor(props: Props) {
-  const { onChange, datasource } = props;
-  const [query, setQuery] = useState(props.query || ({} as LogScaleQuery));
-
-  const handleVariableQuery = (q: LogScaleQuery) => {
-    setQuery(q);
-    onChange(q, `LogScale Query - ${query.lsql}`);
-  };
+  const { onChange, datasource, query } = props;
 
   return (
     <LogScaleQueryEditor
       datasource={datasource}
-      onChange={handleVariableQuery}
-      onRunQuery={() => handleVariableQuery(query)}
-      query={query}
+      onChange={onChange}
+      onRunQuery={() => onChange(query)}
+      query={query ?? {}}
     />
   );
 }
