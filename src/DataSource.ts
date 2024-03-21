@@ -7,7 +7,6 @@ import {
   DataSourceWithQueryImportSupport,
   MetricFindValue,
   ScopedVars,
-  vectorator,
 } from '@grafana/data';
 import { DataSourceWithBackend, getTemplateSrv, TemplateSrv } from '@grafana/runtime';
 import { lastValueFrom, Observable } from 'rxjs';
@@ -39,11 +38,10 @@ export class DataSource
       this.ensureRepositories(targets);
     }
 
-    return super.query(request)
+    return super
+      .query(request)
       .pipe(
-        map((response) =>
-          transformBackendResult(response, this.instanceSettings.jsonData.dataLinks ?? [], request)
-        )
+        map((response) => transformBackendResult(response, this.instanceSettings.jsonData.dataLinks ?? [], request))
       );
   }
 
@@ -51,7 +49,7 @@ export class DataSource
     for (const target of targets) {
       if (!target.repository) {
         target.repository = this.defaultRepository ?? '';
-      } else if (target.repository === "$defaultRepo" && this.defaultRepository) {
+      } else if (target.repository === '$defaultRepo' && this.defaultRepository) {
         target.repository = this.defaultRepository;
       }
     }
@@ -72,10 +70,10 @@ export class DataSource
       return [];
     }
     const frame: DataFrame = results.data[0];
-    return vectorator(frame.fields[0].values).map((v) => ({ text: v }));
+    return frame.fields[0].values.map((v) => ({ text: v }));
   }
 
-  applyTemplateVariables(query: LogScaleQuery, scopedVars: ScopedVars): Record<string, any> {
+  applyTemplateVariables(query: LogScaleQuery, scopedVars: ScopedVars): LogScaleQuery {
     return {
       ...query,
       lsql: this.templateSrv.replace(query.lsql, scopedVars),

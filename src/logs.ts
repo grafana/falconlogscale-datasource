@@ -1,4 +1,4 @@
-import { DataFrame, DataQueryRequest, DataQueryResponse, Field, isDataFrame, Vector } from '@grafana/data';
+import { DataFrame, DataQueryRequest, DataQueryResponse, Field, isDataFrame } from '@grafana/data';
 import { getDataLinks } from 'dataLink';
 import { DataLinkConfig } from './components/DataLinks';
 import { LogScaleQuery } from 'types';
@@ -43,7 +43,7 @@ function processFrames(
   });
 }
 
-function orderFields(fields: Array<Field<any, Vector<any>>>): Array<Field<any, Vector<any>>> {
+function orderFields(fields: Array<Field<any, any[]>>): Array<Field<any, any[]>> {
   const rawstringFieldIndex = fields.findIndex((x) => x.name === '@rawstring');
   if (rawstringFieldIndex === -1) {
     return fields;

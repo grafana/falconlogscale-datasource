@@ -1,27 +1,11 @@
 import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { css } from '@emotion/css';
 import { VariableSuggestion, DataSourceInstanceSettings, DataSourceJsonData } from '@grafana/data';
-import { Button, LegacyForms, DataLinkInput, stylesFactory } from '@grafana/ui';
+import { Button, LegacyForms, DataLinkInput, useStyles2 } from '@grafana/ui';
 const { FormField, Switch } = LegacyForms;
 import { DataLinkConfig } from './types';
 import { usePrevious } from 'react-use';
 import { DataSourcePicker } from './DataSourcePicker';
-
-const getStyles = stylesFactory(() => ({
-  firstRow: css`
-    display: flex;
-  `,
-  nameField: css`
-    flex: 2;
-  `,
-  regexField: css`
-    flex: 3;
-  `,
-  row: css`
-    display: flex;
-    align-items: baseline;
-  `,
-}));
 
 type Props = {
   value: DataLinkConfig;
@@ -33,7 +17,21 @@ type Props = {
 };
 export const DataLink = (props: Props) => {
   const { value, onChange, onDelete, suggestions, className } = props;
-  const styles = getStyles();
+  const styles = useStyles2(() => ({
+    firstRow: css`
+      display: flex;
+    `,
+    nameField: css`
+      flex: 2;
+    `,
+    regexField: css`
+      flex: 3;
+    `,
+    row: css`
+      display: flex;
+      align-items: baseline;
+    `,
+  }));
   const [showInternalLink, setShowInternalLink] = useInternalLink(value.datasourceUid);
 
   const handleChange = (field: keyof typeof value) => (event: React.ChangeEvent<HTMLInputElement>) => {
