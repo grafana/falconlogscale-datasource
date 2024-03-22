@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.6.0
+
+- Fix: State bug in `VariableEditor`
+- Dependency updates.
+  
 ## 1.5.0
 
 - Experimental: Support OAuth token forwarding for authentication. See [here](https://github.com/grafana/falconlogscale-datasource?tab=readme-ov-file#forward-oauth-identity) for further details.
