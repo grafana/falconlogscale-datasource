@@ -1,4 +1,4 @@
-import { ArrayVector, DataFrame, DataLink, Field, FieldType } from '@grafana/data';
+import { DataFrame, DataLink, Field, FieldType } from '@grafana/data';
 import { getDataSourceSrv } from '@grafana/runtime';
 import { DataLinkConfig } from './components/DataLinks';
 
@@ -16,20 +16,20 @@ export function getDataLinks(dataFrame: DataFrame, dataLinkConfigs: DataLinkConf
   });
 
   dataLinks.forEach((dl) => {
-    dl.lineField?.values.toArray().forEach((line) => {
+    dl.lineField?.values.forEach((line) => {
       if (!line) {
-        dl.newField.values.add(null);
+        dl.newField.values.push(null);
         return;
       }
       const logMatch = line.match(dl.dataLinkConfig.matcherRegex);
-      dl.newField.values.add(logMatch && logMatch[1]);
+      dl.newField.values.push(logMatch && logMatch[1]);
     });
   });
 
   return dataLinks.map((f) => f.newField);
 }
 
-function dataLinkConfigToDataFrameField(dataLinkConfig: DataLinkConfig): Field<any, ArrayVector> {
+function dataLinkConfigToDataFrameField(dataLinkConfig: DataLinkConfig): Field<any, Array<string | null>> {
   const dataSourceSrv = getDataSourceSrv();
 
   let dataLink = {} as DataLink;
@@ -58,6 +58,6 @@ function dataLinkConfigToDataFrameField(dataLinkConfig: DataLinkConfig): Field<a
       links: [dataLink],
     },
     // We are adding values later on
-    values: new ArrayVector<string>([]),
+    values: [],
   };
 }
