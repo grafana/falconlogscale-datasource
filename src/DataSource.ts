@@ -15,6 +15,7 @@ import { LogScaleQuery, LogScaleOptions } from './types';
 import { map } from 'rxjs/operators';
 import LanguageProvider from 'LanguageProvider';
 import { transformBackendResult } from './logs';
+import { VariableSupport } from 'variables';
 
 export class DataSource
   extends DataSourceWithBackend<LogScaleQuery, LogScaleOptions>
@@ -31,6 +32,7 @@ export class DataSource
     super(instanceSettings);
     this.defaultRepository = instanceSettings.jsonData.defaultRepository;
     this.languageProvider = new LanguageProvider(this);
+    this.variables = new VariableSupport(this);
   }
 
   query(request: DataQueryRequest<LogScaleQuery>): Observable<DataQueryResponse> {
@@ -111,7 +113,16 @@ export class DataSource
     }
     return { ...query, lsql: expression };
   }
+
+  getVariablesRaw() {
+    return this.templateSrv.getVariables();
+  }
+
+  getVariables() {
+    return this.templateSrv.getVariables().map((v) => `$${v.name}`);
+  }
 }
+
 // hacky method for doing this
 export const includeTimeRange = (option: DataQueryRequest<LogScaleQuery>): DataQueryRequest<LogScaleQuery> => {
   const range = (getTemplateSrv() as any)?.timeRange as TimeRange;
