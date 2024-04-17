@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, waitFor } from '@testing-library/react';
-import { mockDatasource, mockQuery } from './__fixtures__/datasource';
+import { mockDatasource, mockQuery } from '../__fixtures__/datasource';
 import { QueryEditor, Props } from './QueryEditor';
 
 const getDefaultProps = (): Props => {

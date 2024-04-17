@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { Select, QueryField } from '@grafana/ui';
 import { EditorRows, EditorRow, EditorField } from '@grafana/experimental';
-import { DataSource } from '../DataSource';
-import { LogScaleOptions, LogScaleQuery } from './../types';
-import { parseRepositoriesResponse } from '../utils/utils';
+import { DataSource } from '../../DataSource';
+import { LogScaleOptions, LogScaleQuery } from '../../types';
+import { parseRepositoriesResponse } from '../../utils/utils';
 
 export type Props = QueryEditorProps<DataSource, LogScaleQuery, LogScaleOptions>;
 
