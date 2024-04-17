@@ -7,6 +7,7 @@ import {
   DataSourceWithQueryImportSupport,
   MetricFindValue,
   ScopedVars,
+  TimeRange,
 } from '@grafana/data';
 import { DataSourceWithBackend, getTemplateSrv, TemplateSrv } from '@grafana/runtime';
 import { lastValueFrom, Observable } from 'rxjs';
@@ -111,3 +112,16 @@ export class DataSource
     return { ...query, lsql: expression };
   }
 }
+// hacky method for doing this
+export const includeTimeRange = (option: DataQueryRequest<LogScaleQuery>): DataQueryRequest<LogScaleQuery> => {
+  const range = (getTemplateSrv() as any)?.timeRange as TimeRange;
+
+  if (!range) {
+    return option;
+  }
+
+  return {
+    ...option,
+    range,
+  };
+};
