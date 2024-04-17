@@ -2,7 +2,7 @@ import { DataQueryResponse, FieldType } from '@grafana/data';
 import * as grafanaRuntime from '@grafana/runtime';
 import { from } from 'rxjs';
 import { DataSource } from './DataSource';
-import { LogScaleQuery } from './types';
+import { FormatAs, LogScaleQuery, LogScaleQueryType } from './types';
 import { expect } from '@jest/globals';
 import { mockDataSourceInstanceSettings, mockQuery } from 'components/__fixtures__/datasource';
 
@@ -88,6 +88,8 @@ describe('DataSource', () => {
           repository: '',
           lsql: '',
           refId: '',
+          queryType: LogScaleQueryType.LQL,
+          formatAs: FormatAs.Logs,
         },
       ];
     });

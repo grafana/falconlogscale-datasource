@@ -30,7 +30,7 @@ function processFrames(
 ): DataFrame[] {
   return frames.map((frame) => {
     const targetQuery = request.targets.find((x) => x.refId === frame.refId);
-    if (!targetQuery || targetQuery.queryType !== 'logs') {
+    if (!targetQuery || targetQuery.formatAs !== 'logs') {
       return {
         ...frame,
         fields: [...orderFields(frame.fields)],

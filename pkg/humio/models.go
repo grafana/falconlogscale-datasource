@@ -7,6 +7,7 @@ type Query struct {
 	End            string `json:"end,omitempty"`
 	Live           bool   `json:"isLive,omitempty"`
 	TimezoneOffset *int   `json:"timeZoneOffsetMinutes,omitempty"`
+	FormatAs       string `json:"formatAs"`
 }
 
 type QueryResult struct {

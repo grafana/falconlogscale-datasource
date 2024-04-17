@@ -64,7 +64,7 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 				return nil, err
 			}
 
-			if q.QueryType == "logs" {
+			if qr.FormatAs == "logs" {
 				f.Meta = &data.FrameMeta{
 					PreferredVisualization: data.VisTypeLogs,
 				}

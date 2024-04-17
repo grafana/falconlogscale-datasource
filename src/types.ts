@@ -20,4 +20,16 @@ export interface LogScaleQuery extends DataQuery {
   repository: string;
   lsql: string;
   live?: boolean;
+  queryType: LogScaleQueryType;
+  formatAs: FormatAs;
+}
+
+export enum LogScaleQueryType {
+  Repositories = 'Repositories',
+  LQL = 'LQL',
+}
+
+export enum FormatAs {
+  Logs = 'logs',
+  Metrics = 'metrics',
 }
