@@ -110,8 +110,10 @@ describe('<ConfigEditor />', () => {
 
     render(<ConfigEditor {...props} />);
 
-    expect(
-      screen.getByTestId(selectors.components.configEditor.defaultRepository.input).querySelector('input')
-    ).toBeEnabled();
+    await waitFor(() =>
+      expect(
+        screen.getByTestId(selectors.components.configEditor.defaultRepository.input).querySelector('input')
+      ).toBeEnabled()
+    );
   });
 });
