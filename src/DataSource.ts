@@ -8,6 +8,7 @@ import {
   MetricFindValue,
   ScopedVars,
   TimeRange,
+  VariableSupportType,
 } from '@grafana/data';
 import { DataSourceWithBackend, getTemplateSrv, TemplateSrv } from '@grafana/runtime';
 import { lastValueFrom, Observable } from 'rxjs';
@@ -15,7 +16,8 @@ import { LogScaleQuery, LogScaleOptions } from './types';
 import { map } from 'rxjs/operators';
 import LanguageProvider from 'LanguageProvider';
 import { transformBackendResult } from './logs';
-import { VariableSupport } from 'variables';
+import VariableQueryEditor from 'components/VariableEditor/VariableQueryEditor';
+import { uniqueId } from 'lodash';
 
 export class DataSource
   extends DataSourceWithBackend<LogScaleQuery, LogScaleOptions>
@@ -32,7 +34,17 @@ export class DataSource
     super(instanceSettings);
     this.defaultRepository = instanceSettings.jsonData.defaultRepository;
     this.languageProvider = new LanguageProvider(this);
-    this.variables = new VariableSupport(this);
+    this.variables = {
+      getType: () => VariableSupportType.Custom,
+      editor: VariableQueryEditor as any,
+      query: (request: DataQueryRequest<LogScaleQuery>) => {
+        // Make sure that every query has a refId
+        const queries = request.targets.map((query) => {
+          return { ...query, refId: query.refId || uniqueId('tempVar') };
+        });
+        return this.query({ ...request, targets: queries });
+      },
+    };
   }
 
   query(request: DataQueryRequest<LogScaleQuery>): Observable<DataQueryResponse> {
