@@ -8,7 +8,13 @@ type Query struct {
 	Live           bool   `json:"isLive,omitempty"`
 	TimezoneOffset *int   `json:"timeZoneOffsetMinutes,omitempty"`
 	FormatAs       string `json:"formatAs"`
+	QueryType      string `json:"queryType,omitempty"`
 }
+
+const (
+	QueryTypeLQL          = "LQL"
+	QueryTypeRepositories = "Repositories"
+)
 
 type QueryResult struct {
 	Cancelled bool                `json:"cancelled"`

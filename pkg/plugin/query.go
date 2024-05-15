@@ -33,48 +33,65 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 			"X-Id-Token":    req.GetHTTPHeader("X-Id-Token"),
 		}
 		h.QueryRunner.SetAuthHeaders(authHeaders)
-		err = ValidateQuery(qr)
-		if err != nil {
-			response.Responses[q.RefID] = backend.DataResponse{Error: err}
-			continue
-		}
-
-		res, err := h.QueryRunner.Run(qr)
-		if err != nil {
-			response.Responses[q.RefID] = backend.DataResponse{Error: err}
-			continue
-		}
 
 		var frames []*data.Frame
-		for _, r := range res {
-			if len(r.Events) == 0 {
-				continue
-			}
-
-			converters := GetConverters(r.Events)
-			f, err := h.FrameMarshaller("events", r.Events, converters...)
-
-			OrderFrameFieldsByMetaData(r.Metadata.FieldOrder, f)
-			PrependTimestampField(f)
-
-			if _, ok := r.Events[0]["_bucket"]; ok {
-				f, err = ConvertToWideFormat(f)
-			}
+		if qr.QueryType == humio.QueryTypeRepositories {
+			repos, err := h.QueryRunner.GetAllRepoNames()
 			if err != nil {
 				return nil, err
 			}
 
-			if qr.FormatAs == "logs" {
-				f.Meta = &data.FrameMeta{
-					PreferredVisualization: data.VisTypeLogs,
-				}
+			f, err := h.FrameMarshaller("repositories", humio.ConvertRepos(repos))
+			if err != nil {
+				return nil, err
 			}
+
+			frames = append(frames, f)
+		}
+
+		if qr.QueryType == humio.QueryTypeLQL {
+			err = ValidateQuery(qr)
 			if err != nil {
 				response.Responses[q.RefID] = backend.DataResponse{Error: err}
 				continue
 			}
 
-			frames = append(frames, f)
+			res, err := h.QueryRunner.Run(qr)
+			if err != nil {
+				response.Responses[q.RefID] = backend.DataResponse{Error: err}
+				continue
+			}
+
+			for _, r := range res {
+				if len(r.Events) == 0 {
+					continue
+				}
+
+				converters := GetConverters(r.Events)
+				f, err := h.FrameMarshaller("events", r.Events, converters...)
+				if err != nil {
+					response.Responses[q.RefID] = backend.DataResponse{Error: err}
+					continue
+				}
+
+				OrderFrameFieldsByMetaData(r.Metadata.FieldOrder, f)
+				PrependTimestampField(f)
+
+				if _, ok := r.Events[0]["_bucket"]; ok {
+					f, err = ConvertToWideFormat(f)
+					if err != nil {
+						return nil, err
+					}
+				}
+
+				if qr.FormatAs == "logs" {
+					f.Meta = &data.FrameMeta{
+						PreferredVisualization: data.VisTypeLogs,
+					}
+				}
+
+				frames = append(frames, f)
+			}
 		}
 
 		if len(frames) > 0 {
