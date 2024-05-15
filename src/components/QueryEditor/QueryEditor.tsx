@@ -21,7 +21,7 @@ export function QueryEditor(props: Props) {
     }
   }, [props.app, query, onChange, onRunQuery]);
 
-  const onFormateAsChange = (val: boolean) => {
+  const onFormatAsChange = (val: boolean) => {
     setIsLogFormat(val);
     onChange({ ...query, formatAs: val ? FormatAs.Logs : FormatAs.Metrics });
     onRunQuery();
@@ -36,7 +36,7 @@ export function QueryEditor(props: Props) {
             <Switch
               id="formatLogs"
               value={isLogFormat || false}
-              onChange={(e) => onFormateAsChange(e.currentTarget.checked)}
+              onChange={(e) => onFormatAsChange(e.currentTarget.checked)}
             />
           </Field>
         </EditorRow>
