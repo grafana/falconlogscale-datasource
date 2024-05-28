@@ -84,7 +84,7 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 					}
 				}
 
-				if qr.FormatAs == "logs" {
+				if qr.FormatAs == humio.FormatLogs {
 					f.Meta = &data.FrameMeta{
 						PreferredVisualization: data.VisTypeLogs,
 					}
