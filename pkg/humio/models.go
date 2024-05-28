@@ -16,6 +16,11 @@ const (
 	QueryTypeRepositories = "Repositories"
 )
 
+const (
+	FormatMetrics = "metrics"
+	FormatLogs    = "logs"
+)
+
 type QueryResult struct {
 	Cancelled bool                `json:"cancelled"`
 	Done      bool                `json:"done"`
