@@ -7,7 +7,6 @@ import {
   DataSourceWithQueryImportSupport,
   MetricFindValue,
   ScopedVars,
-  TimeRange,
   VariableSupportType,
 } from '@grafana/data';
 import { DataSourceWithBackend, getTemplateSrv, TemplateSrv } from '@grafana/runtime';
