@@ -20,6 +20,11 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 
 	response := backend.NewQueryDataResponse()
 
+	err := migrateRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
 	// loop over queries and execute them individually.
 	for _, q := range req.Queries {
 		qr, err := h.queryRequest(q)
@@ -228,5 +233,32 @@ func ValidateQuery(q humio.Query) error {
 	if q.Repository == "" {
 		return errors.New("select a repository")
 	}
+	return nil
+}
+
+func migrateRequest(req *backend.QueryDataRequest) error {
+	for i, q := range req.Queries {
+		var rawQuery map[string]any
+		err := json.Unmarshal(q.JSON, &rawQuery)
+		if err != nil {
+			return err
+		}
+
+		if rawQuery["queryType"] == nil {
+			rawQuery["queryType"] = humio.QueryTypeLQL
+		}
+		if rawQuery["formatAs"] == nil {
+			rawQuery["formatAs"] = humio.FormatMetrics
+		}
+
+		b, err := json.Marshal(rawQuery)
+		if err != nil {
+			return err
+		}
+		q.JSON = b
+
+		req.Queries[i] = q
+	}
+
 	return nil
 }

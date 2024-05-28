@@ -11,7 +11,7 @@ import {
 } from '@grafana/data';
 import { DataSourceWithBackend, getTemplateSrv, TemplateSrv } from '@grafana/runtime';
 import { lastValueFrom, Observable } from 'rxjs';
-import { LogScaleQuery, LogScaleOptions } from './types';
+import { LogScaleQuery, LogScaleOptions, LogScaleQueryType, FormatAs } from './types';
 import { map } from 'rxjs/operators';
 import LanguageProvider from 'LanguageProvider';
 import { transformBackendResult } from './logs';
@@ -51,6 +51,11 @@ export class DataSource
     if (targets && targets.length > 0) {
       this.ensureRepositories(targets);
     }
+
+    request.targets = request.targets.map((t) => ({
+      ...this.migrateQuery(t),
+      intervalMs: request.intervalMs,
+    }));
 
     return super
       .query(request)
@@ -128,5 +133,18 @@ export class DataSource
 
   getVariables() {
     return this.templateSrv.getVariables().map((v) => `$${v.name}`);
+  }
+
+  migrateQuery(query: LogScaleQuery): LogScaleQuery {
+    const migratedQuery = { ...query };
+    if (!query.hasOwnProperty('queryType')) {
+      migratedQuery.queryType = LogScaleQueryType.LQL;
+    }
+
+    if (!query.hasOwnProperty('formatAs')) {
+      migratedQuery.formatAs = FormatAs.Metrics;
+    }
+
+    return migratedQuery;
   }
 }

@@ -1,11 +1,12 @@
 package plugin
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
 	"github.com/grafana/falconlogscale-datasource-backend/pkg/humio"
-	"github.com/grafana/falconlogscale-datasource-backend/pkg/plugin"
+	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/grafana/grafana-plugin-sdk-go/data/framestruct"
 	"github.com/grafana/grafana-plugin-sdk-go/experimental"
@@ -17,10 +18,10 @@ type testContext struct {
 	queryRunner     *fakeQueryRunner
 	frameMarshaller *fakeFrameMarshaller
 	callHandler     *fakeCallHandler
-	settings        plugin.Settings
+	settings        Settings
 }
 
-func setup(opts ...plugin.HandlerOption) (*plugin.Handler, testContext) {
+func setup(opts ...HandlerOption) (*Handler, testContext) {
 	tc := testContext{
 		falconClient: newFakeFalconClient(),
 		queryRunner: &fakeQueryRunner{
@@ -31,14 +32,14 @@ func setup(opts ...plugin.HandlerOption) (*plugin.Handler, testContext) {
 			errs: make(chan error, 100),
 		},
 		callHandler: &fakeCallHandler{},
-		settings: plugin.Settings{
+		settings: Settings{
 			BaseURL:               "https://cloud.humio.com",
 			AccessToken:           "1234abcd",
 			AuthenticateWithToken: true,
 		},
 	}
 
-	handler := plugin.NewHandler(
+	handler := NewHandler(
 		tc.falconClient,
 		tc.queryRunner,
 		tc.callHandler,
@@ -53,13 +54,13 @@ func setup(opts ...plugin.HandlerOption) (*plugin.Handler, testContext) {
 func TestGetConverters(t *testing.T) {
 	t.Run("gets all types", func(t *testing.T) {
 		events := []map[string]any{{"_count": "100", "stringField": "hello", "@timestamp": "2020-01-01T00:00:00Z"}}
-		converters := plugin.GetConverters(events)
+		converters := GetConverters(events)
 		frames, _ := framestruct.ToDataFrame("field", events, converters...)
 		experimental.CheckGoldenJSONFrame(t, "../test_data", "converter_all_field_types", frames, true)
 	})
 	t.Run("gets number in second entry", func(t *testing.T) {
 		events := []map[string]any{{}, {"_count": "3"}}
-		converters := plugin.GetConverters(events)
+		converters := GetConverters(events)
 		frames, _ := framestruct.ToDataFrame("field", events, converters...)
 		experimental.CheckGoldenJSONFrame(t, "../test_data", "convert_num_second", frames, true)
 	})
@@ -68,7 +69,7 @@ func TestGetConverters(t *testing.T) {
 			{"_count": "100", "stringField": "hello", "@timestamp": "2020-01-01T00:00:00Z"},
 			{"stringField": "hello", "extraField": "extra"},
 		}
-		converters := plugin.GetConverters(events)
+		converters := GetConverters(events)
 		frames, _ := framestruct.ToDataFrame("field", events, converters...)
 		experimental.CheckGoldenJSONFrame(t, "../test_data", "convert_inconsistent_fields", frames, true)
 	})
@@ -78,7 +79,7 @@ func TestGetConverters(t *testing.T) {
 			{"_count": nil, "stringField": "hello", "extraField": "extra", "@timestamp": nil},
 			{"_count": "100", "stringField": "hello", "extraField": nil},
 		}
-		converters := plugin.GetConverters(events)
+		converters := GetConverters(events)
 		frames, _ := framestruct.ToDataFrame("field", events, converters...)
 		experimental.CheckGoldenJSONFrame(t, "../test_data", "convert_inconsistent_fields_null", frames, true)
 	})
@@ -96,7 +97,7 @@ func TestOrderFrameFieldsByMetaData(t *testing.T) {
 			"b",
 			"c",
 		}
-		plugin.OrderFrameFieldsByMetaData(fieldOrder, frame)
+		OrderFrameFieldsByMetaData(fieldOrder, frame)
 		experimental.CheckGoldenJSONFrame(t, "../test_data", "order_frame_fields", frame, false)
 	})
 	t.Run("orders fields by meta data with missing fields", func(t *testing.T) {
@@ -111,7 +112,7 @@ func TestOrderFrameFieldsByMetaData(t *testing.T) {
 			"c",
 			"d",
 		}
-		plugin.OrderFrameFieldsByMetaData(fieldOrder, frame)
+		OrderFrameFieldsByMetaData(fieldOrder, frame)
 		experimental.CheckGoldenJSONFrame(t, "../test_data", "order_frame_fields_missing", frame, false)
 	})
 	t.Run("orders fields by meta data with extra fields", func(t *testing.T) {
@@ -124,7 +125,7 @@ func TestOrderFrameFieldsByMetaData(t *testing.T) {
 			"a",
 			"b",
 		}
-		plugin.OrderFrameFieldsByMetaData(fieldOrder, frame)
+		OrderFrameFieldsByMetaData(fieldOrder, frame)
 		experimental.CheckGoldenJSONFrame(t, "../test_data", "order_frame_fields_extra", frame, false)
 	})
 	t.Run("do not order fields if no meta data", func(t *testing.T) {
@@ -134,7 +135,7 @@ func TestOrderFrameFieldsByMetaData(t *testing.T) {
 			data.NewField("a", nil, []string{"g", "h", "i"}),
 		)
 		fieldOrder := []string{}
-		plugin.OrderFrameFieldsByMetaData(fieldOrder, frame)
+		OrderFrameFieldsByMetaData(fieldOrder, frame)
 		experimental.CheckGoldenJSONFrame(t, "../test_data", "order_frame_fields_no_meta", frame, false)
 	})
 	t.Run("string fields with numbers in them return as strings", func(t *testing.T) {
@@ -146,7 +147,7 @@ func TestOrderFrameFieldsByMetaData(t *testing.T) {
 			{"stringField": "hello", "numberField": "4"},
 			{"stringField": "100", "numberField": "5"},
 		}
-		converters := plugin.GetConverters(events)
+		converters := GetConverters(events)
 		frames, _ := framestruct.ToDataFrame("field", events, converters...)
 		experimental.CheckGoldenJSONFrame(t, "../test_data", "string_number_fields", frames, false)
 	})
@@ -159,7 +160,7 @@ func TestPrependTimestampField(t *testing.T) {
 			data.NewField("a", nil, []string{"g", "h", "i"}),
 			data.NewField("@timestamp", nil, []string{"a", "b", "c"}),
 		)
-		plugin.PrependTimestampField(frame)
+		PrependTimestampField(frame)
 		experimental.CheckGoldenJSONFrame(t, "../test_data", "prepend_timestamp_field", frame, true)
 	})
 }
@@ -167,7 +168,7 @@ func TestPrependTimestampField(t *testing.T) {
 func TestConvertToWideFormat(t *testing.T) {
 	t.Run("wide format with no fields", func(t *testing.T) {
 		frame := data.NewFrame("test")
-		frame, err := plugin.ConvertToWideFormat(frame)
+		frame, err := ConvertToWideFormat(frame)
 		require.NoError(t, err)
 		experimental.CheckGoldenJSONFrame(t, "../test_data", "wide_format_no_fields", frame, false)
 	})
@@ -182,7 +183,7 @@ func TestConvertToWideFormat(t *testing.T) {
 			data.NewField("num", nil, []float64{1, 2, 3}),
 			data.NewField("label", nil, []string{"g", "h", "i"}),
 		)
-		frame, err := plugin.ConvertToWideFormat(frame)
+		frame, err := ConvertToWideFormat(frame)
 		require.NoError(t, err)
 		experimental.CheckGoldenJSONFrame(t, "../test_data", "wide_format_fields", frame, false)
 	})
@@ -193,16 +194,45 @@ func TestValidateQuery(t *testing.T) {
 		query := humio.Query{
 			Repository: "repo",
 		}
-		err := plugin.ValidateQuery(query)
+		err := ValidateQuery(query)
 		require.NoError(t, err)
 	})
 	t.Run("no repository in query returns an error", func(t *testing.T) {
 		query := humio.Query{
 			Repository: "",
 		}
-		err := plugin.ValidateQuery(query)
+		err := ValidateQuery(query)
 		require.Error(t, err, "select a repository")
 	})
+}
+
+func TestMigrateRequest(t *testing.T) {
+	t.Run("migrates request to have default queryType", func(t *testing.T) {
+		req := preMigrationRequest()
+		err := migrateRequest(req)
+		require.NoError(t, err)
+
+		query := humio.Query{}
+
+		err = json.Unmarshal(req.Queries[0].JSON, &query)
+		require.NoError(t, err)
+
+		require.Equal(t, query.QueryType, humio.QueryTypeLQL)
+	})
+
+	t.Run("migrates request to have default formatAs", func(t *testing.T) {
+		req := preMigrationRequest()
+		err := migrateRequest(req)
+		require.NoError(t, err)
+
+		query := humio.Query{}
+
+		err = json.Unmarshal(req.Queries[0].JSON, &query)
+		require.NoError(t, err)
+
+		require.Equal(t, query.FormatAs, humio.FormatMetrics)
+	})
+
 }
 
 func newFakeFalconClient() *fakeFalconClient {
@@ -262,4 +292,23 @@ func (f *fakeFrameMarshaller) ToDataFrame(name string, any interface{}, options 
 	default:
 		return f.ret, nil
 	}
+}
+
+func preMigrationRequest() *backend.QueryDataRequest {
+	fromStart := time.Date(2018, 3, 15, 13, 0, 0, 0, time.UTC).In(time.Local)
+	query := &backend.QueryDataRequest{
+		Queries: []backend.DataQuery{
+			{
+				RefID: "A",
+				TimeRange: backend.TimeRange{
+					From: fromStart,
+					To:   fromStart.Add(34 * time.Minute),
+				},
+				JSON: json.RawMessage(`{
+					"query": "lqlquery"
+				}`),
+			},
+		},
+	}
+	return query
 }
