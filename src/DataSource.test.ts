@@ -59,7 +59,16 @@ describe('DataSource', () => {
 
   it('should return correct `applyTemplateVariables` result', () => {
     jest.spyOn(grafanaRuntime, 'getTemplateSrv').mockImplementation(() => ({
-      replace: () => 'result string after replace',
+      replace: (target: string) => {
+        if (target === '$lql') {
+          return 'result string after replace';
+        }
+        if (target === '$repository') {
+          return 'repository after replace';
+        }
+
+        return 'result string after replace';
+      },
       getVariables: jest.fn(),
       updateTimeRange: jest.fn(),
       containsTemplate: jest.fn(),
@@ -68,13 +77,14 @@ describe('DataSource', () => {
     const ds = getDataSource();
     const query = {
       ...mockQuery(),
-      repository: '',
-      lsql: '',
+      repository: '$repository',
+      lsql: '$lql',
     };
 
     expect(ds.applyTemplateVariables(query, { var: { text: '', value: '' } })).toStrictEqual({
       ...query,
       lsql: 'result string after replace',
+      repository: 'repository after replace',
     });
   });
 
