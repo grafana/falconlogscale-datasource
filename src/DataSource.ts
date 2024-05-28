@@ -126,25 +126,7 @@ export class DataSource
     return { ...query, lsql: expression };
   }
 
-  getVariablesRaw() {
-    return this.templateSrv.getVariables();
-  }
-
   getVariables() {
     return this.templateSrv.getVariables().map((v) => `$${v.name}`);
   }
 }
-
-// hacky method for doing this
-export const includeTimeRange = (option: DataQueryRequest<LogScaleQuery>): DataQueryRequest<LogScaleQuery> => {
-  const range = (getTemplateSrv() as any)?.timeRange as TimeRange;
-
-  if (!range) {
-    return option;
-  }
-
-  return {
-    ...option,
-    range,
-  };
-};
