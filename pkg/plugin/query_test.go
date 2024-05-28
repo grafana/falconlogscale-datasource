@@ -305,7 +305,7 @@ func preMigrationRequest() *backend.QueryDataRequest {
 					To:   fromStart.Add(34 * time.Minute),
 				},
 				JSON: json.RawMessage(`{
-					"query": "lqlquery"
+					"query": "test query"
 				}`),
 			},
 		},
