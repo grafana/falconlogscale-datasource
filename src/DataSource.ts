@@ -92,6 +92,7 @@ export class DataSource
     return {
       ...query,
       lsql: this.templateSrv.replace(query.lsql, scopedVars),
+      repository: this.templateSrv.replace(query.repository, scopedVars),
     };
   }
 
