@@ -5,6 +5,7 @@ import { DataSource } from './DataSource';
 import { FormatAs, LogScaleQuery, LogScaleQueryType } from './types';
 import { expect } from '@jest/globals';
 import { mockDataSourceInstanceSettings, mockQuery } from 'components/__fixtures__/datasource';
+import { pluginVersion } from 'utils/version';
 
 const getDataSource = () => {
   return new DataSource({
@@ -100,6 +101,7 @@ describe('DataSource', () => {
           refId: '',
           queryType: LogScaleQueryType.LQL,
           formatAs: FormatAs.Logs,
+          version: pluginVersion,
         },
       ];
     });
@@ -124,48 +126,6 @@ describe('DataSource', () => {
       ds.ensureRepositories(targets);
 
       expect(targets[0].repository).toBe('foo');
-    });
-  });
-
-  describe('migrateQuery', () => {
-    describe('should migrate the query to the new format', () => {
-      [
-        {
-          description: 'migrates a query without a type to the default (LQL)',
-          input: {
-            refId: 'A',
-            intervalMs: 1000,
-            query: '',
-            repository: 'test-repo',
-          },
-          expected: {
-            query: '',
-            queryType: LogScaleQueryType.LQL,
-            repository: 'test-repo',
-          },
-        },
-        {
-          description: 'migrates a query without the formatAs prop to the default (metrics)',
-          input: {
-            refId: 'A',
-            intervalMs: 1000,
-            query: '',
-            repository: 'test-repo',
-          },
-          expected: {
-            query: '',
-            formatAs: FormatAs.Metrics,
-            repository: 'test-repo',
-          },
-        },
-      ].forEach((t) =>
-        it(t.description, () => {
-          const ds = getDataSource();
-          const oldQuery = { ...t.input } as unknown as LogScaleQuery;
-          const newQuery = ds.migrateQuery(oldQuery);
-          expect(newQuery).toMatchObject(t.expected);
-        })
-      );
     });
   });
 });

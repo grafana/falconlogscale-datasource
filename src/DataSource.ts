@@ -11,12 +11,13 @@ import {
 } from '@grafana/data';
 import { DataSourceWithBackend, getTemplateSrv, TemplateSrv } from '@grafana/runtime';
 import { lastValueFrom, Observable } from 'rxjs';
-import { LogScaleQuery, LogScaleOptions, LogScaleQueryType, FormatAs } from './types';
+import { LogScaleQuery, LogScaleOptions } from './types';
 import { map } from 'rxjs/operators';
 import LanguageProvider from 'LanguageProvider';
 import { transformBackendResult } from './logs';
 import VariableQueryEditor from 'components/VariableEditor/VariableQueryEditor';
 import { uniqueId } from 'lodash';
+import { migrateQuery } from 'migrations';
 
 export class DataSource
   extends DataSourceWithBackend<LogScaleQuery, LogScaleOptions>
@@ -53,7 +54,7 @@ export class DataSource
     }
 
     request.targets = request.targets.map((t) => ({
-      ...this.migrateQuery(t),
+      ...migrateQuery(t),
       intervalMs: request.intervalMs,
     }));
 
@@ -133,18 +134,5 @@ export class DataSource
 
   getVariables() {
     return this.templateSrv.getVariables().map((v) => `$${v.name}`);
-  }
-
-  migrateQuery(query: LogScaleQuery): LogScaleQuery {
-    const migratedQuery = { ...query };
-    if (!query.hasOwnProperty('queryType')) {
-      migratedQuery.queryType = LogScaleQueryType.LQL;
-    }
-
-    if (!query.hasOwnProperty('formatAs')) {
-      migratedQuery.formatAs = FormatAs.Metrics;
-    }
-
-    return migratedQuery;
   }
 }

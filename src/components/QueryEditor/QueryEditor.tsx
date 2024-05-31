@@ -5,6 +5,7 @@ import { DataSource } from '../../DataSource';
 import { FormatAs, LogScaleOptions, LogScaleQuery, LogScaleQueryType } from '../../types';
 import { LogScaleQueryEditor } from 'components/QueryEditor/LogScaleQueryEditor';
 import { Field, Switch } from '@grafana/ui';
+import { pluginVersion } from 'utils/version';
 
 export type Props = QueryEditorProps<DataSource, LogScaleQuery, LogScaleOptions>;
 
@@ -20,6 +21,12 @@ export function QueryEditor(props: Props) {
       onRunQuery();
     }
   }, [props.app, query, onChange, onRunQuery]);
+
+  useEffect(() => {
+    if (!query.version) {
+      onChange({ ...query, version: pluginVersion });
+    }
+  }, [query, onChange]);
 
   const onFormatAsChange = (val: boolean) => {
     setIsLogFormat(val);

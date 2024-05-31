@@ -22,6 +22,7 @@ export interface LogScaleQuery extends DataQuery {
   live?: boolean;
   queryType: LogScaleQueryType;
   formatAs: FormatAs;
+  version: string;
 }
 
 export enum LogScaleQueryType {
