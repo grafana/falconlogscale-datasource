@@ -1,5 +1,5 @@
 import { AbstractLabelMatcher, AbstractLabelOperator, AbstractQuery, LanguageProvider } from '@grafana/data';
-import { LogScaleQuery } from 'types';
+import { FormatAs, LogScaleQuery, LogScaleQueryType } from 'types';
 import { DataSource } from './DataSource';
 
 export default class FalconLogScaleLanguageProvider extends LanguageProvider {
@@ -18,6 +18,8 @@ export default class FalconLogScaleLanguageProvider extends LanguageProvider {
     return {
       repository: abstractQuery.labelMatchers.find((x) => x.name === '__name__')?.value || '',
       lsql: this.getQuery(abstractQuery.labelMatchers),
+      queryType: LogScaleQueryType.LQL,
+      formatAs: FormatAs.Logs,
       refId: abstractQuery.refId,
     };
   }

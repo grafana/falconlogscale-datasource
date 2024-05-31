@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, waitFor, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { mockDatasource } from './__fixtures__/datasource';
+import { mockDatasource } from '../__fixtures__/datasource';
 import { LogScaleQueryEditor, Props } from './LogScaleQueryEditor';
 
 const getDefaultProps = (): Props => {
@@ -16,7 +16,6 @@ const getDefaultProps = (): Props => {
   };
 
   props.datasource.getRepositories = async (): Promise<string[]> => ['repository_1', 'repository_2', 'repository_3'];
-
   return props;
 };
 

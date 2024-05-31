@@ -1,4 +1,4 @@
-import { LogScaleOptions, LogScaleQuery, SecretLogScaleOptions } from 'types';
+import { FormatAs, LogScaleOptions, LogScaleQuery, LogScaleQueryType, SecretLogScaleOptions } from 'types';
 import { DataSource } from '../../DataSource';
 import { DataSourceInstanceSettings, DataSourceSettings, PluginType } from '@grafana/data';
 
@@ -76,6 +76,8 @@ export const mockDatasource = () => {
   const instanceSettings = mockDataSourceInstanceSettings();
   const ds = new DataSource(instanceSettings);
   ds.getResource = jest.fn().mockResolvedValue([]);
+  ds.getVariables = jest.fn().mockReturnValue([]);
+  ds.getRepositories = jest.fn().mockResolvedValue([]);
   return ds;
 };
 
@@ -83,7 +85,8 @@ export const mockQuery = (): LogScaleQuery => ({
   refId: 'A',
   hide: false,
   key: 'fake-query',
-  queryType: '',
+  queryType: LogScaleQueryType.LQL,
+  formatAs: FormatAs.Logs,
   datasource: {},
   lsql: '',
   repository: '',

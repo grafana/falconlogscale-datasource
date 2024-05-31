@@ -1,7 +1,8 @@
 import React from 'react';
 import { render, waitFor } from '@testing-library/react';
-import { mockDatasource, mockQuery } from './__fixtures__/datasource';
+import { mockDatasource, mockQuery } from '../__fixtures__/datasource';
 import { QueryEditor, Props } from './QueryEditor';
+import { pluginVersion } from 'utils/version';
 
 const getDefaultProps = (): Props => {
   const props: Props = {
@@ -28,5 +29,16 @@ describe('<QueryEditor />', () => {
     const { container } = render(<QueryEditor {...getDefaultProps()} />);
 
     await waitFor(() => expect(container).not.toBeEmptyDOMElement());
+  });
+
+  it("should add a version to the query if it doesn't exist", async () => {
+    const props = getDefaultProps();
+    props.query.version = '';
+
+    render(<QueryEditor {...props} />);
+
+    await waitFor(() =>
+      expect(props.onChange).toHaveBeenCalledWith(expect.objectContaining({ version: pluginVersion }))
+    );
   });
 });

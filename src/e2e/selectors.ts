@@ -9,6 +9,11 @@ export const components = {
       button: 'data-testid load-repositories',
     },
   },
+  variableEditor: {
+    queryType: {
+      input: 'data-testid query-type',
+    },
+  },
 };
 
 export const selectors: { components: E2ESelectors<typeof components> } = {

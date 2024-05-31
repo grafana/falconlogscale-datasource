@@ -2,9 +2,10 @@ import { DataQueryResponse, FieldType } from '@grafana/data';
 import * as grafanaRuntime from '@grafana/runtime';
 import { from } from 'rxjs';
 import { DataSource } from './DataSource';
-import { LogScaleQuery } from './types';
+import { FormatAs, LogScaleQuery, LogScaleQueryType } from './types';
 import { expect } from '@jest/globals';
 import { mockDataSourceInstanceSettings, mockQuery } from 'components/__fixtures__/datasource';
+import { pluginVersion } from 'utils/version';
 
 const getDataSource = () => {
   return new DataSource({
@@ -59,7 +60,16 @@ describe('DataSource', () => {
 
   it('should return correct `applyTemplateVariables` result', () => {
     jest.spyOn(grafanaRuntime, 'getTemplateSrv').mockImplementation(() => ({
-      replace: () => 'result string after replace',
+      replace: (target: string) => {
+        if (target === '$lql') {
+          return 'result string after replace';
+        }
+        if (target === '$repository') {
+          return 'repository after replace';
+        }
+
+        return 'result string after replace';
+      },
       getVariables: jest.fn(),
       updateTimeRange: jest.fn(),
       containsTemplate: jest.fn(),
@@ -68,13 +78,14 @@ describe('DataSource', () => {
     const ds = getDataSource();
     const query = {
       ...mockQuery(),
-      repository: '',
-      lsql: '',
+      repository: '$repository',
+      lsql: '$lql',
     };
 
     expect(ds.applyTemplateVariables(query, { var: { text: '', value: '' } })).toStrictEqual({
       ...query,
       lsql: 'result string after replace',
+      repository: 'repository after replace',
     });
   });
 
@@ -88,6 +99,9 @@ describe('DataSource', () => {
           repository: '',
           lsql: '',
           refId: '',
+          queryType: LogScaleQueryType.LQL,
+          formatAs: FormatAs.Logs,
+          version: pluginVersion,
         },
       ];
     });

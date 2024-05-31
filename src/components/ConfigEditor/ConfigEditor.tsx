@@ -6,7 +6,7 @@ import {
   updateDatasourcePluginOption,
 } from '@grafana/data';
 import { Field, SecretInput } from '@grafana/ui';
-import { DataLinks } from './DataLinks';
+import { DataLinks } from '../DataLinks';
 import { getBackendSrv } from '@grafana/runtime';
 import {
   AdvancedHttpSettings,
@@ -18,7 +18,7 @@ import {
   convertLegacyAuthProps,
 } from '@grafana/experimental';
 
-import { LogScaleOptions, SecretLogScaleOptions } from '../types';
+import { LogScaleOptions, SecretLogScaleOptions } from '../../types';
 import { lastValueFrom } from 'rxjs';
 import { parseRepositoriesResponse } from 'utils/utils';
 import { DefaultRepository } from './DefaultRepository';

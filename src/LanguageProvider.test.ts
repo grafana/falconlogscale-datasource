@@ -8,7 +8,7 @@ import {
 
 import LanguageProvider from './LanguageProvider';
 import { DataSource } from './DataSource';
-import { LogScaleOptions, LogScaleQuery } from './types';
+import { FormatAs, LogScaleOptions, LogScaleQuery, LogScaleQueryType } from './types';
 import { TemplateSrv } from '@grafana/runtime';
 import { expect } from '@jest/globals';
 
@@ -38,6 +38,8 @@ describe('transform abstract query to a LogScale query', () => {
     const result = instance.importFromAbstractQuery(abstractQuery);
 
     expect(result).toEqual({
+      formatAs: FormatAs.Logs,
+      queryType: LogScaleQueryType.LQL,
       lsql: 'label1="value1"\n| label2 != "value2"\n| label3 = *value3*\n| label4 != *value4*',
       repository: 'repo',
       refId: abstractQuery.refId,
@@ -53,6 +55,8 @@ describe('transform abstract query to a LogScale query', () => {
     const result = instance.importFromAbstractQuery(abstractQuery);
 
     expect(result).toEqual({
+      formatAs: FormatAs.Logs,
+      queryType: LogScaleQueryType.LQL,
       lsql: '',
       repository: 'repo',
       refId: abstractQuery.refId,
@@ -65,6 +69,8 @@ describe('transform abstract query to a LogScale query', () => {
     const result = instance.importFromAbstractQuery(abstractQuery);
 
     expect(result).toEqual({
+      formatAs: FormatAs.Logs,
+      queryType: LogScaleQueryType.LQL,
       refId: abstractQuery.refId,
       lsql: '',
       repository: '',

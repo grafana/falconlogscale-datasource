@@ -7,6 +7,7 @@ import {
   DataSourceWithQueryImportSupport,
   MetricFindValue,
   ScopedVars,
+  VariableSupportType,
 } from '@grafana/data';
 import { DataSourceWithBackend, getTemplateSrv, TemplateSrv } from '@grafana/runtime';
 import { lastValueFrom, Observable } from 'rxjs';
@@ -14,6 +15,9 @@ import { LogScaleQuery, LogScaleOptions } from './types';
 import { map } from 'rxjs/operators';
 import LanguageProvider from 'LanguageProvider';
 import { transformBackendResult } from './logs';
+import VariableQueryEditor from 'components/VariableEditor/VariableQueryEditor';
+import { uniqueId } from 'lodash';
+import { migrateQuery } from 'migrations';
 
 export class DataSource
   extends DataSourceWithBackend<LogScaleQuery, LogScaleOptions>
@@ -30,6 +34,17 @@ export class DataSource
     super(instanceSettings);
     this.defaultRepository = instanceSettings.jsonData.defaultRepository;
     this.languageProvider = new LanguageProvider(this);
+    this.variables = {
+      getType: () => VariableSupportType.Custom,
+      editor: VariableQueryEditor as any,
+      query: (request: DataQueryRequest<LogScaleQuery>) => {
+        // Make sure that every query has a refId
+        const queries = request.targets.map((query) => {
+          return { ...query, refId: query.refId || uniqueId('tempVar') };
+        });
+        return this.query({ ...request, targets: queries });
+      },
+    };
   }
 
   query(request: DataQueryRequest<LogScaleQuery>): Observable<DataQueryResponse> {
@@ -37,6 +52,11 @@ export class DataSource
     if (targets && targets.length > 0) {
       this.ensureRepositories(targets);
     }
+
+    request.targets = request.targets.map((t) => ({
+      ...migrateQuery(t),
+      intervalMs: request.intervalMs,
+    }));
 
     return super
       .query(request)
@@ -77,6 +97,7 @@ export class DataSource
     return {
       ...query,
       lsql: this.templateSrv.replace(query.lsql, scopedVars),
+      repository: this.templateSrv.replace(query.repository, scopedVars),
     };
   }
 
@@ -109,5 +130,9 @@ export class DataSource
       }
     }
     return { ...query, lsql: expression };
+  }
+
+  getVariables() {
+    return this.templateSrv.getVariables().map((v) => `$${v.name}`);
   }
 }

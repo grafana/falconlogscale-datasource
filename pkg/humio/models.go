@@ -7,7 +7,23 @@ type Query struct {
 	End            string `json:"end,omitempty"`
 	Live           bool   `json:"isLive,omitempty"`
 	TimezoneOffset *int   `json:"timeZoneOffsetMinutes,omitempty"`
+	FormatAs       string `json:"formatAs"`
+	QueryType      string `json:"queryType,omitempty"`
+
+	// This is the version of the plugin that the query was created/updated with
+	// Needed for tracking query versions across migrations
+	Version string `json:"version,omitempty"`
 }
+
+const (
+	QueryTypeLQL          = "LQL"
+	QueryTypeRepositories = "Repositories"
+)
+
+const (
+	FormatMetrics = "metrics"
+	FormatLogs    = "logs"
+)
 
 type QueryResult struct {
 	Cancelled bool                `json:"cancelled"`

@@ -1,4 +1,4 @@
-import { render, waitFor, screen } from '@testing-library/react';
+import { render, waitFor, screen, act } from '@testing-library/react';
 import { DefaultRepository, DefaultRepositoryProps } from './DefaultRepository';
 import React from 'react';
 import { selectors } from 'e2e/selectors';
@@ -48,7 +48,7 @@ describe('<DefaultRepository/>', () => {
 
     await waitFor(() => expect(screen.getByText('Default Repository')).toBeInTheDocument());
 
-    screen.getByTestId(selectors.components.configEditor.loadRepositories.button).click();
+    act(() => screen.getByTestId(selectors.components.configEditor.loadRepositories.button).click());
     expect(props.onRepositoriesChange).toHaveBeenCalledWith(repositories);
 
     rerender(<DefaultRepository {...{ ...props, repositories, defaultRepository: repositories[0].value }} />);

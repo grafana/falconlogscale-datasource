@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { QueryEditorProps, SelectableValue } from '@grafana/data';
+import React, { useEffect, useMemo, useState } from 'react';
+import { QueryEditorProps, SelectableValue, toOption } from '@grafana/data';
 import { Select, QueryField } from '@grafana/ui';
 import { EditorRows, EditorRow, EditorField } from '@grafana/experimental';
-import { DataSource } from '../DataSource';
-import { LogScaleOptions, LogScaleQuery } from './../types';
-import { parseRepositoriesResponse } from '../utils/utils';
+import { DataSource } from '../../DataSource';
+import { LogScaleOptions, LogScaleQuery } from '../../types';
+import { parseRepositoriesResponse } from '../../utils/utils';
 
 export type Props = QueryEditorProps<DataSource, LogScaleQuery, LogScaleOptions>;
 
@@ -12,13 +12,28 @@ export function LogScaleQueryEditor(props: Props) {
   const { datasource, query, onChange, onRunQuery } = props;
   const [repositories, setRepositories] = useState<Array<SelectableValue<string>>>([]);
 
+  const variableOptionGroup = useMemo(
+    () => ({
+      label: 'Template Variables',
+      expanded: false,
+      options: datasource.getVariables().map(toOption),
+    }),
+    [datasource]
+  );
+
   useEffect(() => {
     datasource.getRepositories().then((result: string[]) => {
       const repositories = parseRepositoriesResponse(result);
       repositories.unshift({ label: `$defaultRepo (${datasource.defaultRepository})`, value: '$defaultRepo' });
-      setRepositories(repositories);
+      setRepositories([
+        {
+          label: 'Template Variables',
+          options: variableOptionGroup.options,
+        },
+        ...repositories,
+      ]);
     });
-  }, [datasource]);
+  }, [datasource, variableOptionGroup]);
 
   useEffect(() => {
     if (datasource.defaultRepository && !query.repository) {
