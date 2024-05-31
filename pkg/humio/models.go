@@ -9,6 +9,10 @@ type Query struct {
 	TimezoneOffset *int   `json:"timeZoneOffsetMinutes,omitempty"`
 	FormatAs       string `json:"formatAs"`
 	QueryType      string `json:"queryType,omitempty"`
+
+	// This is the version of the plugin that the query was created/updated with
+	// Needed for tracking query versions across migrations
+	Version string `json:"version,omitempty"`
 }
 
 const (
