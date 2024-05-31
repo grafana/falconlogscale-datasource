@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7.0
+
+- Feature: Upgrade `VariableEditor` to remove usage of deprecated APIs and add `repository` variable query type. [#303](https://github.com/grafana/falconlogscale-datasource/pull/303)
+- Dependency updates.
+  
 ## 1.6.0
 
 - Fix: State bug in `VariableEditor`
