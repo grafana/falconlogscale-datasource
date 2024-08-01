@@ -5,12 +5,13 @@ import {
   DataQueryResponse,
   DataSourceInstanceSettings,
   DataSourceWithQueryImportSupport,
+  LiveChannelScope,
   MetricFindValue,
   ScopedVars,
   VariableSupportType,
 } from '@grafana/data';
-import { DataSourceWithBackend, getTemplateSrv, TemplateSrv } from '@grafana/runtime';
-import { lastValueFrom, Observable } from 'rxjs';
+import { DataSourceWithBackend, getGrafanaLiveSrv, getTemplateSrv, TemplateSrv } from '@grafana/runtime';
+import { lastValueFrom, Observable, merge } from 'rxjs';
 import { LogScaleQuery, LogScaleOptions } from './types';
 import { map } from 'rxjs/operators';
 import LanguageProvider from 'LanguageProvider';
@@ -48,21 +49,37 @@ export class DataSource
   }
 
   query(request: DataQueryRequest<LogScaleQuery>): Observable<DataQueryResponse> {
-    const { targets } = request;
-    if (targets && targets.length > 0) {
-      this.ensureRepositories(targets);
-    }
+    // const { targets } = request;
+    // if (targets && targets.length > 0) {
+    //   this.ensureRepositories(targets);
+    // }
 
-    request.targets = request.targets.map((t) => ({
-      ...migrateQuery(t),
-      intervalMs: request.intervalMs,
-    }));
+    // request.targets = request.targets.map((t) => ({
+    //   ...migrateQuery(t),
+    //   intervalMs: request.intervalMs,
+    // }));
 
-    return super
-      .query(request)
-      .pipe(
-        map((response) => transformBackendResult(response, this.instanceSettings.jsonData.dataLinks ?? [], request))
-      );
+    // return super
+    //   .query(request)
+    //   .pipe(
+    //     map((response) => transformBackendResult(response, this.instanceSettings.jsonData.dataLinks ?? [], request))
+    //   );
+
+      const observables = request.targets.map((query, index) => {
+
+        return getGrafanaLiveSrv().getDataStream({
+          addr: {
+            scope: LiveChannelScope.DataSource,
+            namespace: this.uid,
+            path: `my-ws/custom-${encodeURI(query.lsql)}-${encodeURI(query.refId)}`, // this will allow each new query to create a new connection
+            data: {
+              ...query,
+            },
+          },
+        });
+      });
+  
+      return merge(...observables);
   }
 
   ensureRepositories(targets: LogScaleQuery[]): void {

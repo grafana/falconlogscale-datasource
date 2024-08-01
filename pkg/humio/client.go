@@ -39,10 +39,12 @@ func (c *Client) CreateJob(repo string, query Query) (string, error) {
 		QueryString string `json:"queryString"`
 		Start       string `json:"start"`
 		End         string `json:"end"`
+		Live        bool   `json:"live"`
 	}
 	humioQuery.QueryString = query.LSQL
 	humioQuery.Start = query.Start
 	humioQuery.End = query.End
+	humioQuery.Live = query.Live
 	var buf bytes.Buffer
 	err := json.NewEncoder(&buf).Encode(humioQuery)
 	if err != nil {

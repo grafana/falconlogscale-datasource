@@ -55,10 +55,10 @@ func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
 		}(id)
 
 		var result QueryResult
-		poller := queryJobPoller{
-			queryJobs:  &qj.jobQuerier,
-			repository: repository,
-			id:         id,
+		poller := QueryJobPoller{
+			QueryJobs:  &qj.jobQuerier,
+			Repository: repository,
+			Id:         id,
 		}
 		result, err = poller.WaitAndPollContext(ctx)
 
@@ -77,11 +77,8 @@ func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
 	}()
 
 	if err != nil {
-		return nil, err
-	}
-
-	if err != nil {
 		log.DefaultLogger.Error("Humio query string error: %s\n", err.Error())
+		return nil, err
 	}
 
 	r := humioToDatasourceResult(*result)
@@ -104,26 +101,26 @@ func humioToDatasourceResult(r QueryResult) QueryResult {
 	}
 }
 
-type queryJobPoller struct {
-	queryJobs  *JobQuerier
-	repository string
-	id         string
-	nextPoll   time.Time
+type QueryJobPoller struct {
+	QueryJobs  *JobQuerier
+	Repository string
+	Id         string
+	NextPoll   time.Time
 }
 
-func (q *queryJobPoller) WaitAndPollContext(ctx context.Context) (QueryResult, error) {
+func (q *QueryJobPoller) WaitAndPollContext(ctx context.Context) (QueryResult, error) {
 	select {
-	case <-time.After(time.Until(q.nextPoll)):
+	case <-time.After(time.Until(q.NextPoll)):
 	case <-ctx.Done():
 		return QueryResult{}, ctx.Err()
 	}
 
-	result, err := (*q.queryJobs).PollJob(q.repository, q.id)
+	result, err := (*q.QueryJobs).PollJob(q.Repository, q.Id)
 	if err != nil {
 		return result, err
 	}
 
-	q.nextPoll = time.Now().Add(time.Duration(result.Metadata.PollAfter) * time.Millisecond)
+	q.NextPoll = time.Now().Add(time.Duration(result.Metadata.PollAfter) * time.Millisecond)
 
 	return result, err
 }
