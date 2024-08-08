@@ -31,4 +31,4 @@ Here are some useful LQL functions to get you started with Grafana visualization
 
 The Explore view allows you to run LQL queries and visualize the results as logs or charts. For more information about Explore, refer to [Explore](https://grafana.com/docs/grafana/latest/features/explore/). For more information about Logs in Explore, refer to [Explore logs](https://grafana.com/docs/grafana/latest/explore/logs-integration/).
 
-Grafana v9.4.8 and later allows you to create data links in Tempo, Grafana Enterprise Traces, Jaeger, and Zipkin that target Falcon LogScale.
+Grafana v9.4.8 and later allows you to create data links in Tempo, Grafana Enterprise Traces, Jaeger, and Zipkin that target Falcon LogScale. To configure data links, refer to [Configure data links](/docs/plugins/grafana-falconlogscale-datasourcelatest/configure#configure-data-links)

@@ -41,7 +41,7 @@ You can authenticate using your personal LogScale token. To generate a personal 
 
 # Forward OAuth Identity
 
-**Note: The feature is experimental, which means it may not work as expected, it may cause Grafana to behave in an unexpected way, and breaking changes may be introduced in the future.**
+**Note: This feature is experimental, which means it may not work as expected, it may cause Grafana to behave in an unexpected way, and breaking changes may be introduced in the future.**
 
 ## Prerequisites
 
