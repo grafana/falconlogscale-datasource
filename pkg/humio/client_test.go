@@ -111,7 +111,7 @@ func setupClientTest() {
 	url, _ := url.Parse(testServer.URL)
 	token := "testToken"
 	config := humio.Config{Address: url, Token: token}
-	httpOpts := httpclient.Options{Headers: map[string]string{}}
+	httpOpts := httpclient.Options{Header: http.Header{}}
 	var err error
 	testClient, err = humio.NewClient(config, httpOpts)
 	if err != nil {
