@@ -123,7 +123,7 @@ func NewClient(config Config, httpOpts httpclient.Options) (*Client, error) {
 		},
 	}
 
-	httpOpts.Headers["Content-Type"] = "application/json"
+	httpOpts.Header.Add("Content-Type", "application/json")
 
 	c, err := httpclient.NewProvider().New(httpOpts)
 	if err != nil {
