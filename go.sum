@@ -89,8 +89,8 @@ github.com/hashicorp/go-plugin v1.6.1 h1:P7MR2UP6gNKGPp+y7EZw2kOiq4IR9WiqLvp0XOs
 github.com/hashicorp/go-plugin v1.6.1/go.mod h1:XPHFku2tFo3o3QKFgSYo+cghcUhw1NA1hZyMK0PWAw0=
 github.com/hashicorp/yamux v0.1.1 h1:yrQxtgseBDrq9Y652vSRDvsKCJKOUD+GzTS4Y0Y8pvE=
 github.com/hashicorp/yamux v0.1.1/go.mod h1:CtWFDAQgb7dxtzFs4tWbplKIe2jSi3+5vKbgIO0SLnQ=
-github.com/hasura/go-graphql-client v0.12.2 h1:cYeQK/CELtvFy2jvik4kG0b5UMGngQRYWTTXQkbGHDo=
-github.com/hasura/go-graphql-client v0.12.2/go.mod h1:17qYcHgGSensF/wMAHKUhtMYaRZwZa3TyD7biqH9L3k=
+github.com/hasura/go-graphql-client v0.13.0 h1:mPYtqToLttIk/89hIHJYQgPShdBffrloCk6Pn4QqNfo=
+github.com/hasura/go-graphql-client v0.13.0/go.mod h1:17qYcHgGSensF/wMAHKUhtMYaRZwZa3TyD7biqH9L3k=
 github.com/humio/cli v0.33.0 h1:w/6Ex8fBRu+h3JsoVUn7puQD07WDwejxI3xvLUPogQs=
 github.com/humio/cli v0.33.0/go.mod h1:T4mOVMdyJcHM5ANBx8U5/7cbqV5K+O7hWQd9Q78nd7U=
 github.com/invopop/yaml v0.2.0 h1:7zky/qH+O0DwAyoobXUqvVBwgBFRxKoQ/3FjcVpjTMY=
