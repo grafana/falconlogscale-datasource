@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
+	"github.com/grafana/grafana-plugin-sdk-go/experimental/errorsource"
 )
 
 type JobQuerier interface {
@@ -77,7 +78,7 @@ func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
 	}()
 
 	if err != nil {
-		return nil, err
+		return nil, errorsource.DownstreamError(err, false)
 	}
 
 	if err != nil {
