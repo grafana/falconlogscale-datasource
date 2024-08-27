@@ -1948,10 +1948,10 @@
     uplot "1.6.30"
     xss "^1.0.14"
 
-"@grafana/e2e-selectors@11.0.3":
-  version "11.0.3"
-  resolved "https://registry.yarnpkg.com/@grafana/e2e-selectors/-/e2e-selectors-11.0.3.tgz#80feabd3325dedf1d785f9f5f4656a9d272f525e"
-  integrity sha512-o9x1Ny0n3uIqe5pd+uc0HsEyHHcq4ImMeamPdZu9KZD6J279g4ns/R06Sqb2Su2rBe/PyyMmpmT7RRSG+2JXHw==
+"@grafana/e2e-selectors@11.0.4":
+  version "11.0.4"
+  resolved "https://registry.yarnpkg.com/@grafana/e2e-selectors/-/e2e-selectors-11.0.4.tgz#88112e79c8a10be1e06da8e0e7d48117319c32e4"
+  integrity sha512-6FSEsnQ4kwdFdjY3KZAz53ejrwfq1lK1r7ak8LspGzvFB8dasMq9FwTL1OF1g0uVeSz/MheGqZlchKYTOwys6g==
   dependencies:
     "@grafana/tsconfig" "^1.3.0-rc1"
     tslib "2.6.2"
@@ -1966,16 +1966,16 @@
     tslib "2.6.3"
     typescript "5.4.5"
 
-"@grafana/e2e@11.0.3":
-  version "11.0.3"
-  resolved "https://registry.yarnpkg.com/@grafana/e2e/-/e2e-11.0.3.tgz#23d63bbac473a107f439625436bf252bf65584ad"
-  integrity sha512-LDoIMd56x7XLT6CkAa9uYIfhzN6Eo1fWBenjPf43cyTqORpM2yjkWuB7EJ8z+bvH/gdZCV6sdVrzgnYF4tBxew==
+"@grafana/e2e@11.0.4":
+  version "11.0.4"
+  resolved "https://registry.yarnpkg.com/@grafana/e2e/-/e2e-11.0.4.tgz#2342858090d8fb79cc7f9db57a713e6531458354"
+  integrity sha512-6DuXTk1kMpRB+1bBq+PJYSccMxHHLznC0bjw1Yv5P243vb9PD4cJmzAWXAdVE02EK9np410Ln0KmZWW2aKIVfw==
   dependencies:
     "@babel/core" "7.23.2"
     "@babel/preset-env" "7.23.2"
     "@cypress/webpack-preprocessor" "5.17.1"
-    "@grafana/e2e-selectors" "11.0.3"
-    "@grafana/schema" "11.0.3"
+    "@grafana/e2e-selectors" "11.0.4"
+    "@grafana/schema" "11.0.4"
     "@grafana/tsconfig" "^1.3.0-rc1"
     "@mochajs/json-file-reporter" "^1.2.0"
     babel-loader "9.1.3"
@@ -2057,10 +2057,10 @@
     rxjs "7.8.1"
     tslib "2.6.3"
 
-"@grafana/schema@11.0.3":
-  version "11.0.3"
-  resolved "https://registry.yarnpkg.com/@grafana/schema/-/schema-11.0.3.tgz#76a8688dff2bdd735c369f706456b85964b14188"
-  integrity sha512-jPgEWQrcdrZv64QFCSkguoOzfguwu1A6zG+dLeuv+5dR96DJTjHT1sn4zFo1xSPuTF/7JPlwICDxin9rzzLgbg==
+"@grafana/schema@11.0.4":
+  version "11.0.4"
+  resolved "https://registry.yarnpkg.com/@grafana/schema/-/schema-11.0.4.tgz#bc967126f74592dae4d2c9d342ea4c1911228a28"
+  integrity sha512-CVm2PCd/2NZRkr9zrppWwMeDYJ4q7ziHssaT/Z+COftn8h+Kw+WAh42RMcZ1bjjEWxaemY5G6DEXw6DxWXeTOg==
   dependencies:
     tslib "2.6.2"
 
