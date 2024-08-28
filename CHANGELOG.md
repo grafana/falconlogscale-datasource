@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7.2
+
+- Dependency updates.
+- Add `errorsource` [#380](https://github.com/grafana/falconlogscale-datasource/pull/380)
+  
 ## 1.7.1
 
 - Dependency updates.
