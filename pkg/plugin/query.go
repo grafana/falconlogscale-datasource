@@ -13,6 +13,7 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/grafana/grafana-plugin-sdk-go/data/framestruct"
+	"github.com/grafana/grafana-plugin-sdk-go/experimental/errorsource"
 )
 
 // QueryData handles multiple queries and returns multiple responses.
@@ -24,7 +25,7 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 	for _, q := range req.Queries {
 		qr, err := h.queryRequest(q)
 		if err != nil {
-			response.Responses[q.RefID] = backend.DataResponse{Error: err}
+			errorsource.AddErrorToResponse(q.RefID, response, err)
 			continue
 		}
 
@@ -52,13 +53,13 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 		if qr.QueryType == humio.QueryTypeLQL {
 			err = ValidateQuery(qr)
 			if err != nil {
-				response.Responses[q.RefID] = backend.DataResponse{Error: err}
+				errorsource.AddErrorToResponse(q.RefID, response, err)
 				continue
 			}
 
 			res, err := h.QueryRunner.Run(qr)
 			if err != nil {
-				response.Responses[q.RefID] = backend.DataResponse{Error: err}
+				errorsource.AddErrorToResponse(q.RefID, response, err)
 				continue
 			}
 
@@ -70,7 +71,7 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 				converters := GetConverters(r.Events)
 				f, err := h.FrameMarshaller("events", r.Events, converters...)
 				if err != nil {
-					response.Responses[q.RefID] = backend.DataResponse{Error: err}
+					errorsource.AddErrorToResponse(q.RefID, response, err)
 					continue
 				}
 
@@ -228,7 +229,7 @@ func (h *Handler) queryRequest(q backend.DataQuery) (humio.Query, error) {
 
 func ValidateQuery(q humio.Query) error {
 	if q.Repository == "" {
-		return errors.New("select a repository")
+		return errorsource.DownstreamError(errors.New("select a repository"), false)
 	}
 	return nil
 }
