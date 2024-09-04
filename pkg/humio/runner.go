@@ -38,51 +38,52 @@ func NewQueryRunner(c JobQuerier, opts ...QueryRunnerOption) *QueryRunner {
 }
 
 func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
-	repository := query.Repository
-
 	ctx := contextCancelledOnInterrupt(context.Background())
-	// run in lambda func to be able to defer and delete the query job
-	result, err := func() (*QueryResult, error) {
-		id, err := qj.jobQuerier.CreateJob(repository, query)
 
-		if err != nil {
-			return nil, err
-		}
-
-		defer func(id string) {
-			// Humio will eventually delete the query when we stop polling and we can't do much about errors here.
-			_ = qj.jobQuerier.DeleteJob(repository, id)
-		}(id)
-
-		var result QueryResult
-		poller := QueryJobPoller{
-			QueryJobs:  &qj.jobQuerier,
-			Repository: repository,
-			Id:         id,
-		}
-		result, err = poller.WaitAndPollContext(ctx)
-
-		if err != nil {
-			return nil, err
-		}
-
-		for !result.Done {
-			result, err = poller.WaitAndPollContext(ctx)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		return &result, nil
-	}()
-
+	c := make(chan QueryResult)
+	j := QueryResult{}
+	err := qj.GetChannel(ctx, query, c)
 	if err != nil {
 		log.DefaultLogger.Error("Humio query string error: %s\n", err.Error())
 		return nil, err
 	}
+	for {
+		c <- j
+		if j.Done {
+			r := humioToDatasourceResult(j)
+			return []QueryResult{r}, nil
+		}
+	}
+}
 
-	r := humioToDatasourceResult(*result)
-	return []QueryResult{r}, nil
+func (qr *QueryRunner) GetChannel(ctx context.Context, query Query, c chan QueryResult) (err error) {
+	repository := query.Repository
+
+	id, err := qr.jobQuerier.CreateJob(repository, query)
+
+	if err != nil {
+		return
+	}
+
+	defer func(id string) {
+		// Humio will eventually delete the query when we stop polling and we can't do much about errors here.
+		_ = qr.jobQuerier.DeleteJob(repository, id)
+	}(id)
+
+	var result QueryResult
+	poller := QueryJobPoller{
+		QueryJobs:  &qr.jobQuerier,
+		Repository: repository,
+		Id:         id,
+	}
+	for !result.Done {
+		result, err = poller.WaitAndPollContext(ctx)
+		if err != nil {
+			return
+		}
+		c <- result
+	}
+	return
 }
 
 func (qr *QueryRunner) GetAllRepoNames() ([]string, error) {
