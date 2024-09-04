@@ -6,8 +6,6 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-
-	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 )
 
 type JobQuerier interface {
@@ -41,22 +39,23 @@ func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
 	ctx := contextCancelledOnInterrupt(context.Background())
 
 	c := make(chan QueryResult)
-	j := QueryResult{}
-	err := qj.GetChannel(ctx, query, c)
-	if err != nil {
-		log.DefaultLogger.Error("Humio query string error: %s\n", err.Error())
-		return nil, err
-	}
-	for {
-		c <- j
+	go qj.GetChannel(ctx, query, &c)
+	// if err != nil {
+	// 	log.DefaultLogger.Error("Humio query string error: %s\n", err.Error())
+	// 	return nil, err
+	// }
+	//	c <- j
+	for j := range c {
 		if j.Done {
 			r := humioToDatasourceResult(j)
+			close(c)
 			return []QueryResult{r}, nil
 		}
 	}
+	return []QueryResult{}, nil
 }
 
-func (qr *QueryRunner) GetChannel(ctx context.Context, query Query, c chan QueryResult) (err error) {
+func (qr *QueryRunner) GetChannel(ctx context.Context, query Query, c *chan QueryResult) (err error) {
 	repository := query.Repository
 
 	id, err := qr.jobQuerier.CreateJob(repository, query)
@@ -76,13 +75,15 @@ func (qr *QueryRunner) GetChannel(ctx context.Context, query Query, c chan Query
 		Repository: repository,
 		Id:         id,
 	}
+	result, err = poller.WaitAndPollContext(ctx)
 	for !result.Done {
 		result, err = poller.WaitAndPollContext(ctx)
 		if err != nil {
 			return
 		}
-		c <- result
+		*c <- result
 	}
+	*c <- result
 	return
 }
 
