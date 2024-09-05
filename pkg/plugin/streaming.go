@@ -6,7 +6,6 @@ import (
 
 	"github.com/grafana/falconlogscale-datasource-backend/pkg/humio"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
-	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 )
 
@@ -29,93 +28,48 @@ func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, 
 		return err
 	}
 	qr.Live = true
-
-	var frames []*data.Frame
-
-	if qr.QueryType == humio.QueryTypeLQL {
-		res, err := h.QueryRunner.Run(qr)
-		if err != nil {
-			return err
-		}
-
-		for _, r := range res {
+	qr.Repository = "humio-organization-audit"
+	qr.LSQL = "css"
+	qr.Start = "1m"
+	c := make(chan humio.QueryResult)
+	go func() {
+		for r := range c {
+			// f2 := data.NewFrame("testdata",
+			// 	data.NewField("Time", nil, make([]time.Time, 1)),
+			// 	data.NewField("Value", nil, make([]float64, 1)),
+			// 	data.NewField("Min", nil, make([]float64, 1)),
+			// 	data.NewField("Max", nil, make([]float64, 1)),
+			// )
+			// sender.SendFrame(f2, data.IncludeAll)
 			if len(r.Events) == 0 {
 				continue
 			}
 
 			converters := GetConverters(r.Events)
-			f, err := h.FrameMarshaller("events", r.Events, converters...)
-			if err != nil {
-				return err
-			}
+			f, _ := h.FrameMarshaller("events", r.Events, converters...)
+			// if err != nil {
+			// 	return err
+			// }
 
 			OrderFrameFieldsByMetaData(r.Metadata.FieldOrder, f)
 			PrependTimestampField(f)
 
-			if _, ok := r.Events[0]["_bucket"]; ok {
-				f, err = ConvertToWideFormat(f)
-				if err != nil {
-					return err
-				}
-			}
+			// if _, ok := r.Events[0]["_bucket"]; ok {
+			// 	f, err = ConvertToWideFormat(f)
+			// 	if err != nil {
+			// 		return err
+			// 	}
+			// }
 
-			if qr.FormatAs == humio.FormatLogs {
-				f.Meta = &data.FrameMeta{
-					PreferredVisualization: data.VisTypeLogs,
-				}
-			}
-
-			frames = append(frames, f)
+			// if qr.FormatAs == humio.FormatLogs {
+			// 	f.Meta = &data.FrameMeta{
+			// 		PreferredVisualization: data.VisTypeLogs,
+			// 	}
+			// }
+			sender.SendFrame(f, data.IncludeAll)
 		}
-	}
-
-	err := sender.SendFrame(
-		frames[0],
-		data.IncludeAll,
-	)
-
-	repository := qr.Repository
-
-	// run in lambda func to be able to defer and delete the query job
-	result, err := func() (*humio.QueryResult, error) {
-		id, err := h.QueryRunner.JobQuerier.CreateJob(repository, query)
-
-		if err != nil {
-			return nil, err
-		}
-
-		defer func(id string) {
-			// Humio will eventually delete the query when we stop polling and we can't do much about errors here.
-			_ = qj.jobQuerier.DeleteJob(repository, id)
-		}(id)
-
-		var result humio.QueryResult
-		poller := humio.QueryJobPoller{
-			QueryJobs:  &qj.jobQuerier,
-			Repository: repository,
-			Id:         id,
-		}
-		result, err = poller.WaitAndPollContext(ctx)
-
-		if err != nil {
-			return nil, err
-		}
-
-		for !result.Done {
-			result, err = poller.WaitAndPollContext(ctx)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		return &result, nil
 	}()
-
-	if err != nil {
-		log.DefaultLogger.Error("Humio query string error: %s\n", err.Error())
-		return nil, err
-	}
-
-	r := humioToDatasourceResult(*result)
-	return []humio.QueryResult{r}, nil
+	h.QueryRunner.RunChannel(ctx, qr, &c)
+	//c <- humio.QueryResult{}
+	return nil
 }

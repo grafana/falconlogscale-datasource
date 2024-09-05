@@ -37,9 +37,9 @@ func (c *Client) CreateJob(repo string, query Query) (string, error) {
 	}
 	var humioQuery struct {
 		QueryString string `json:"queryString"`
-		Start       string `json:"start"`
-		End         string `json:"end"`
-		Live        bool   `json:"live"`
+		Start       string `json:"start,omitempty"`
+		End         string `json:"end,omitempty"`
+		Live        bool   `json:"isLive"`
 	}
 	humioQuery.QueryString = query.LSQL
 	humioQuery.Start = query.Start

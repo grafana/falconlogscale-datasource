@@ -1,6 +1,7 @@
 package plugin_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -230,6 +231,9 @@ func (qr *fakeQueryRunner) Run(req humio.Query) ([]humio.QueryResult, error) {
 	default:
 		return nil, qr.err()
 	}
+}
+
+func (qr *fakeQueryRunner) RunChannel(context.Context, humio.Query, *chan humio.QueryResult) {
 }
 
 func (qr *fakeQueryRunner) GetAllRepoNames() ([]string, error) {

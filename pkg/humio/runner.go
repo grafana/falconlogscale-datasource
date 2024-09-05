@@ -39,7 +39,7 @@ func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
 	ctx := contextCancelledOnInterrupt(context.Background())
 
 	c := make(chan QueryResult)
-	go qj.GetChannel(ctx, query, &c)
+	go qj.RunChannel(ctx, query, &c)
 	// if err != nil {
 	// 	log.DefaultLogger.Error("Humio query string error: %s\n", err.Error())
 	// 	return nil, err
@@ -55,7 +55,7 @@ func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
 	return []QueryResult{}, nil
 }
 
-func (qr *QueryRunner) GetChannel(ctx context.Context, query Query, c *chan QueryResult) (err error) {
+func (qr *QueryRunner) RunChannel(ctx context.Context, query Query, c *chan QueryResult) {
 	repository := query.Repository
 
 	id, err := qr.jobQuerier.CreateJob(repository, query)
@@ -75,16 +75,18 @@ func (qr *QueryRunner) GetChannel(ctx context.Context, query Query, c *chan Quer
 		Repository: repository,
 		Id:         id,
 	}
-	result, err = poller.WaitAndPollContext(ctx)
-	for !result.Done {
+	//result, err = poller.WaitAndPollContext(ctx)
+	for {
 		result, err = poller.WaitAndPollContext(ctx)
 		if err != nil {
 			return
 		}
-		*c <- result
+		if len(result.Events) > 0 {
+			*c <- result
+		}
 	}
-	*c <- result
-	return
+	//*c <- result
+	//return
 }
 
 func (qr *QueryRunner) GetAllRepoNames() ([]string, error) {
