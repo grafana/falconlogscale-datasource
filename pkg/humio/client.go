@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
+	"github.com/grafana/grafana-plugin-sdk-go/experimental/errorsource"
 	"github.com/hasura/go-graphql-client"
 )
 
@@ -46,7 +47,9 @@ func (c *Client) CreateJob(repo string, query Query) (string, error) {
 	var buf bytes.Buffer
 	err := json.NewEncoder(&buf).Encode(humioQuery)
 	if err != nil {
-		return "", err
+		// This is technically a plugin error so we set it here
+		// to avoid it being overwritten by a higher level errorsource call
+		return "", errorsource.PluginError(err, false)
 	}
 
 	err = c.Fetch(http.MethodPost, "api/v1/repositories/"+url.QueryEscape(repo)+"/queryjobs", &buf, &jsonResponse)
@@ -91,7 +94,12 @@ func (c *Client) ListRepos() ([]string, error) {
 	for _, v := range query.Views {
 		f = append(f, v.Name)
 	}
-	return f, err
+
+	if err != nil {
+		return f, errorsource.DownstreamError(err, false)
+	}
+
+	return f, nil
 }
 
 func (c *Client) setAuthHeaders() graphql.RequestModifier {
@@ -109,7 +117,7 @@ func (c *Client) newGraphQLClient() (*graphql.Client, error) {
 func (c *Client) GraphQLQuery(query interface{}, variables map[string]interface{}) error {
 	client, err := c.newGraphQLClient()
 	if err != nil {
-		return err
+		return errorsource.PluginError(err, false)
 	}
 	return client.Query(context.Background(), query, variables)
 }
@@ -123,7 +131,7 @@ func NewClient(config Config, httpOpts httpclient.Options) (*Client, error) {
 		},
 	}
 
-	httpOpts.Headers["Content-Type"] = "application/json"
+	httpOpts.Header.Add("Content-Type", "application/json")
 
 	c, err := httpclient.NewProvider().New(httpOpts)
 	if err != nil {
