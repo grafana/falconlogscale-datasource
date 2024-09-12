@@ -190,3 +190,46 @@ func (c *Client) Fetch(method string, path string, body *bytes.Buffer, out inter
 	}
 	return fmt.Errorf("%s %s", res.Status, strings.TrimSpace(errResponse.Detail))
 }
+
+/*
+return a stream new data from http stream
+*/
+func (c *Client) Stream(method string, path string, body *bytes.Buffer, ch *chan any) error {
+	url, err := url.JoinPath(c.URL.String(), path)
+	if err != nil {
+		return err
+	}
+
+	var req *http.Request
+	if body == nil {
+		req, err = http.NewRequest(method, url, bytes.NewReader(nil))
+	} else {
+		req, err = http.NewRequest(method, url, body)
+	}
+	if err != nil {
+		return err
+	}
+	req = c.addAuthHeaders(req)
+
+	res, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return err
+	}
+
+	defer res.Body.Close()
+	for res.StatusCode == http.StatusOK {
+		var result any
+		json.NewDecoder(res.Body).Decode(&result)
+		if result != nil {
+			*ch <- result
+		}
+	}
+	if res.StatusCode == http.StatusNoContent {
+		return fmt.Errorf("%s %s", res.Status, "No content returned from request")
+	}
+	var errResponse ErrorResponse
+	if err := json.NewDecoder(res.Body).Decode(&errResponse); err != nil {
+		return fmt.Errorf("%s %s", res.Status, err.Error())
+	}
+	return fmt.Errorf("%s %s", res.Status, strings.TrimSpace(errResponse.Detail))
+}

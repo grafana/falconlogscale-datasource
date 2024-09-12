@@ -28,6 +28,7 @@ export interface LogScaleQuery extends DataQuery {
 export enum LogScaleQueryType {
   Repositories = 'Repositories',
   LQL = 'LQL',
+  LQLStreaming = 'LQLStreaming',
 }
 
 export enum FormatAs {

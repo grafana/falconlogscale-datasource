@@ -83,7 +83,7 @@ func (qr *QueryRunner) RunChannel(ctx context.Context, query Query, c *chan Quer
 		}
 		if len(result.Events) > 0 {
 			*c <- result
-		}
+		} //   -d @- << EOF
 	}
 	//*c <- result
 	//return

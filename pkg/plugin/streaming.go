@@ -66,6 +66,8 @@ func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, 
 			// 		PreferredVisualization: data.VisTypeLogs,
 			// 	}
 			// }
+
+			//remove dup lines
 			sender.SendFrame(f, data.IncludeAll)
 		}
 	}()

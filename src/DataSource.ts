@@ -11,14 +11,15 @@ import {
   VariableSupportType,
 } from '@grafana/data';
 import { DataSourceWithBackend, getGrafanaLiveSrv, getTemplateSrv, TemplateSrv } from '@grafana/runtime';
-import { lastValueFrom, Observable, merge } from 'rxjs';
-import { LogScaleQuery, LogScaleOptions } from './types';
+import { lastValueFrom, Observable, merge, defer, mergeMap } from 'rxjs';
+import { LogScaleQuery, LogScaleOptions, LogScaleQueryType } from './types';
 import { map } from 'rxjs/operators';
 import LanguageProvider from 'LanguageProvider';
 import { transformBackendResult } from './logs';
 import VariableQueryEditor from 'components/VariableEditor/VariableQueryEditor';
 import { uniqueId } from 'lodash';
 import { migrateQuery } from 'migrations';
+import { getLiveStreamKey } from 'streaming';
 
 export class DataSource
   extends DataSourceWithBackend<LogScaleQuery, LogScaleOptions>
@@ -49,37 +50,69 @@ export class DataSource
   }
 
   query(request: DataQueryRequest<LogScaleQuery>): Observable<DataQueryResponse> {
-    // const { targets } = request;
-    // if (targets && targets.length > 0) {
-    //   this.ensureRepositories(targets);
-    // }
+    if (request.liveStreaming) {
+      return this.runLiveQuery(request);
+    }
 
-    // request.targets = request.targets.map((t) => ({
-    //   ...migrateQuery(t),
-    //   intervalMs: request.intervalMs,
-    // }));
+    const { targets } = request;
+    if (targets && targets.length > 0) {
+      this.ensureRepositories(targets);
+    }
 
-    // return super
-    //   .query(request)
-    //   .pipe(
-    //     map((response) => transformBackendResult(response, this.instanceSettings.jsonData.dataLinks ?? [], request))
-    //   );
+    request.targets = request.targets.map((t) => ({
+      ...migrateQuery(t),
+      intervalMs: request.intervalMs,
+    }));
 
-      const observables = request.targets.map((query, index) => {
+    return super
+      .query(request)
+      .pipe(
+        map((response) => transformBackendResult(response, this.instanceSettings.jsonData.dataLinks ?? [], request))
+      );
+  }
 
-        return getGrafanaLiveSrv().getDataStream({
-          addr: {
-            scope: LiveChannelScope.DataSource,
-            namespace: this.uid,
-            path: `my-ws/custom-${encodeURI(query.lsql)}-${encodeURI(query.refId)}`, // this will allow each new query to create a new connection
-            data: {
-              ...query,
-            },
-          },
-        });
-      });
-  
-      return merge(...observables);
+  runLiveQuery(request: DataQueryRequest<LogScaleQuery>): Observable<DataQueryResponse> {
+    const ds = this;
+    const range = request.range;
+    const observables = request.targets.map((query, index) => {
+      return defer(() => getLiveStreamKey(query)).pipe(
+        mergeMap((key) => {
+          return getGrafanaLiveSrv()
+            .getDataStream({addr: {
+              scope: LiveChannelScope.DataSource,
+              namespace: ds.uid,
+              path: `tail/${key}`,
+              data: {
+                ...query,
+                timeRange: {
+                  from: range.from.valueOf().toString(),
+                  to: range.to.valueOf().toString(),
+                },
+              },
+            }})
+            // .pipe(
+            //   map((evt) => {
+            //     const frame = updateFrame(evt);
+            //     return {
+            //       data: frame ? [frame] : [],
+            //       state: LoadingState.Streaming,
+            //     };
+            //   })
+            // );
+        })
+      );
+      // return getGrafanaLiveSrv().getDataStream({
+      //   addr: {
+      //     scope: LiveChannelScope.DataSource,
+      //     namespace: this.uid,
+      //     path: , // include org id and plugin id
+      //     data: {
+      //       ...query,
+      //     },
+      //   },
+      // });
+    });
+    return merge(...observables);
   }
 
   ensureRepositories(targets: LogScaleQuery[]): void {
