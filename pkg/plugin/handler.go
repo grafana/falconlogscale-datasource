@@ -14,7 +14,7 @@ type humioClient interface {
 
 type queryRunner interface {
 	Run(humio.Query) ([]humio.QueryResult, error)
-	RunChannel(context.Context, humio.Query, *chan humio.QueryResult)
+	RunChannel(context.Context, humio.Query, *chan humio.StreamingResults)
 	GetAllRepoNames() ([]string, error)
 	SetAuthHeaders(authHeaders map[string]string)
 }

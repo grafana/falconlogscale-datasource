@@ -2,10 +2,15 @@ package humio
 
 import (
 	"context"
+	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
+	"github.com/grafana/grafana-plugin-sdk-go/experimental/errorsource"
 )
 
 type JobQuerier interface {
@@ -14,6 +19,7 @@ type JobQuerier interface {
 	PollJob(repo string, id string) (QueryResult, error)
 	ListRepos() ([]string, error)
 	SetAuthHeaders(headers map[string]string)
+	Stream(method string, path string, query Query, ch *chan StreamingResults) error
 }
 
 type QueryRunner struct {
@@ -36,57 +42,76 @@ func NewQueryRunner(c JobQuerier, opts ...QueryRunnerOption) *QueryRunner {
 }
 
 func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
-	ctx := contextCancelledOnInterrupt(context.Background())
-
-	c := make(chan QueryResult)
-	go qj.RunChannel(ctx, query, &c)
-	// if err != nil {
-	// 	log.DefaultLogger.Error("Humio query string error: %s\n", err.Error())
-	// 	return nil, err
-	// }
-	//	c <- j
-	for j := range c {
-		if j.Done {
-			r := humioToDatasourceResult(j)
-			close(c)
-			return []QueryResult{r}, nil
-		}
-	}
-	return []QueryResult{}, nil
-}
-
-func (qr *QueryRunner) RunChannel(ctx context.Context, query Query, c *chan QueryResult) {
 	repository := query.Repository
 
-	id, err := qr.jobQuerier.CreateJob(repository, query)
+	ctx := contextCancelledOnInterrupt(context.Background())
+	// run in lambda func to be able to defer and delete the query job
+	result, err := func() (*QueryResult, error) {
+		id, err := qj.jobQuerier.CreateJob(repository, query)
+
+		if err != nil {
+			return nil, err
+		}
+
+		defer func(id string) {
+			// Humio will eventually delete the query when we stop polling and we can't do much about errors here.
+			_ = qj.jobQuerier.DeleteJob(repository, id)
+		}(id)
+
+		var result QueryResult
+		poller := QueryJobPoller{
+			QueryJobs:  &qj.jobQuerier,
+			Repository: repository,
+			Id:         id,
+		}
+		result, err = poller.WaitAndPollContext(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for !result.Done {
+			result, err = poller.WaitAndPollContext(ctx)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		return &result, nil
+	}()
 
 	if err != nil {
-		return
+		log.DefaultLogger.Error("Humio query string error: %s\n", err.Error())
+		return nil, errorsource.DownstreamError(err, false)
 	}
 
-	defer func(id string) {
-		// Humio will eventually delete the query when we stop polling and we can't do much about errors here.
-		_ = qr.jobQuerier.DeleteJob(repository, id)
-	}(id)
+	r := humioToDatasourceResult(*result)
+	return []QueryResult{r}, nil
+}
 
-	var result QueryResult
-	poller := QueryJobPoller{
-		QueryJobs:  &qr.jobQuerier,
-		Repository: repository,
-		Id:         id,
-	}
-	//result, err = poller.WaitAndPollContext(ctx)
-	for {
-		result, err = poller.WaitAndPollContext(ctx)
-		if err != nil {
-			return
-		}
-		if len(result.Events) > 0 {
-			*c <- result
-		} //   -d @- << EOF
-	}
-	//*c <- result
-	//return
+func (qr *QueryRunner) RunChannel(ctx context.Context, query Query, c *chan StreamingResults) {
+	repository := query.Repository
+
+	// id, err := qr.jobQuerier.CreateJob(repository, query)
+
+	// if err != nil {
+	// 	return
+	// }
+
+	// defer func(id string) {
+	// 	// Humio will eventually delete the query when we stop polling and we can't do much about errors here.
+	// 	_ = qr.jobQuerier.DeleteJob(repository, id)
+	// }(id)
+
+	// var result QueryResult
+	// poller := QueryJobPoller{
+	// 	QueryJobs:  &qr.jobQuerier,
+	// 	Repository: repository,
+	// 	Id:         id,
+	// }
+
+	endPoint := fmt.Sprintf("api/v1/repositories/%s/query", repository)
+	go qr.jobQuerier.Stream(http.MethodPost, endPoint, query, c)
 }
 
 func (qr *QueryRunner) GetAllRepoNames() ([]string, error) {

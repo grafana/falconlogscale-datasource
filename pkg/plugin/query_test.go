@@ -233,7 +233,7 @@ func (qr *fakeQueryRunner) Run(req humio.Query) ([]humio.QueryResult, error) {
 	}
 }
 
-func (qr *fakeQueryRunner) RunChannel(context.Context, humio.Query, *chan humio.QueryResult) {
+func (qr *fakeQueryRunner) RunChannel(context.Context, humio.Query, *chan humio.StreamingResults) {
 }
 
 func (qr *fakeQueryRunner) GetAllRepoNames() ([]string, error) {

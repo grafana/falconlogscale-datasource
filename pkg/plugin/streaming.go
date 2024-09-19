@@ -31,7 +31,7 @@ func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, 
 	qr.Repository = "humio-organization-audit"
 	qr.LSQL = "css"
 	qr.Start = "1m"
-	c := make(chan humio.QueryResult)
+	c := make(chan humio.StreamingResults)
 	go func() {
 		for r := range c {
 			// f2 := data.NewFrame("testdata",
@@ -41,17 +41,15 @@ func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, 
 			// 	data.NewField("Max", nil, make([]float64, 1)),
 			// )
 			// sender.SendFrame(f2, data.IncludeAll)
-			if len(r.Events) == 0 {
+			if len(r) == 0 {
 				continue
 			}
 
-			converters := GetConverters(r.Events)
-			f, _ := h.FrameMarshaller("events", r.Events, converters...)
+			converters := GetConverters(Events{r})
+			f, _ := h.FrameMarshaller("events", r, converters...)
 			// if err != nil {
 			// 	return err
 			// }
-
-			OrderFrameFieldsByMetaData(r.Metadata.FieldOrder, f)
 			PrependTimestampField(f)
 
 			// if _, ok := r.Events[0]["_bucket"]; ok {

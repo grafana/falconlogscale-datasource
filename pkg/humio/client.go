@@ -194,18 +194,19 @@ func (c *Client) Fetch(method string, path string, body *bytes.Buffer, out inter
 /*
 return a stream new data from http stream
 */
-func (c *Client) Stream(method string, path string, body *bytes.Buffer, ch *chan any) error {
+func (c *Client) Stream(method string, path string, query Query, ch *chan StreamingResults) error {
+	var buf bytes.Buffer
+	err := json.NewEncoder(&buf).Encode(query)
+	if err != nil {
+		return err
+	}
 	url, err := url.JoinPath(c.URL.String(), path)
 	if err != nil {
 		return err
 	}
 
 	var req *http.Request
-	if body == nil {
-		req, err = http.NewRequest(method, url, bytes.NewReader(nil))
-	} else {
-		req, err = http.NewRequest(method, url, body)
-	}
+	req, err = http.NewRequest(method, url, &buf)
 	if err != nil {
 		return err
 	}
@@ -218,7 +219,7 @@ func (c *Client) Stream(method string, path string, body *bytes.Buffer, ch *chan
 
 	defer res.Body.Close()
 	for res.StatusCode == http.StatusOK {
-		var result any
+		var result StreamingResults
 		json.NewDecoder(res.Body).Decode(&result)
 		if result != nil {
 			*ch <- result

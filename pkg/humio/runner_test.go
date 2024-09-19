@@ -49,3 +49,7 @@ func (t TestJobQuerier) ListRepos() ([]string, error) {
 }
 
 func (t TestJobQuerier) SetAuthHeaders(authHeaders map[string]string) {}
+
+func (t TestJobQuerier) Stream(string, string, humio.Query, *chan humio.StreamingResults) error {
+	return nil
+}

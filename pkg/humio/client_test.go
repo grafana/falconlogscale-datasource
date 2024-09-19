@@ -1,8 +1,6 @@
 package humio_test
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -95,24 +93,18 @@ func TestClient(t *testing.T) {
 		require.Nil(t, err)
 	})
 
+	//remove this test. its not a good functional test
 	t.Run("d", func(t *testing.T) {
 		url, _ := url.Parse("https://cloud.community.humio.com/")
-		config := humio.Config{Address: url, Token: "{TOKEN HERE}"}
+		config := humio.Config{Address: url, Token: "fill this in"}
 		httpOpts := httpclient.Options{Headers: map[string]string{}}
 		c, _ := humio.NewClient(config, httpOpts)
-		var humioQuery struct {
-			QueryString string `json:"queryString"`
-			Start       string `json:"start,omitempty"`
-			End         string `json:"end,omitempty"`
-			Live        bool   `json:"isLive"`
-		}
-		humioQuery.QueryString = ""
+		var humioQuery humio.Query
+		humioQuery.LSQL = ""
 		humioQuery.Start = "1m"
 		humioQuery.Live = true
-		var buf bytes.Buffer
-		json.NewEncoder(&buf).Encode(humioQuery)
-		ch := make(chan any)
-		go c.Stream(http.MethodPost, "api/v1/repositories/humio-organization-github-demo/query", &buf, &ch)
+		ch := make(chan humio.StreamingResults)
+		go c.Stream(http.MethodPost, "api/v1/repositories/humio-organization-github-demo/query", humioQuery, &ch)
 		for r := range ch {
 			println(r)
 		}
