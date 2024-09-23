@@ -2,6 +2,7 @@ package humio
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -19,7 +20,7 @@ type JobQuerier interface {
 	PollJob(repo string, id string) (QueryResult, error)
 	ListRepos() ([]string, error)
 	SetAuthHeaders(headers map[string]string)
-	Stream(method string, path string, query Query, ch *chan StreamingResults) error
+	GetStream(method string, path string, query Query) (*json.Decoder, error)
 }
 
 type QueryRunner struct {
@@ -89,29 +90,37 @@ func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
 	return []QueryResult{r}, nil
 }
 
-func (qr *QueryRunner) RunChannel(ctx context.Context, query Query, c *chan StreamingResults) {
+func (qr *QueryRunner) RunChannel(ctx context.Context, query Query, c *chan StreamingResults, done *chan any) {
 	repository := query.Repository
-
-	// id, err := qr.jobQuerier.CreateJob(repository, query)
-
-	// if err != nil {
-	// 	return
-	// }
-
-	// defer func(id string) {
-	// 	// Humio will eventually delete the query when we stop polling and we can't do much about errors here.
-	// 	_ = qr.jobQuerier.DeleteJob(repository, id)
-	// }(id)
-
-	// var result QueryResult
-	// poller := QueryJobPoller{
-	// 	QueryJobs:  &qr.jobQuerier,
-	// 	Repository: repository,
-	// 	Id:         id,
-	// }
-
 	endPoint := fmt.Sprintf("api/v1/repositories/%s/query", repository)
-	go qr.jobQuerier.Stream(http.MethodPost, endPoint, query, c)
+	d, err := qr.jobQuerier.GetStream(http.MethodPost, endPoint, query)
+	if err != nil {
+		//error
+	}
+	ticker := time.NewTicker(time.Second * 60) // .Step)
+	defer ticker.Stop()
+	var result StreamingResults
+	go func() {
+		for {
+			select {
+			case <-*done:
+				//logger.Info("Socket done")
+				return
+			// case <-ctx.Done():
+			// 	//logger.Info("Stop streaming (context canceled)")
+			// 	return
+			default:
+			}
+
+			err := d.Decode(&result)
+			if err != nil {
+				return
+			}
+			if result != nil {
+				*c <- result
+			}
+		}
+	}()
 }
 
 func (qr *QueryRunner) GetAllRepoNames() ([]string, error) {

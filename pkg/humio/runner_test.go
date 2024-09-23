@@ -1,6 +1,7 @@
 package humio_test
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/grafana/falconlogscale-datasource-backend/pkg/humio"
@@ -30,6 +31,11 @@ type TestJobQuerier struct {
 	id          string
 	queryResult humio.QueryResult
 	repos       []string
+}
+
+// GetStream implements humio.JobQuerier.
+func (t TestJobQuerier) GetStream(method string, path string, query humio.Query) (*json.Decoder, error) {
+	panic("unimplemented")
 }
 
 func (t TestJobQuerier) CreateJob(repo string, query humio.Query) (string, error) {

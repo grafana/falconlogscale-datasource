@@ -3,13 +3,43 @@ package plugin
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"strings"
+	"sync"
 
 	"github.com/grafana/falconlogscale-datasource-backend/pkg/humio"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 )
 
-func (h *Handler) SubscribeStream(context.Context, *backend.SubscribeStreamRequest) (*backend.SubscribeStreamResponse, error) {
+func (h *Handler) SubscribeStream(ctx context.Context, req *backend.SubscribeStreamRequest) (*backend.SubscribeStreamResponse, error) {
+	// Expect tail/${key}
+	if !strings.HasPrefix(req.Path, "tail/") {
+		return &backend.SubscribeStreamResponse{
+			Status: backend.SubscribeStreamStatusNotFound,
+		}, fmt.Errorf("expected tail in channel path")
+	}
+
+	var qr humio.Query
+	if err := json.Unmarshal(req.Data, &qr); err != nil {
+		return nil, err
+	}
+
+	//todo: dont run an invalid query and return an error
+
+	h.streamsMu.RLock()
+	defer h.streamsMu.RUnlock()
+
+	cache, ok := h.streams[req.Path]
+	if ok {
+		msg, err := backend.NewInitialData(cache.Bytes(data.IncludeAll))
+		return &backend.SubscribeStreamResponse{
+			Status:      backend.SubscribeStreamStatusOK,
+			InitialData: msg,
+		}, err
+	}
+
+	// nothing yet
 	return &backend.SubscribeStreamResponse{
 		Status: backend.SubscribeStreamStatusOK,
 	}, nil
@@ -22,54 +52,63 @@ func (h *Handler) PublishStream(context.Context, *backend.PublishStreamRequest) 
 }
 
 func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, sender *backend.StreamSender) error {
-
+	//logger := s.logger.FromContext(ctx)
 	var qr humio.Query
 	if err := json.Unmarshal(req.Data, &qr); err != nil {
 		return err
 	}
 	qr.Live = true
-	qr.Repository = "humio-organization-audit"
-	qr.LSQL = "css"
 	qr.Start = "1m"
 	c := make(chan humio.StreamingResults)
-	go func() {
-		for r := range c {
-			// f2 := data.NewFrame("testdata",
-			// 	data.NewField("Time", nil, make([]time.Time, 1)),
-			// 	data.NewField("Value", nil, make([]float64, 1)),
-			// 	data.NewField("Min", nil, make([]float64, 1)),
-			// 	data.NewField("Max", nil, make([]float64, 1)),
-			// )
-			// sender.SendFrame(f2, data.IncludeAll)
-			if len(r) == 0 {
-				continue
-			}
+	prev := data.FrameJSONCache{}
+	done := make(chan any)
+	var sm sync.RWMutex
+	defer close(done)
 
-			converters := GetConverters(Events{r})
-			f, _ := h.FrameMarshaller("events", r, converters...)
-			// if err != nil {
-			// 	return err
-			// }
-			PrependTimestampField(f)
-
-			// if _, ok := r.Events[0]["_bucket"]; ok {
-			// 	f, err = ConvertToWideFormat(f)
-			// 	if err != nil {
-			// 		return err
-			// 	}
-			// }
-
-			// if qr.FormatAs == humio.FormatLogs {
-			// 	f.Meta = &data.FrameMeta{
-			// 		PreferredVisualization: data.VisTypeLogs,
-			// 	}
-			// }
-
-			//remove dup lines
-			sender.SendFrame(f, data.IncludeAll)
+	h.QueryRunner.RunChannel(ctx, qr, &c, &done)
+	for r := range c {
+		if len(r) == 0 {
+			continue
 		}
-	}()
-	h.QueryRunner.RunChannel(ctx, qr, &c)
+		sm.Lock()
+
+		f, err := h.FrameMarshaller("events", r)
+		if err != nil {
+			//logger.Error("Websocket write:", "err", err, "raw", message)
+			return err
+		}
+		sm.Unlock()
+
+		// r := rand.New(rand.NewSource(99))
+		// f :=
+		// 	data.NewFrame("test",
+		// 		data.NewField("time", nil, []time.Time{time.Unix(1, 0)}),
+		// 		data.NewField("test-value1", nil, []*float64{fp(r.ExpFloat64())}),
+		// 		data.NewField("test-value2", nil, []*float64{fp(r.ExpFloat64())}))
+
+		//PrependTimestampField(f)
+		if f != nil {
+			next, _ := data.FrameToJSONCache(f)
+			if next.SameSchema(&prev) {
+				err = sender.SendFrame(f, data.IncludeDataOnly)
+			} else {
+				err = sender.SendFrame(f, data.IncludeAll)
+			}
+			if err != nil {
+				//logger.Error("Websocket write:", "err", err, "raw", message)
+				//return
+			}
+			prev = next
+
+			// Cache the initial data
+			h.streamsMu.Lock()
+			h.streams[req.Path] = prev
+			h.streamsMu.Unlock()
+		}
+	}
 	//c <- humio.QueryResult{}
 	return nil
+}
+func fp(f float64) *float64 {
+	return &f
 }

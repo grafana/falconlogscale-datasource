@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"context"
+	"sync"
 
 	"github.com/grafana/falconlogscale-datasource-backend/pkg/humio"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
@@ -14,7 +15,7 @@ type humioClient interface {
 
 type queryRunner interface {
 	Run(humio.Query) ([]humio.QueryResult, error)
-	RunChannel(context.Context, humio.Query, *chan humio.StreamingResults)
+	RunChannel(context.Context, humio.Query, *chan humio.StreamingResults, *chan any)
 	GetAllRepoNames() ([]string, error)
 	SetAuthHeaders(authHeaders map[string]string)
 }
@@ -26,6 +27,10 @@ type Handler struct {
 	ResourceHandler backend.CallResourceHandler
 	FrameMarshaller func(string, interface{}, ...framestruct.FramestructOption) (*data.Frame, error)
 	Settings        Settings
+
+	// open streams
+	streams   map[string]data.FrameJSONCache
+	streamsMu sync.RWMutex
 }
 
 var (
@@ -52,6 +57,7 @@ func NewHandler(
 		ResourceHandler: resourceHandler,
 		FrameMarshaller: marshaller,
 		Settings:        settings,
+		streams:         make(map[string]data.FrameJSONCache),
 	}
 
 	for _, o := range opts {

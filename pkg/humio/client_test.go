@@ -94,22 +94,22 @@ func TestClient(t *testing.T) {
 	})
 
 	//remove this test. its not a good functional test
-	t.Run("d", func(t *testing.T) {
-		url, _ := url.Parse("https://cloud.community.humio.com/")
-		config := humio.Config{Address: url, Token: "fill this in"}
-		httpOpts := httpclient.Options{Headers: map[string]string{}}
-		c, _ := humio.NewClient(config, httpOpts)
-		var humioQuery humio.Query
-		humioQuery.LSQL = ""
-		humioQuery.Start = "1m"
-		humioQuery.Live = true
-		ch := make(chan humio.StreamingResults)
-		go c.Stream(http.MethodPost, "api/v1/repositories/humio-organization-github-demo/query", humioQuery, &ch)
-		for r := range ch {
-			println(r)
-		}
-		require.Nil(t, nil)
-	})
+	// t.Run("d", func(t *testing.T) {
+	// 	url, _ := url.Parse("https://cloud.community.humio.com/")
+	// 	config := humio.Config{Address: url, Token: "fill this in"}
+	// 	httpOpts := httpclient.Options{Headers: map[string]string{}}
+	// 	c, _ := humio.NewClient(config, httpOpts)
+	// 	var humioQuery humio.Query
+	// 	humioQuery.LSQL = ""
+	// 	humioQuery.Start = "1m"
+	// 	humioQuery.Live = true
+	// 	ch := make(chan humio.StreamingResults)
+	// 	go c.Stream(context.Background(), http.MethodPost, "api/v1/repositories/humio-organization-github-demo/query", humioQuery, &ch)
+	// 	for r := range ch {
+	// 		println(r)
+	// 	}
+	// 	require.Nil(t, nil)
+	// })
 }
 
 var (
