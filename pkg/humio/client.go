@@ -117,7 +117,7 @@ func (c *Client) GraphQLQuery(query interface{}, variables map[string]interface{
 	return client.Query(context.Background(), query, variables)
 }
 
-func NewClient(config Config, httpOpts httpclient.Options) (*Client, error) {
+func NewClient(config Config, httpOpts httpclient.Options, streamingOpts httpclient.Options) (*Client, error) {
 	client := &Client{
 		URL: config.Address,
 		Auth: Auth{
@@ -126,14 +126,13 @@ func NewClient(config Config, httpOpts httpclient.Options) (*Client, error) {
 		},
 	}
 
-	httpOpts.Headers["Content-Type"] = "application/json"
 	c, err := httpclient.NewProvider().New(httpOpts)
 	if err != nil {
 		return nil, err
 	}
 	client.HTTPClient = c
 
-	client.StreamingClient, err = newStreamingClient(httpOpts)
+	client.StreamingClient, err = newStreamingClient(streamingOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -142,8 +141,6 @@ func NewClient(config Config, httpOpts httpclient.Options) (*Client, error) {
 }
 
 func newStreamingClient(opts httpclient.Options) (*http.Client, error) {
-	opts.Headers["Content-Type"] = "application/json"
-	opts.Headers["Accept"] = "application/x-ndjson"
 	// not sure if we will need time outs
 	// streamingHttpOpts.Timeouts.IdleConnTimeout = 0
 	// streamingHttpOpts.Timeouts.KeepAlive = 0
@@ -213,7 +210,7 @@ func (c *Client) Fetch(method string, path string, body *bytes.Buffer, out inter
 /*
 return a stream new data from http stream
 */
-func (c *Client) GetStream(method string, path string, query Query, ch *chan StreamingResults) error {
+func (c *Client) GetStream(method string, path string, query Query, ch chan StreamingResults) error {
 	var humioQuery struct {
 		QueryString string `json:"queryString"`
 		Start       string `json:"start,omitempty"`
@@ -255,10 +252,10 @@ func (c *Client) GetStream(method string, path string, query Query, ch *chan Str
 			return err
 		}
 		if result != nil {
-			*ch <- result
+			ch <- result
 		}
 	}
-	return nil
+	// return nil
 
 	// if res.StatusCode == http.StatusNoContent {
 	// 	return fmt.Errorf("%s %s", res.Status, "No content returned from request")

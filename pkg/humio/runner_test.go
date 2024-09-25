@@ -33,7 +33,7 @@ type TestJobQuerier struct {
 }
 
 // GetStream implements humio.JobQuerier.
-func (t TestJobQuerier) GetStream(method string, path string, query humio.Query, ch *chan humio.StreamingResults) error {
+func (t TestJobQuerier) GetStream(method string, path string, query humio.Query, ch chan humio.StreamingResults) error {
 	panic("unimplemented")
 }
 

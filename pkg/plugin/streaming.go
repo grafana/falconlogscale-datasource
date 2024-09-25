@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/grafana/falconlogscale-datasource-backend/pkg/humio"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
@@ -51,8 +52,6 @@ func (h *Handler) PublishStream(context.Context, *backend.PublishStreamRequest) 
 	}, nil
 }
 
-//var sm sync.RWMutex
-
 func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, sender *backend.StreamSender) error {
 	//logger := s.logger.FromContext(ctx)
 	var qr humio.Query
@@ -69,19 +68,26 @@ func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, 
 	done := make(chan any)
 	defer close(done)
 
-	h.QueryRunner.RunChannel(ctx, qr, &c, &done)
+	h.QueryRunner.RunChannel(ctx, qr, c, done)
+
 	for r := range c {
 		if len(r) == 0 {
 			continue
 		}
 
-		//sm.Lock()
-		f, err := h.FrameMarshaller("events", r, asdf(r)...)
-		if err != nil {
-			//logger.Error("Websocket write:", "err", err, "raw", message)
-			return err
-		}
-		//sm.Unlock()
+		// f, err := h.FrameMarshaller("events", r, asdf(r)...)
+		// if err != nil {
+		// 	//logger.Error("Websocket write:", "err", err, "raw", message)
+		// 	return err
+		// }
+
+		f := data.NewFrame(
+			"events",
+			data.NewField("field", nil, []string{}),
+		)
+		f.AppendRow(
+			fmt.Sprint(r),
+		)
 
 		// r := rand.New(rand.NewSource(99))
 		// p1 := float64(4)
@@ -131,11 +137,14 @@ func frameToString(input any) (any, error) {
 }
 
 func asdf(event humio.StreamingResults) []framestruct.FramestructOption {
+	sm := sync.RWMutex{}
+	sm.Lock()
 	var converters []framestruct.FramestructOption
 	// search through all event fields and return every field name with a value
-	for key, _ := range event {
+	for key := range event {
 		converters = append(converters, framestruct.WithConverterFor(key, frameToString))
 	}
+	sm.Unlock()
 	return converters
 }
 
