@@ -15,8 +15,9 @@ import (
 )
 
 type Client struct {
-	URL        *url.URL
-	HTTPClient *http.Client
+	URL             *url.URL
+	HTTPClient      *http.Client
+	StreamingClient *http.Client
 	Auth
 }
 
@@ -132,7 +133,26 @@ func NewClient(config Config, httpOpts httpclient.Options) (*Client, error) {
 	}
 	client.HTTPClient = c
 
+	client.StreamingClient, err = newStreamingClient(httpOpts)
+	if err != nil {
+		return nil, err
+	}
+
 	return client, nil
+}
+
+func newStreamingClient(opts httpclient.Options) (*http.Client, error) {
+	opts.Headers["Content-Type"] = "application/json"
+	opts.Headers["Accept"] = "application/x-ndjson"
+	// not sure if we will need time outs
+	// streamingHttpOpts.Timeouts.IdleConnTimeout = 0
+	// streamingHttpOpts.Timeouts.KeepAlive = 0
+	// streamingHttpOpts.Timeouts.Timeout = 0
+	c, err := httpclient.NewProvider().New(opts)
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
 }
 
 type ErrorResponse struct {
@@ -218,7 +238,7 @@ func (c *Client) GetStream(method string, path string, query Query, ch *chan Str
 		return err
 	}
 	req = c.addAuthHeaders(req)
-	res, err := c.HTTPClient.Do(req)
+	res, err := c.StreamingClient.Do(req)
 	if err != nil {
 		return err
 	}

@@ -23,7 +23,6 @@ type queryRunner interface {
 // Handler encapsulates the lifecycle management of the handler components.
 type Handler struct {
 	Client          humioClient
-	StreamingClient humioClient
 	QueryRunner     queryRunner
 	ResourceHandler backend.CallResourceHandler
 	FrameMarshaller func(string, interface{}, ...framestruct.FramestructOption) (*data.Frame, error)
@@ -46,7 +45,6 @@ type HandlerOption func(h *Handler)
 // NewHandler returns a Humio handler
 func NewHandler(
 	client humioClient,
-	streamingClient humioClient,
 	runner queryRunner,
 	resourceHandler backend.CallResourceHandler,
 	marshaller func(string, interface{}, ...framestruct.FramestructOption) (*data.Frame, error),
@@ -55,7 +53,6 @@ func NewHandler(
 ) *Handler {
 	h := &Handler{
 		Client:          client,
-		StreamingClient: streamingClient,
 		QueryRunner:     runner,
 		ResourceHandler: resourceHandler,
 		FrameMarshaller: marshaller,
