@@ -130,7 +130,7 @@ func setupClientTest() {
 	config := humio.Config{Address: url, Token: token}
 	httpOpts := httpclient.Options{Headers: map[string]string{}}
 	var err error
-	testClient, err = humio.NewClient(config, httpOpts)
+	testClient, err = humio.NewClient(config, httpOpts, httpOpts)
 	if err != nil {
 		panic(err)
 	}

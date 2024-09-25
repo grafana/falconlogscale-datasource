@@ -93,22 +93,14 @@ func (qr *QueryRunner) RunChannel(ctx context.Context, query Query, c chan Strea
 
 	repository := query.Repository
 	endPoint := fmt.Sprintf("api/v1/repositories/%s/query", repository)
+	// note from andrew: not sure if the func param is needed here.
+	// try taking it out and just using the vars in the above scope
 	go func(s string) {
 		err := qr.jobQuerier.GetStream(http.MethodPost, s, query, c)
 		if err != nil {
 			return
 		}
 	}(endPoint)
-
-	// url, _ := url.Parse("https://cloud.community.humio.com/")
-	// config := Config{Address: url, Token: "gNYvfNp5MEXp3jupZiJIylBP~dNdMuExQILTRXSDyFDr3ynPo8jFKstUmGbBJ2muarJbt"}
-	// httpOpts := httpclient.Options{Headers: map[string]string{}}
-	// cl, _ := NewClient(config, httpOpts)
-	// var humioQuery Query
-	// humioQuery.LSQL = ""
-	// humioQuery.Start = "1m"
-	// go cl.GetStream(http.MethodPost, "api/v1/repositories/humio-organization-github-demo/query", humioQuery, c)
-
 }
 
 func (qr *QueryRunner) GetAllRepoNames() ([]string, error) {

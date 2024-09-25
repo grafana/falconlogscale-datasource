@@ -141,10 +141,7 @@ func NewClient(config Config, httpOpts httpclient.Options, streamingOpts httpcli
 }
 
 func newStreamingClient(opts httpclient.Options) (*http.Client, error) {
-	// not sure if we will need time outs
-	// streamingHttpOpts.Timeouts.IdleConnTimeout = 0
-	// streamingHttpOpts.Timeouts.KeepAlive = 0
-	// streamingHttpOpts.Timeouts.Timeout = 0
+
 	c, err := httpclient.NewProvider().New(opts)
 	if err != nil {
 		return nil, err
@@ -207,9 +204,6 @@ func (c *Client) Fetch(method string, path string, body *bytes.Buffer, out inter
 	return fmt.Errorf("%s %s", res.Status, strings.TrimSpace(errResponse.Detail))
 }
 
-/*
-return a stream new data from http stream
-*/
 func (c *Client) GetStream(method string, path string, query Query, ch chan StreamingResults) error {
 	var humioQuery struct {
 		QueryString string `json:"queryString"`
@@ -243,10 +237,13 @@ func (c *Client) GetStream(method string, path string, query Query, ch chan Stre
 		res.Body.Close()
 	}()
 	d := json.NewDecoder(res.Body)
-	//ticker := time.NewTicker(time.Second * 60) // .Step)
-	//defer ticker.Stop()
-	var result StreamingResults
+
+	// note from andrew: it might be a good idea to set up a ticker to not endlessly loop over this code
+	// you should look to see if this is done with the decoder already
+	// currently this never ends unless there is an error. there should be an ending condition for this loop
+	// maybe a timeout similar to the client timeout. or maybe we can check to see if the client is timed out. not sure
 	for {
+		var result StreamingResults
 		err := d.Decode(&result)
 		if err != nil {
 			return err
@@ -255,14 +252,4 @@ func (c *Client) GetStream(method string, path string, query Query, ch chan Stre
 			ch <- result
 		}
 	}
-	// return nil
-
-	// if res.StatusCode == http.StatusNoContent {
-	// 	return fmt.Errorf("%s %s", res.Status, "No content returned from request")
-	// }
-	// var errResponse ErrorResponse
-	// if err := json.NewDecoder(res.Body).Decode(&errResponse); err != nil {
-	// 	return fmt.Errorf("%s %s", res.Status, err.Error())
-	// }
-	// return fmt.Errorf("%s %s", res.Status, strings.TrimSpace(errResponse.Detail))
 }
