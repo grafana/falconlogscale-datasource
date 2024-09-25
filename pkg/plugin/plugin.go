@@ -23,14 +23,31 @@ func NewDataSourceInstance(ctx context.Context, settings backend.DataSourceInsta
 	}
 	httpOpts.ForwardHTTPHeaders = s.OAuthPassThru
 
-	client, err := client(s, httpOpts)
+	client, err := newClient(s, httpOpts)
 	if err != nil {
 		return nil, err
 	}
 	resourceHandler := ResourceHandler(client)
 
+	streamingHttpOpts, err := settings.HTTPClientOptions(ctx)
+	if err != nil {
+		return nil, err
+	}
+	streamingHttpOpts.ForwardHTTPHeaders = s.OAuthPassThru
+	streamingHttpOpts.Headers["Content-Type"] = "application/json"
+	streamingHttpOpts.Headers["Accept"] = "application/x-ndjson"
+	// not sure if we will need time outs
+	// streamingHttpOpts.Timeouts.IdleConnTimeout = 0
+	// streamingHttpOpts.Timeouts.KeepAlive = 0
+	// streamingHttpOpts.Timeouts.Timeout = 0
+	streamingClient, err := newClient(s, streamingHttpOpts)
+	if err != nil {
+		return nil, err
+	}
+
 	return NewHandler(
 		client,
+		streamingClient,
 		humio.NewQueryRunner(client),
 		httpadapter.New(resourceHandler),
 		framestruct.ToDataFrame,
@@ -38,7 +55,7 @@ func NewDataSourceInstance(ctx context.Context, settings backend.DataSourceInsta
 	), nil
 }
 
-func client(settings Settings, httpOpts httpclient.Options) (*humio.Client, error) {
+func newClient(settings Settings, httpOpts httpclient.Options) (*humio.Client, error) {
 	address, err := url.Parse(settings.BaseURL)
 	if err != nil {
 		return nil, err

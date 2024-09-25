@@ -6,7 +6,7 @@ import { LogScaleQuery } from "types";
  * possible collisions
  */
 export async function getLiveStreamKey(query: LogScaleQuery): Promise<string> {
-    const str = JSON.stringify({ expr: query.lsql });
+    const str = JSON.stringify({ expr: query.lsql, repo: query.repository });
 
     const msgUint8 = new TextEncoder().encode(str); // encode as (utf-8) Uint8Array
     const hashBuffer = await crypto.subtle.digest('SHA-1', msgUint8); // hash the message

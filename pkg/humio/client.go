@@ -44,7 +44,7 @@ func (c *Client) CreateJob(repo string, query Query) (string, error) {
 	humioQuery.QueryString = query.LSQL
 	humioQuery.Start = query.Start
 	humioQuery.End = query.End
-	humioQuery.Live = query.Live
+	humioQuery.Live = false
 	var buf bytes.Buffer
 	err := json.NewEncoder(&buf).Encode(humioQuery)
 	if err != nil {
@@ -126,7 +126,6 @@ func NewClient(config Config, httpOpts httpclient.Options) (*Client, error) {
 	}
 
 	httpOpts.Headers["Content-Type"] = "application/json"
-
 	c, err := httpclient.NewProvider().New(httpOpts)
 	if err != nil {
 		return nil, err
@@ -194,29 +193,52 @@ func (c *Client) Fetch(method string, path string, body *bytes.Buffer, out inter
 /*
 return a stream new data from http stream
 */
-func (c *Client) GetStream(method string, path string, query Query) (*json.Decoder, error) {
+func (c *Client) GetStream(method string, path string, query Query, ch *chan StreamingResults) error {
+	var humioQuery struct {
+		QueryString string `json:"queryString"`
+		Start       string `json:"start,omitempty"`
+		Live        bool   `json:"isLive"`
+	}
+	humioQuery.QueryString = query.LSQL
+	humioQuery.Start = query.Start
+	humioQuery.Live = true
 	var buf bytes.Buffer
-	err := json.NewEncoder(&buf).Encode(query)
+	err := json.NewEncoder(&buf).Encode(humioQuery)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	url, err := url.JoinPath(c.URL.String(), path)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	var req *http.Request
 	req, err = http.NewRequest(method, url, &buf)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	req = c.addAuthHeaders(req)
-
 	res, err := c.HTTPClient.Do(req)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return json.NewDecoder(res.Body), nil
+	defer func() {
+		res.Body.Close()
+	}()
+	d := json.NewDecoder(res.Body)
+	//ticker := time.NewTicker(time.Second * 60) // .Step)
+	//defer ticker.Stop()
+	var result StreamingResults
+	for {
+		err := d.Decode(&result)
+		if err != nil {
+			return err
+		}
+		if result != nil {
+			*ch <- result
+		}
+	}
+	return nil
 
 	// if res.StatusCode == http.StatusNoContent {
 	// 	return fmt.Errorf("%s %s", res.Status, "No content returned from request")

@@ -2,7 +2,6 @@ package humio
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -20,7 +19,7 @@ type JobQuerier interface {
 	PollJob(repo string, id string) (QueryResult, error)
 	ListRepos() ([]string, error)
 	SetAuthHeaders(headers map[string]string)
-	GetStream(method string, path string, query Query) (*json.Decoder, error)
+	GetStream(method string, path string, query Query, ch *chan StreamingResults) error
 }
 
 type QueryRunner struct {
@@ -91,36 +90,25 @@ func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
 }
 
 func (qr *QueryRunner) RunChannel(ctx context.Context, query Query, c *chan StreamingResults, done *chan any) {
+
 	repository := query.Repository
 	endPoint := fmt.Sprintf("api/v1/repositories/%s/query", repository)
-	d, err := qr.jobQuerier.GetStream(http.MethodPost, endPoint, query)
-	if err != nil {
-		//error
-	}
-	ticker := time.NewTicker(time.Second * 60) // .Step)
-	defer ticker.Stop()
-	var result StreamingResults
-	go func() {
-		for {
-			select {
-			case <-*done:
-				//logger.Info("Socket done")
-				return
-			// case <-ctx.Done():
-			// 	//logger.Info("Stop streaming (context canceled)")
-			// 	return
-			default:
-			}
-
-			err := d.Decode(&result)
-			if err != nil {
-				return
-			}
-			if result != nil {
-				*c <- result
-			}
+	go func(s string) {
+		err := qr.jobQuerier.GetStream(http.MethodPost, s, query, c)
+		if err != nil {
+			return
 		}
-	}()
+	}(endPoint)
+
+	// url, _ := url.Parse("https://cloud.community.humio.com/")
+	// config := Config{Address: url, Token: "gNYvfNp5MEXp3jupZiJIylBP~dNdMuExQILTRXSDyFDr3ynPo8jFKstUmGbBJ2muarJbt"}
+	// httpOpts := httpclient.Options{Headers: map[string]string{}}
+	// cl, _ := NewClient(config, httpOpts)
+	// var humioQuery Query
+	// humioQuery.LSQL = ""
+	// humioQuery.Start = "1m"
+	// go cl.GetStream(http.MethodPost, "api/v1/repositories/humio-organization-github-demo/query", humioQuery, c)
+
 }
 
 func (qr *QueryRunner) GetAllRepoNames() ([]string, error) {

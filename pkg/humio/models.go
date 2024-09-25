@@ -5,11 +5,9 @@ type Query struct {
 	LSQL           string `json:"lsql"`
 	Start          string `json:"start,omitempty"`
 	End            string `json:"end,omitempty"`
-	Live           bool   `json:"isLive,omitempty"`
 	TimezoneOffset *int   `json:"timeZoneOffsetMinutes,omitempty"`
 	FormatAs       string `json:"formatAs"`
 	QueryType      string `json:"queryType,omitempty"`
-	StreamingQuery string `json:"queryString"`
 
 	// This is the version of the plugin that the query was created/updated with
 	// Needed for tracking query versions across migrations
