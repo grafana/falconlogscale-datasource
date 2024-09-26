@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.3
+
+- Dependency updates.
+
 ## 1.7.2
 
 - Dependency updates.
