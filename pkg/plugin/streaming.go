@@ -70,6 +70,10 @@ func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, 
 
 	for {
 		select {
+		case <-done:
+			//stream over
+			//log stream over
+			return nil
 		case r := <-c:
 			if len(r) == 0 {
 				continue
@@ -89,7 +93,7 @@ func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, 
 				}
 				if err != nil {
 					//logger.Error("Websocket write:", "err", err, "raw", message)
-					//return
+					return err
 				}
 				prev = next
 
@@ -98,10 +102,6 @@ func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, 
 				h.streams[req.Path] = prev
 				h.streamsMu.Unlock()
 			}
-		// note from andrew: this isnt called. we need to trigger the done channel from the runner
-		case <-done:
-			//stream over
-			return nil
 		}
 	}
 }

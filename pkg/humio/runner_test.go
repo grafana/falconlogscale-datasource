@@ -32,8 +32,8 @@ type TestJobQuerier struct {
 	repos       []string
 }
 
-// GetStream implements humio.JobQuerier.
-func (t TestJobQuerier) GetStream(method string, path string, query humio.Query, ch chan humio.StreamingResults) error {
+// Stream implements humio.JobQuerier.
+func (t TestJobQuerier) Stream(method string, path string, query humio.Query, ch chan humio.StreamingResults, done chan any) error {
 	panic("unimplemented")
 }
 
@@ -54,7 +54,3 @@ func (t TestJobQuerier) ListRepos() ([]string, error) {
 }
 
 func (t TestJobQuerier) SetAuthHeaders(authHeaders map[string]string) {}
-
-func (t TestJobQuerier) Stream(string, string, humio.Query, *chan humio.StreamingResults) error {
-	return nil
-}

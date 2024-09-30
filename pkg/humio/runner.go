@@ -19,7 +19,7 @@ type JobQuerier interface {
 	PollJob(repo string, id string) (QueryResult, error)
 	ListRepos() ([]string, error)
 	SetAuthHeaders(headers map[string]string)
-	GetStream(method string, path string, query Query, ch chan StreamingResults) error
+	Stream(method string, path string, query Query, ch chan StreamingResults, done chan any) error
 }
 
 type QueryRunner struct {
@@ -90,17 +90,15 @@ func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
 }
 
 func (qr *QueryRunner) RunChannel(ctx context.Context, query Query, c chan StreamingResults, done chan any) {
-
-	repository := query.Repository
-	endPoint := fmt.Sprintf("api/v1/repositories/%s/query", repository)
-	// note from andrew: not sure if the func param is needed here.
-	// try taking it out and just using the vars in the above scope
-	go func(s string) {
-		err := qr.jobQuerier.GetStream(http.MethodPost, s, query, c)
+	endPoint := fmt.Sprintf("api/v1/repositories/%s/query", query.Repository)
+	go func() {
+		defer close(done)
+		err := qr.jobQuerier.Stream(http.MethodPost, endPoint, query, c, done)
 		if err != nil {
+			//todo: log here is very important. no other way to see this error
 			return
 		}
-	}(endPoint)
+	}()
 }
 
 func (qr *QueryRunner) GetAllRepoNames() ([]string, error) {

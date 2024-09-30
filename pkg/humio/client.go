@@ -204,7 +204,7 @@ func (c *Client) Fetch(method string, path string, body *bytes.Buffer, out inter
 	return fmt.Errorf("%s %s", res.Status, strings.TrimSpace(errResponse.Detail))
 }
 
-func (c *Client) GetStream(method string, path string, query Query, ch chan StreamingResults) error {
+func (c *Client) Stream(method string, path string, query Query, ch chan StreamingResults, done chan any) error {
 	var humioQuery struct {
 		QueryString string `json:"queryString"`
 		Start       string `json:"start,omitempty"`
@@ -213,6 +213,9 @@ func (c *Client) GetStream(method string, path string, query Query, ch chan Stre
 	humioQuery.QueryString = query.LSQL
 	humioQuery.Start = query.Start
 	humioQuery.Live = true
+
+	defer close(done)
+
 	var buf bytes.Buffer
 	err := json.NewEncoder(&buf).Encode(humioQuery)
 	if err != nil {
@@ -238,8 +241,8 @@ func (c *Client) GetStream(method string, path string, query Query, ch chan Stre
 	}()
 	d := json.NewDecoder(res.Body)
 
-	// note from andrew: it might be a good idea to set up a ticker to not endlessly loop over this code
-	// you should look to see if this is done with the decoder already
+	// note from andrew: it might be a good idea to time.Sleep to not endlessly loop over this code
+	// you should look to see if this is done with the decoder already (it doesnt seem to be)
 	// currently this never ends unless there is an error. there should be an ending condition for this loop
 	// maybe a timeout similar to the client timeout. or maybe we can check to see if the client is timed out. not sure
 	for {
