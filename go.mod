@@ -7,7 +7,7 @@ toolchain go1.22.5
 require (
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/gorilla/mux v1.8.1
-	github.com/grafana/grafana-plugin-sdk-go v0.251.0
+	github.com/grafana/grafana-plugin-sdk-go v0.253.0
 	github.com/humio/cli v0.36.0
 	github.com/stretchr/testify v1.9.0
 )
