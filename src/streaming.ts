@@ -6,8 +6,6 @@ import { LogScaleQuery } from "types";
  * possible collisions
  */
 export async function getLiveStreamKey(query: LogScaleQuery): Promise<string> {
-    // note from andrew: there was a incident with live queries leaking cached data. i believe the icident had to do with
-    // this str not being secure. we probably should include the tenant id in this
     const str = JSON.stringify({ expr: query.lsql, repo: query.repository });
 
     const msgUint8 = new TextEncoder().encode(str); // encode as (utf-8) Uint8Array

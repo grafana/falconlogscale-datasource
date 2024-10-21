@@ -93,8 +93,6 @@ func (qr *QueryRunner) RunChannel(ctx context.Context, query Query, c chan Strea
 
 	repository := query.Repository
 	endPoint := fmt.Sprintf("api/v1/repositories/%s/query", repository)
-	// note from andrew: not sure if the func param is needed here.
-	// try taking it out and just using the vars in the above scope
 	go func(s string) {
 		err := qr.jobQuerier.GetStream(http.MethodPost, s, query, c)
 		if err != nil {

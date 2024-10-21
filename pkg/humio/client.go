@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
 	"github.com/hasura/go-graphql-client"
@@ -229,6 +230,13 @@ func (c *Client) GetStream(method string, path string, query Query, ch chan Stre
 		return err
 	}
 	req = c.addAuthHeaders(req)
+
+	// Set up a context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel() // Ensure cancellation to prevent resource leaks
+
+	req = req.WithContext(ctx)
+
 	res, err := c.StreamingClient.Do(req)
 	if err != nil {
 		return err
@@ -236,20 +244,27 @@ func (c *Client) GetStream(method string, path string, query Query, ch chan Stre
 	defer func() {
 		res.Body.Close()
 	}()
+
 	d := json.NewDecoder(res.Body)
 
-	// note from andrew: it might be a good idea to set up a ticker to not endlessly loop over this code
-	// you should look to see if this is done with the decoder already
-	// currently this never ends unless there is an error. there should be an ending condition for this loop
-	// maybe a timeout similar to the client timeout. or maybe we can check to see if the client is timed out. not sure
+	// Set up ticker to prevent infinite loop
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+
 	for {
-		var result StreamingResults
-		err := d.Decode(&result)
-		if err != nil {
-			return err
-		}
-		if result != nil {
-			ch <- result
+		select {
+		case <-ctx.Done(): // If the context is canceled or times out, break the loop
+			return ctx.Err()
+
+		case <-ticker.C: // Ticker will check periodically
+			var result StreamingResults
+			err := d.Decode(&result)
+			if err != nil {
+				return err
+			}
+			if result != nil {
+				ch <- result
+			}
 		}
 	}
 }

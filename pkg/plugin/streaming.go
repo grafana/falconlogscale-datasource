@@ -12,7 +12,6 @@ import (
 )
 
 func (h *Handler) SubscribeStream(ctx context.Context, req *backend.SubscribeStreamRequest) (*backend.SubscribeStreamResponse, error) {
-	// Expect tail/${key}
 	if !strings.HasPrefix(req.Path, "tail/") {
 		return &backend.SubscribeStreamResponse{
 			Status: backend.SubscribeStreamStatusNotFound,
@@ -76,8 +75,8 @@ func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, 
 			}
 			f, err := h.FrameMarshaller("events", r)
 			if err != nil {
-				// not from andrew: we need logging all over this function!
-				//logger.Error("Websocket write:", "err", err, "raw", message)
+				// note from andrew: we need logging all over this function!
+				// logger.Error("Websocket write:", "err", err, "raw", message)
 				return err
 			}
 			if f != nil {
@@ -89,7 +88,7 @@ func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, 
 				}
 				if err != nil {
 					//logger.Error("Websocket write:", "err", err, "raw", message)
-					//return
+					return err
 				}
 				prev = next
 
