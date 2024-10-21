@@ -12,7 +12,7 @@ import {
 } from '@grafana/data';
 import { DataSourceWithBackend, getGrafanaLiveSrv, getTemplateSrv, TemplateSrv } from '@grafana/runtime';
 import { lastValueFrom, Observable, merge, defer, mergeMap } from 'rxjs';
-import { LogScaleQuery, LogScaleOptions, LogScaleQueryType } from './types';
+import { LogScaleQuery, LogScaleOptions } from './types';
 import { map } from 'rxjs/operators';
 import LanguageProvider from 'LanguageProvider';
 import { transformBackendResult } from './logs';

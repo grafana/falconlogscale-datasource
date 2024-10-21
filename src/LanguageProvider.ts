@@ -21,6 +21,7 @@ export default class FalconLogScaleLanguageProvider extends LanguageProvider {
       queryType: LogScaleQueryType.LQL,
       formatAs: FormatAs.Logs,
       refId: abstractQuery.refId,
+      version: '',
     };
   }
 

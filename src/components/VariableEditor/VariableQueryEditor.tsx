@@ -21,6 +21,7 @@ const VariableQueryEditor = (props: Props) => {
   ];
 
   const queryType = query.queryType || LogScaleQueryType.LQL;
+  const version = query.version || '';
 
   useEffectOnce(() => {
     if (typeof query === 'string') {
@@ -30,6 +31,7 @@ const VariableQueryEditor = (props: Props) => {
         formatAs: FormatAs.Logs,
         lsql: query,
         queryType: LogScaleQueryType.LQL,
+        version,
       });
     } else if (!query.queryType) {
       onChange({ ...query, queryType: LogScaleQueryType.LQL });

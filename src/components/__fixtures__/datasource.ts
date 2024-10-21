@@ -90,4 +90,5 @@ export const mockQuery = (): LogScaleQuery => ({
   datasource: {},
   lsql: '',
   repository: '',
+  version: '',
 });
