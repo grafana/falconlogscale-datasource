@@ -22,15 +22,19 @@ func NewDataSourceInstance(ctx context.Context, settings backend.DataSourceInsta
 		return nil, err
 	}
 	httpOpts.ForwardHTTPHeaders = s.OAuthPassThru
-	httpOpts.Headers["Content-Type"] = "application/json"
+	httpOpts.CustomOptions = map[string]interface{}{
+		"Content-Type": "application/json",
+	}
 
 	streamingOpts, err := settings.HTTPClientOptions(ctx)
 	if err != nil {
 		return nil, err
 	}
 	streamingOpts.ForwardHTTPHeaders = s.OAuthPassThru
-	streamingOpts.Headers["Content-Type"] = "application/json"
-	streamingOpts.Headers["Accept"] = "application/x-ndjson"
+	streamingOpts.CustomOptions = map[string]interface{}{
+		"Content-Type": "application/json",
+		"Accept":       "application/x-ndjson",
+	}
 	streamingOpts.Timeouts.IdleConnTimeout = 0
 	streamingOpts.Timeouts.KeepAlive = 0
 	streamingOpts.Timeouts.Timeout = 0
