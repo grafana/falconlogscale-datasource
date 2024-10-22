@@ -49,7 +49,7 @@ func TestSubscribeStream(t *testing.T) {
 
 	t.Run("subscribes successfully with valid path", func(t *testing.T) {
 		req := &backend.SubscribeStreamRequest{
-			Path: "tail/somepath",
+			Path: "tail/test-path",
 			Data: json.RawMessage(`{"repository":"test-repository"}`),
 		}
 		resp, err := testHandler.SubscribeStream(context.Background(), req)
@@ -64,7 +64,7 @@ func TestRunStream(t *testing.T) {
 
 	t.Run("runs stream and sends frame successfully", func(t *testing.T) {
 		req := &backend.RunStreamRequest{
-			Path: "tail/somepath",
+			Path: "tail/test-path",
 			Data: json.RawMessage(`{"repository":"test-repository-1"}`),
 		}
 
