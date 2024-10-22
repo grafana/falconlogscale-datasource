@@ -5,9 +5,9 @@ import {
   SelectableValue,
   updateDatasourcePluginOption,
 } from '@grafana/data';
-import { Field, SecretInput } from '@grafana/ui';
+import { Field, InlineField, SecretInput, Switch } from '@grafana/ui';
 import { DataLinks } from '../DataLinks';
-import { getBackendSrv } from '@grafana/runtime';
+import { config, getBackendSrv } from '@grafana/runtime';
 import {
   AdvancedHttpSettings,
   Auth,
@@ -23,6 +23,14 @@ import { lastValueFrom } from 'rxjs';
 import { parseRepositoriesResponse } from 'utils/utils';
 import { DefaultRepository } from './DefaultRepository';
 import { Divider } from './Divider';
+import { css } from '@emotion/css';
+
+const styles = {
+  toggle: css`
+    margin-top: 7px;
+    margin-left: 5px;
+  `,
+};
 
 export interface Props extends DataSourcePluginOptionsEditorProps<LogScaleOptions, SecretLogScaleOptions> {}
 
@@ -198,6 +206,45 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
             });
           }}
         />
+
+      {config.secureSocksDSProxyEnabled && (
+          <>
+            <div className="gf-form-group">
+              <h3 className="page-heading">Secure Socks Proxy</h3>
+              <br />
+              <InlineField
+                label="Enable"
+                tooltip={
+                  <>
+                    Enable proxying the datasource connection through the secure socks proxy to a different network. See{' '}
+                    <a
+                      href="https://grafana.com/docs/grafana/next/setup-grafana/configure-grafana/proxy/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Configure a datasource connection proxy.
+                    </a>
+                  </>
+                }
+              >
+                <div className={styles.toggle}>
+                  <Switch
+                    value={options.jsonData.enableSecureSocksProxy}
+                    onChange={(e) => {
+                      onOptionsChange({
+                        ...options,
+                        jsonData: {
+                          ...options.jsonData,
+                          enableSecureSocksProxy: e.currentTarget.checked,
+                        },
+                      });
+                    }}
+                  />
+                </div>
+              </InlineField>
+            </div>
+          </>
+        )}
       </ConfigSection>
     </>
   );

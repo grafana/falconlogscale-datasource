@@ -9,6 +9,7 @@ export interface LogScaleOptions extends DataSourceJsonData {
   dataLinks?: DataLinkConfig[];
   defaultRepository?: string;
   basicAuthUser?: string;
+  enableSecureSocksProxy?: boolean;
 }
 
 export interface SecretLogScaleOptions extends DataSourceJsonData {
