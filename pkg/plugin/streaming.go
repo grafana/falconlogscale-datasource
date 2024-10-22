@@ -24,7 +24,9 @@ func (h *Handler) SubscribeStream(ctx context.Context, req *backend.SubscribeStr
 		return nil, err
 	}
 
-	ValidateQuery(qr)
+	if err := ValidateQuery(qr); err != nil {
+		return nil, err
+	}
 
 	h.streamsMu.RLock()
 	defer h.streamsMu.RUnlock()
