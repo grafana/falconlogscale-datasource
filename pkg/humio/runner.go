@@ -23,7 +23,7 @@ type JobQuerier interface {
 }
 
 type QueryRunner struct {
-	jobQuerier JobQuerier
+	JobQuerier JobQuerier
 }
 
 // QueryRunnerOption acts as an optional modifier on the QueryRunner
@@ -31,7 +31,7 @@ type QueryRunnerOption func(qr *QueryRunner)
 
 func NewQueryRunner(c JobQuerier, opts ...QueryRunnerOption) *QueryRunner {
 	qr := &QueryRunner{
-		jobQuerier: c,
+		JobQuerier: c,
 	}
 
 	for _, o := range opts {
@@ -47,7 +47,7 @@ func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
 	ctx := contextCancelledOnInterrupt(context.Background())
 	// run in lambda func to be able to defer and delete the query job
 	result, err := func() (*QueryResult, error) {
-		id, err := qj.jobQuerier.CreateJob(repository, query)
+		id, err := qj.JobQuerier.CreateJob(repository, query)
 
 		if err != nil {
 			return nil, err
@@ -55,12 +55,12 @@ func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
 
 		defer func(id string) {
 			// Humio will eventually delete the query when we stop polling and we can't do much about errors here.
-			_ = qj.jobQuerier.DeleteJob(repository, id)
+			_ = qj.JobQuerier.DeleteJob(repository, id)
 		}(id)
 
 		var result QueryResult
 		poller := QueryJobPoller{
-			QueryJobs:  &qj.jobQuerier,
+			QueryJobs:  &qj.JobQuerier,
 			Repository: repository,
 			Id:         id,
 		}
@@ -90,11 +90,11 @@ func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
 }
 
 func (qr *QueryRunner) RunChannel(ctx context.Context, query Query, c chan StreamingResults, done chan any) {
-
 	repository := query.Repository
 	endPoint := fmt.Sprintf("api/v1/repositories/%s/query", repository)
+
 	go func(s string) {
-		err := qr.jobQuerier.GetStream(http.MethodPost, s, query, c)
+		err := qr.JobQuerier.GetStream(http.MethodPost, s, query, c)
 		if err != nil {
 			return
 		}
@@ -102,11 +102,11 @@ func (qr *QueryRunner) RunChannel(ctx context.Context, query Query, c chan Strea
 }
 
 func (qr *QueryRunner) GetAllRepoNames() ([]string, error) {
-	return qr.jobQuerier.ListRepos()
+	return qr.JobQuerier.ListRepos()
 }
 
 func (qr *QueryRunner) SetAuthHeaders(authHeaders map[string]string) {
-	qr.jobQuerier.SetAuthHeaders(authHeaders)
+	qr.JobQuerier.SetAuthHeaders(authHeaders)
 }
 
 func humioToDatasourceResult(r QueryResult) QueryResult {

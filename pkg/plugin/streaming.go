@@ -29,7 +29,7 @@ func (h *Handler) SubscribeStream(ctx context.Context, req *backend.SubscribeStr
 	h.streamsMu.RLock()
 	defer h.streamsMu.RUnlock()
 
-	cache, ok := h.streams[req.Path]
+	cache, ok := h.Streams[req.Path]
 	if ok {
 		msg, err := backend.NewInitialData(cache.Bytes(data.IncludeAll))
 		return &backend.SubscribeStreamResponse{
@@ -93,12 +93,16 @@ func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, 
 
 				// Cache the initial data
 				h.streamsMu.Lock()
-				h.streams[req.Path] = prev
+				h.Streams[req.Path] = prev
 				h.streamsMu.Unlock()
 			}
 		case <-done:
 			//stream over
 			return nil
+		case <-ctx.Done():
+			// If the context is canceled, clean up
+			log.DefaultLogger.Info("Stream context canceled")
+			return ctx.Err()
 		}
 	}
 }

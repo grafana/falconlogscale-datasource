@@ -29,7 +29,7 @@ type Handler struct {
 	Settings        Settings
 
 	// open streams
-	streams   map[string]data.FrameJSONCache
+	Streams   map[string]data.FrameJSONCache
 	streamsMu sync.RWMutex
 }
 
@@ -57,7 +57,7 @@ func NewHandler(
 		ResourceHandler: resourceHandler,
 		FrameMarshaller: marshaller,
 		Settings:        settings,
-		streams:         make(map[string]data.FrameJSONCache),
+		Streams:         make(map[string]data.FrameJSONCache),
 	}
 
 	for _, o := range opts {
