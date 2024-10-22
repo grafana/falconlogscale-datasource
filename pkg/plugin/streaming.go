@@ -8,6 +8,7 @@ import (
 
 	"github.com/grafana/falconlogscale-datasource-backend/pkg/humio"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 )
 
@@ -23,7 +24,7 @@ func (h *Handler) SubscribeStream(ctx context.Context, req *backend.SubscribeStr
 		return nil, err
 	}
 
-	//todo: dont run an invalid query and return an error
+	ValidateQuery(qr)
 
 	h.streamsMu.RLock()
 	defer h.streamsMu.RUnlock()
@@ -58,8 +59,7 @@ func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, 
 	if err != nil {
 		return err
 	}
-	// note from andrew: this should be set by the user in the query
-	qr.Start = "1m"
+
 	c := make(chan humio.StreamingResults)
 	prev := data.FrameJSONCache{}
 	done := make(chan any)
@@ -75,8 +75,7 @@ func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, 
 			}
 			f, err := h.FrameMarshaller("events", r)
 			if err != nil {
-				// note from andrew: we need logging all over this function!
-				// logger.Error("Websocket write:", "err", err, "raw", message)
+				log.DefaultLogger.Error("Failed to marshal frame", "err", err, "data", r)
 				return err
 			}
 			if f != nil {
@@ -87,7 +86,7 @@ func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, 
 					err = sender.SendFrame(f, data.IncludeAll)
 				}
 				if err != nil {
-					//logger.Error("Websocket write:", "err", err, "raw", message)
+					log.DefaultLogger.Error(("Websocket write:"), "err", err)
 					return err
 				}
 				prev = next
@@ -97,7 +96,6 @@ func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, 
 				h.streams[req.Path] = prev
 				h.streamsMu.Unlock()
 			}
-		// note from andrew: this isnt called. we need to trigger the done channel from the runner
 		case <-done:
 			//stream over
 			return nil

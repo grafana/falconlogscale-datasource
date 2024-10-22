@@ -31,9 +31,6 @@ func NewDataSourceInstance(ctx context.Context, settings backend.DataSourceInsta
 	streamingOpts.ForwardHTTPHeaders = s.OAuthPassThru
 	streamingOpts.Headers["Content-Type"] = "application/json"
 	streamingOpts.Headers["Accept"] = "application/x-ndjson"
-	// note from andrew: I am not sure which time out is relevant for ending the http connection,
-	// but when the relevant timeout is found, we should either set to so the stream cancels after
-	// a set amount of time of no activity or make it a user settings.
 	streamingOpts.Timeouts.IdleConnTimeout = 0
 	streamingOpts.Timeouts.KeepAlive = 0
 	streamingOpts.Timeouts.Timeout = 0
