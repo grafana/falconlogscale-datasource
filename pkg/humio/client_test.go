@@ -103,7 +103,7 @@ func TestClient(t *testing.T) {
 	// 	humioQuery.LSQL = ""
 	// 	humioQuery.Start = "1m"
 	// 	ch := make(chan humio.StreamingResults)
-	// 	go c.GetStream(http.MethodPost, "api/v1/repositories/humio-organization-github-demo/query", humioQuery, &ch)
+	// 	go c.Stream(http.MethodPost, "api/v1/repositories/humio-organization-github-demo/query", humioQuery, &ch)
 	// 	for r := range ch {
 	// 		println(r)
 	// 	}

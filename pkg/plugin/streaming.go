@@ -69,6 +69,10 @@ func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, 
 
 	for {
 		select {
+		case <-done:
+			//stream over
+			//log stream over
+			return nil
 		case r := <-c:
 			if len(r) == 0 {
 				continue

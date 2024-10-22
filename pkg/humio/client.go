@@ -205,7 +205,7 @@ func (c *Client) Fetch(method string, path string, body *bytes.Buffer, out inter
 	return fmt.Errorf("%s %s", res.Status, strings.TrimSpace(errResponse.Detail))
 }
 
-func (c *Client) GetStream(method string, path string, query Query, ch chan StreamingResults) error {
+func (c *Client) Stream(method string, path string, query Query, ch chan StreamingResults, done chan any) error {
 	var humioQuery struct {
 		QueryString string `json:"queryString"`
 		Start       string `json:"start,omitempty"`
@@ -214,6 +214,9 @@ func (c *Client) GetStream(method string, path string, query Query, ch chan Stre
 	humioQuery.QueryString = query.LSQL
 	humioQuery.Start = query.Start
 	humioQuery.Live = true
+
+	defer close(done)
+
 	var buf bytes.Buffer
 	err := json.NewEncoder(&buf).Encode(humioQuery)
 	if err != nil {
