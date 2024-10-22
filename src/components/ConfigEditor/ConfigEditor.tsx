@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import {
   DataSourcePluginOptionsEditorProps,
   DataSourceSettings,
+  GrafanaTheme2,
   SelectableValue,
   updateDatasourcePluginOption,
 } from '@grafana/data';
-import { Field, InlineField, SecretInput, Switch } from '@grafana/ui';
+import { Field, InlineField, SecretInput, Switch, useTheme2 } from '@grafana/ui';
 import { DataLinks } from '../DataLinks';
 import { config, getBackendSrv } from '@grafana/runtime';
 import {
@@ -25,16 +26,23 @@ import { DefaultRepository } from './DefaultRepository';
 import { Divider } from './Divider';
 import { css } from '@emotion/css';
 
-const styles = {
+const getStyles = (theme: GrafanaTheme2) => ({
   toggle: css`
     margin-top: 7px;
     margin-left: 5px;
   `,
-};
+  infoText: css`
+    padding-bottom: ${theme.v1.spacing.md};
+    color: ${theme.v1.colors.textWeak};
+  `,
+});
 
 export interface Props extends DataSourcePluginOptionsEditorProps<LogScaleOptions, SecretLogScaleOptions> {}
 
 export const ConfigEditor: React.FC<Props> = (props: Props) => {
+  const theme = useTheme2();
+  const styles = getStyles(theme);
+  
   const { onOptionsChange, options } = props;
   const onTokenReset = () => {
     setUnsaved(true);
@@ -211,21 +219,18 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
           <>
             <div className="gf-form-group">
               <h3 className="page-heading">Secure Socks Proxy</h3>
-              <br />
+              <div className={styles.infoText}>
+                Enable proxying the datasource connection through the secure socks proxy to a different network. See{' '}
+                <a
+                  href="https://grafana.com/docs/grafana/next/setup-grafana/configure-grafana/proxy/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Configure a data source connection proxy.
+                </a>
+              </div>
               <InlineField
                 label="Enable"
-                tooltip={
-                  <>
-                    Enable proxying the datasource connection through the secure socks proxy to a different network. See{' '}
-                    <a
-                      href="https://grafana.com/docs/grafana/next/setup-grafana/configure-grafana/proxy/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Configure a datasource connection proxy.
-                    </a>
-                  </>
-                }
               >
                 <div className={styles.toggle}>
                   <Switch
