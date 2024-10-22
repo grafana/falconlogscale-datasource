@@ -4,7 +4,7 @@
 //      "type": "timeseries-wide",
 //      "typeVersion": [
 //          0,
-//          0
+//          1
 //      ]
 //  }
 //  Name: test
@@ -31,7 +31,7 @@
           "type": "timeseries-wide",
           "typeVersion": [
             0,
-            0
+            1
           ]
         },
         "fields": [

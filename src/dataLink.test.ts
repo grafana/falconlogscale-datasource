@@ -70,7 +70,7 @@ describe('dataLink', () => {
   });
 
   it('should not add a data link because does not match regExp', () => {
-    const df = createDataFrame({ fields: [{ name: 'line', values: ['no traceId', 'agin no traceId'] }] });
+    const df = createDataFrame({ fields: [{ name: 'line', values: ['no traceId', 'again no traceId'] }] });
     const newFields = getDataLinks(df, [
       {
         matcherRegex: 'traceId=(\\w+)',
