@@ -99,7 +99,7 @@ func (qr *QueryRunner) RunChannel(ctx context.Context, query Query, c chan Strea
 		defer close(done)
 		err := qr.JobQuerier.Stream(http.MethodPost, endPoint, query, c, done)
 		if err != nil {
-			//todo: log here is very important. no other way to see this error
+			log.DefaultLogger.Error(err.Error())
 			return
 		}
 	}()

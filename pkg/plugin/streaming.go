@@ -65,6 +65,7 @@ func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, 
 	c := make(chan humio.StreamingResults)
 	prev := data.FrameJSONCache{}
 	done := make(chan any)
+	defer close(done)
 
 	h.QueryRunner.RunChannel(ctx, qr, c, done)
 
