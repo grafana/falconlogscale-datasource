@@ -21,23 +21,90 @@ var (
 	testHandler *plugin.Handler
 )
 
-func setupStreamingTests() {
-	// Setup test server and handlers
+type mockStreamPacketSender struct {
+	sendFunc func(*backend.StreamPacket) error
+}
+
+func (m *mockStreamPacketSender) Send(packet *backend.StreamPacket) error {
+	if m.sendFunc != nil {
+		return m.sendFunc(packet)
+	}
+	return nil
+}
+
+var mockSender *backend.StreamSender
+
+type mockQueryRunner struct {
+	runFunc            func(humio.Query) ([]humio.QueryResult, error)
+	runChannelFunc     func(context.Context, humio.Query, chan humio.StreamingResults, chan any)
+	getRepoNamesFunc   func() ([]string, error)
+	setAuthHeadersFunc func(authHeaders map[string]string)
+}
+
+func (m *mockQueryRunner) Run(q humio.Query) ([]humio.QueryResult, error) {
+	if m.runFunc != nil {
+		return m.runFunc(q)
+	}
+	return nil, nil
+}
+
+func (m *mockQueryRunner) RunChannel(ctx context.Context, qr humio.Query, c chan humio.StreamingResults, done chan any) {
+	if m.runChannelFunc != nil {
+		m.runChannelFunc(ctx, qr, c, done)
+	}
+}
+
+func (m *mockQueryRunner) GetAllRepoNames() ([]string, error) {
+	if m.getRepoNamesFunc != nil {
+		return m.getRepoNamesFunc()
+	}
+	return nil, nil
+}
+
+func (m *mockQueryRunner) SetAuthHeaders(authHeaders map[string]string) {
+	if m.setAuthHeadersFunc != nil {
+		m.setAuthHeadersFunc(authHeaders)
+	}
+}
+
+func setupStreamingTests(t *testing.T) {
 	testMux = http.NewServeMux()
 	testServer = httptest.NewServer(testMux)
 
-	// Initialize the Handler
+	t.Cleanup(func() {
+		testServer.Close()
+	})
+
+	mockPacketSender := &mockStreamPacketSender{
+		sendFunc: func(packet *backend.StreamPacket) error {
+			return nil
+		},
+	}
+
+	mockSender = backend.NewStreamSender(mockPacketSender)
+
+	mockQueryRunner := &mockQueryRunner{
+		runChannelFunc: func(ctx context.Context, qr humio.Query, c chan humio.StreamingResults, done chan any) {
+			go func() {
+				c <- humio.StreamingResults{"event": "mock event data"}
+				close(c)
+				close(done)
+			}()
+		},
+	}
+
 	testHandler = &plugin.Handler{
 		Streams: make(map[string]data.FrameJSONCache),
 		FrameMarshaller: func(string, interface{}, ...framestruct.FramestructOption) (*data.Frame, error) {
 			frame := &data.Frame{Name: "TestFrame"}
 			return frame, nil
 		},
+		QueryRunner: mockQueryRunner,
 	}
 }
 
 func TestSubscribeStream(t *testing.T) {
-	setupStreamingTests()
+	setupStreamingTests(t)
 
 	t.Run("returns error for invalid path", func(t *testing.T) {
 		req := &backend.SubscribeStreamRequest{Path: "invalid/path"}
@@ -60,7 +127,7 @@ func TestSubscribeStream(t *testing.T) {
 }
 
 func TestRunStream(t *testing.T) {
-	setupStreamingTests()
+	setupStreamingTests(t)
 
 	t.Run("runs stream and sends frame successfully", func(t *testing.T) {
 		req := &backend.RunStreamRequest{
@@ -68,23 +135,12 @@ func TestRunStream(t *testing.T) {
 			Data: json.RawMessage(`{"repository":"test-repository-1"}`),
 		}
 
-		// Create a channel to simulate the streaming results
-		c := make(chan humio.StreamingResults, 1)
-		done := make(chan any)
-		defer close(done)
-
-		go func() {
-			c <- humio.StreamingResults{"event": "some data"}
-			close(c)
-		}()
-
 		testHandler.FrameMarshaller = func(string, interface{}, ...framestruct.FramestructOption) (*data.Frame, error) {
 			frame := &data.Frame{Name: "TestFrame"}
 			return frame, nil
 		}
 
-		sender := &backend.StreamSender{}
-		err := testHandler.RunStream(context.Background(), req, sender)
+		err := testHandler.RunStream(context.Background(), req, mockSender)
 		require.NoError(t, err)
 	})
 }

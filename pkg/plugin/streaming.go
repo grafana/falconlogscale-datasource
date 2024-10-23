@@ -65,15 +65,13 @@ func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, 
 	c := make(chan humio.StreamingResults)
 	prev := data.FrameJSONCache{}
 	done := make(chan any)
-	defer close(done)
 
 	h.QueryRunner.RunChannel(ctx, qr, c, done)
 
 	for {
 		select {
 		case <-done:
-			//stream over
-			//log stream over
+			log.DefaultLogger.Info("Received done signal in RunStream")
 			return nil
 		case r := <-c:
 			if len(r) == 0 {
@@ -102,9 +100,6 @@ func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, 
 				h.Streams[req.Path] = prev
 				h.streamsMu.Unlock()
 			}
-		case <-done:
-			//stream over
-			return nil
 		case <-ctx.Done():
 			// If the context is canceled, clean up
 			log.DefaultLogger.Info("Stream context canceled")
