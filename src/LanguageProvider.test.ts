@@ -61,11 +61,7 @@ describe('transform abstract query to a LogScale query', () => {
       lsql: '',
       repository: 'repo',
       refId: abstractQuery.refId,
-<<<<<<< Updated upstream
-      version: ""
-=======
       version: ''
->>>>>>> Stashed changes
     } as LogScaleQuery);
   });
 
@@ -80,11 +76,7 @@ describe('transform abstract query to a LogScale query', () => {
       refId: abstractQuery.refId,
       lsql: '',
       repository: '',
-<<<<<<< Updated upstream
-      version: ""
-=======
       version: ''
->>>>>>> Stashed changes
     } as LogScaleQuery);
   });
 });
