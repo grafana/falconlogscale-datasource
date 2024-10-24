@@ -92,6 +92,23 @@ func TestClient(t *testing.T) {
 		_, err := testClient.ListRepos()
 		require.Nil(t, err)
 	})
+
+	//remove this test. its not a good functional test
+	// t.Run("d", func(t *testing.T) {
+	// 	url, _ := url.Parse("https://cloud.community.humio.com/")
+	// 	config := humio.Config{Address: url, Token: "fill this in"}
+	// 	httpOpts := httpclient.Options{Headers: map[string]string{}}
+	// 	c, _ := humio.NewClient(config, httpOpts)
+	// 	var humioQuery humio.Query
+	// 	humioQuery.LSQL = ""
+	// 	humioQuery.Start = "1m"
+	// 	ch := make(chan humio.StreamingResults)
+	// 	go c.Stream(http.MethodPost, "api/v1/repositories/humio-organization-github-demo/query", humioQuery, &ch)
+	// 	for r := range ch {
+	// 		println(r)
+	// 	}
+	// 	require.Nil(t, nil)
+	// })
 }
 
 var (
@@ -113,7 +130,7 @@ func setupClientTest() {
 	config := humio.Config{Address: url, Token: token}
 	httpOpts := httpclient.Options{Header: http.Header{}}
 	var err error
-	testClient, err = humio.NewClient(config, httpOpts)
+	testClient, err = humio.NewClient(config, httpOpts, httpOpts)
 	if err != nil {
 		panic(err)
 	}

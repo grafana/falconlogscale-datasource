@@ -5,12 +5,13 @@ import {
   DataQueryResponse,
   DataSourceInstanceSettings,
   DataSourceWithQueryImportSupport,
+  LiveChannelScope,
   MetricFindValue,
   ScopedVars,
   VariableSupportType,
 } from '@grafana/data';
-import { DataSourceWithBackend, getTemplateSrv, TemplateSrv } from '@grafana/runtime';
-import { lastValueFrom, Observable } from 'rxjs';
+import { DataSourceWithBackend, getGrafanaLiveSrv, getTemplateSrv, TemplateSrv } from '@grafana/runtime';
+import { lastValueFrom, Observable, merge, defer, mergeMap } from 'rxjs';
 import { LogScaleQuery, LogScaleOptions } from './types';
 import { map } from 'rxjs/operators';
 import LanguageProvider from 'LanguageProvider';
@@ -18,6 +19,7 @@ import { transformBackendResult } from './logs';
 import VariableQueryEditor from 'components/VariableEditor/VariableQueryEditor';
 import { uniqueId } from 'lodash';
 import { migrateQuery } from 'migrations';
+import { getLiveStreamKey } from 'streaming';
 
 export class DataSource
   extends DataSourceWithBackend<LogScaleQuery, LogScaleOptions>
@@ -48,6 +50,13 @@ export class DataSource
   }
 
   query(request: DataQueryRequest<LogScaleQuery>): Observable<DataQueryResponse> {
+    if (request.targets[0].live) {
+      request.liveStreaming = true
+    }
+    if (request.liveStreaming) {
+      return this.runLiveQuery(request);
+    }
+
     const { targets } = request;
     if (targets && targets.length > 0) {
       this.ensureRepositories(targets);
@@ -63,6 +72,35 @@ export class DataSource
       .pipe(
         map((response) => transformBackendResult(response, this.instanceSettings.jsonData.dataLinks ?? [], request))
       );
+  }
+
+  runLiveQuery(request: DataQueryRequest<LogScaleQuery>): Observable<DataQueryResponse> {
+    const ds = this;
+    const range = request.range;
+    
+    const observables = request.targets.map((query, index) => {
+      return defer(() => getLiveStreamKey(query)).pipe(
+        mergeMap((key) => {
+          return getGrafanaLiveSrv()
+            .getDataStream({
+              addr: {
+                scope: LiveChannelScope.DataSource,
+                namespace: ds.uid,
+                path: `tail/${key}`,
+                data: {
+                  ...query,
+                  timeRange: {
+                    from: range.from.valueOf().toString(),
+                    to: range.to.valueOf().toString(),
+                  },
+                },
+              },
+            })
+        })
+      );
+    });
+
+    return merge(...observables);
   }
 
   ensureRepositories(targets: LogScaleQuery[]): void {
