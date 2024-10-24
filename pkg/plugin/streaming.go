@@ -87,7 +87,7 @@ func getQueryStartTime(req *backend.RunStreamRequest) (string, error) {
 
 	err := json.Unmarshal(req.Data, &queryTimeRange)
 	if err != nil {
-		fmt.Println("Error unmarshaling data:", err)
+		log.DefaultLogger.Error("Error converting JSON to struct:", err)
 		return "", err
 	}
 
@@ -98,7 +98,7 @@ func getQueryStartTime(req *backend.RunStreamRequest) (string, error) {
 	to, err2 := strconv.ParseInt(toTime, 10, 64)
 
 	if err1 != nil || err2 != nil {
-		fmt.Println("Error converting strings to integers:", err1, err2)
+		log.DefaultLogger.Error("Error converting strings to integers:", err1, err2)
 		return "", err
 	}
 
@@ -125,13 +125,10 @@ func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, 
 		return err
 	}
 
-	fmt.Println(queryStartTime)
-
-	qr.Start = "1h"
+	qr.Start = queryStartTime
 	c := make(chan humio.StreamingResults)
 	prev := data.FrameJSONCache{}
 	done := make(chan any)
-	// defer close(done)
 
 	h.QueryRunner.RunChannel(ctx, qr, c, done)
 
