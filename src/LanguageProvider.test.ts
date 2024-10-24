@@ -43,11 +43,7 @@ describe('transform abstract query to a LogScale query', () => {
       lsql: 'label1="value1"\n| label2 != "value2"\n| label3 = *value3*\n| label4 != *value4*',
       repository: 'repo',
       refId: abstractQuery.refId,
-<<<<<<< Updated upstream
-      version: ""
-=======
       version: ''
->>>>>>> Stashed changes
     } as LogScaleQuery);
   });
 
