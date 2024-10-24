@@ -244,10 +244,9 @@ func (c *Client) Stream(method string, path string, query Query, ch chan Streami
 	req = c.addAuthHeaders(req)
 
 	// Create a context with a timeout to avoid endless streaming
-	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Second) // Set timeout as per your need
-	defer cancel()                                                            // Ensure the context is cancelled when the function ends
+	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Second)
+	defer cancel()
 
-	// Attach the context to the request
 	req = req.WithContext(ctx)
 
 	res, err := c.StreamingClient.Do(req)
@@ -260,20 +259,16 @@ func (c *Client) Stream(method string, path string, query Query, ch chan Streami
 
 	d := json.NewDecoder(res.Body)
 
-	ticker := time.NewTicker(1 * time.Second) // Optional: Adjust the ticker to throttle the loop
+	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 
-	// note from andrew: it might be a good idea to time.Sleep to not endlessly loop over this code
-	// you should look to see if this is done with the decoder already (it doesnt seem to be)
-	// currently this never ends unless there is an error. there should be an ending condition for this loop
-	// maybe a timeout similar to the client timeout. or maybe we can check to see if the client is timed out. not sure
 	for {
 		select {
-		case <-ctx.Done(): // End the loop if the context times out or gets cancelled
+		case <-ctx.Done():
 			log.DefaultLogger.Info("Context done, ending stream", "reason", ctx.Err())
 			return ctx.Err()
 
-		case <-ticker.C: // Poll at regular intervals (throttling the loop)
+		case <-ticker.C:
 			var result StreamingResults
 			if err := d.Decode(&result); err != nil {
 				log.DefaultLogger.Error("Error decoding stream result:", "err", err)
@@ -284,7 +279,6 @@ func (c *Client) Stream(method string, path string, query Query, ch chan Streami
 				ch <- result
 			}
 
-		// Check for other signals (like done channel) if you have them in your code
 		case <-done:
 			log.DefaultLogger.Info("Stream done, exiting")
 			return nil
