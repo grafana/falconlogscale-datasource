@@ -81,10 +81,6 @@ func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
 	}()
 
 	if err != nil {
-		return nil, errorsource.DownstreamError(err, false)
-	}
-
-	if err != nil {
 		log.DefaultLogger.Error("Humio query string error: %s\n", err.Error())
 		return nil, errorsource.DownstreamError(err, false)
 	}

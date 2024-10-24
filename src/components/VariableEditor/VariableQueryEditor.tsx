@@ -31,7 +31,7 @@ const VariableQueryEditor = (props: Props) => {
         formatAs: FormatAs.Logs,
         lsql: query,
         queryType: LogScaleQueryType.LQL,
-        version,
+        version
       });
     } else if (!query.queryType) {
       onChange({ ...query, queryType: LogScaleQueryType.LQL });

@@ -50,6 +50,10 @@ export class DataSource
   }
 
   query(request: DataQueryRequest<LogScaleQuery>): Observable<DataQueryResponse> {
+    request.liveStreaming = false;
+    if (request.targets[0].live) {
+      request.liveStreaming = true;
+    }
     if (request.liveStreaming) {
       return this.runLiveQuery(request);
     }
@@ -74,44 +78,29 @@ export class DataSource
   runLiveQuery(request: DataQueryRequest<LogScaleQuery>): Observable<DataQueryResponse> {
     const ds = this;
     const range = request.range;
+    
     const observables = request.targets.map((query, index) => {
       return defer(() => getLiveStreamKey(query)).pipe(
         mergeMap((key) => {
           return getGrafanaLiveSrv()
-            .getDataStream({addr: {
-              scope: LiveChannelScope.DataSource,
-              namespace: ds.uid,
-              path: `tail/${key}`,
-              data: {
-                ...query,
-                timeRange: {
-                  from: range.from.valueOf().toString(),
-                  to: range.to.valueOf().toString(),
+            .getDataStream({
+              addr: {
+                scope: LiveChannelScope.DataSource,
+                namespace: ds.uid,
+                path: `tail/${key}`,
+                data: {
+                  ...query,
+                  timeRange: {
+                    from: range.from.valueOf().toString(),
+                    to: range.to.valueOf().toString(),
+                  },
                 },
               },
-            }})
-            // .pipe(
-            //   map((evt) => {
-            //     const frame = updateFrame(evt);
-            //     return {
-            //       data: frame ? [frame] : [],
-            //       state: LoadingState.Streaming,
-            //     };
-            //   })
-            // );
+            })
         })
       );
-      // return getGrafanaLiveSrv().getDataStream({
-      //   addr: {
-      //     scope: LiveChannelScope.DataSource,
-      //     namespace: this.uid,
-      //     path: , // include org id and plugin id
-      //     data: {
-      //       ...query,
-      //     },
-      //   },
-      // });
     });
+
     return merge(...observables);
   }
 

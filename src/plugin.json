@@ -8,7 +8,6 @@
   "logs": true,
   "alerting": true,
   "annotations": true,
-  "streaming": true,
   "executable": "gpx_falconlogscale",
   "info": {
     "description": "Falcon LogScale data source for Grafana",

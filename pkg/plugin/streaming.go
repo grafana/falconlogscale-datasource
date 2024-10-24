@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/grafana/falconlogscale-datasource-backend/pkg/humio"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
@@ -24,7 +26,8 @@ func (h *Handler) SubscribeStream(ctx context.Context, req *backend.SubscribeStr
 		return nil, err
 	}
 
-	if err := ValidateQuery(qr); err != nil {
+	err := ValidateQuery(qr)
+	if err != nil {
 		return nil, err
 	}
 
@@ -40,7 +43,6 @@ func (h *Handler) SubscribeStream(ctx context.Context, req *backend.SubscribeStr
 		}, err
 	}
 
-	// nothing yet
 	return &backend.SubscribeStreamResponse{
 		Status: backend.SubscribeStreamStatusOK,
 	}, nil
@@ -50,6 +52,61 @@ func (h *Handler) PublishStream(context.Context, *backend.PublishStreamRequest) 
 	return &backend.PublishStreamResponse{
 		Status: backend.PublishStreamStatusPermissionDenied,
 	}, nil
+}
+
+func formatDuration(d time.Duration) string {
+	if d.Hours() >= 24*365 {
+		return fmt.Sprintf("%.0fy", d.Hours()/(24*365))
+	}
+	if d.Hours() >= 24 {
+		return fmt.Sprintf("%.0fd", d.Hours()/24)
+	}
+	if d.Hours() >= 1 {
+		return fmt.Sprintf("%.0fh", d.Hours())
+	}
+	if d.Minutes() >= 1 {
+		return fmt.Sprintf("%.0fm", d.Minutes())
+	}
+	return fmt.Sprintf("%.0fs", d.Seconds())
+}
+
+func getQueryStartTime(req *backend.RunStreamRequest) (string, error) {
+	type TimeRange struct {
+		From string `json:"from"`
+		To   string `json:"to"`
+	}
+
+	type reqData struct {
+		Repository string    `json:"repository"`
+		QueryType  string    `json:"queryType"`
+		Version    string    `json:"version"`
+		TimeRange  TimeRange `json:"timeRange"`
+	}
+
+	var queryTimeRange reqData
+
+	err := json.Unmarshal(req.Data, &queryTimeRange)
+	if err != nil {
+		fmt.Println("Error unmarshaling data:", err)
+		return "", err
+	}
+
+	fromTime := queryTimeRange.TimeRange.From
+	toTime := queryTimeRange.TimeRange.To
+
+	from, err1 := strconv.ParseInt(fromTime, 10, 64)
+	to, err2 := strconv.ParseInt(toTime, 10, 64)
+
+	if err1 != nil || err2 != nil {
+		fmt.Println("Error converting strings to integers:", err1, err2)
+		return "", err
+	}
+
+	timeDifference := to - from
+	duration := time.Duration(timeDifference) * time.Millisecond
+	relativeTime := formatDuration(duration)
+
+	return relativeTime, nil
 }
 
 func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, sender *backend.StreamSender) error {
@@ -62,17 +119,28 @@ func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, 
 		return err
 	}
 
+	var queryStartTime string
+	queryStartTime, err = getQueryStartTime(req)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(queryStartTime)
+
+	qr.Start = "1h"
 	c := make(chan humio.StreamingResults)
 	prev := data.FrameJSONCache{}
 	done := make(chan any)
-	defer close(done)
+	// defer close(done)
 
 	h.QueryRunner.RunChannel(ctx, qr, c, done)
 
 	for {
 		select {
+		case <-ctx.Done():
+			log.DefaultLogger.Info("Context done, exiting stream", "reason", ctx.Err())
+			return ctx.Err()
 		case <-done:
-			log.DefaultLogger.Info("Received done signal in RunStream")
 			return nil
 		case r := <-c:
 			if len(r) == 0 {
@@ -101,10 +169,6 @@ func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, 
 				h.Streams[req.Path] = prev
 				h.streamsMu.Unlock()
 			}
-		case <-ctx.Done():
-			// If the context is canceled, clean up
-			log.DefaultLogger.Info("Stream context canceled")
-			return ctx.Err()
 		}
 	}
 }
