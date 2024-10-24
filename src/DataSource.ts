@@ -50,9 +50,8 @@ export class DataSource
   }
 
   query(request: DataQueryRequest<LogScaleQuery>): Observable<DataQueryResponse> {
-    request.liveStreaming = false;
     if (request.targets[0].live) {
-      request.liveStreaming = true;
+      request.liveStreaming = true
     }
     if (request.liveStreaming) {
       return this.runLiveQuery(request);

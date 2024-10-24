@@ -28,10 +28,6 @@ export function QueryEditor(props: Props) {
     }
   }, [query, onChange]);
 
-  useEffect(() => {
-    console.log("Run Query button was clicked or query is being executed");
-  }, [onRunQuery]);
-
   const onFormatAsChange = (val: boolean) => {
     setIsLogFormat(val);
     onChange({ ...query, formatAs: val ? FormatAs.Logs : FormatAs.Metrics });
@@ -39,12 +35,7 @@ export function QueryEditor(props: Props) {
   };
 
   const onLiveQueryChange = () => {
-    if (typeof query.live === 'boolean') {
-      query.live = !query.live;
-    } else {
-      query.live = true;
-    }
-
+    query.live = !query.live;
     onRunQuery();
   };
 
@@ -64,17 +55,21 @@ export function QueryEditor(props: Props) {
       ) : (
         ''
       )}
-      <div style={{padding: '5px 0 0 0'}}>
-        <EditorRow>
-          <EditorField label="Enable live querying">
-            <Switch
-              id="liveQuerying"
-              value={query.live || false}
-              onChange={onLiveQueryChange}
-            />
-          </EditorField>
-        </EditorRow>
-      </div>
+      {props.app === 'panel-editor' ? (
+        <div style={{padding: '5px 0 0 0'}}>
+          <EditorRow>
+            <EditorField label="Enable live querying">
+              <Switch
+                id="liveQuerying"
+                value={query.live || false}
+                onChange={onLiveQueryChange}
+              />
+            </EditorField>
+          </EditorRow>
+        </div>
+      ) : (
+        ''
+      )}
     </div>
   );
 }

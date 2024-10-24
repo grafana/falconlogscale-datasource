@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/experimental/errorsource"
 	"github.com/hasura/go-graphql-client"
 )
@@ -236,17 +237,17 @@ func (c *Client) Stream(method string, path string, query Query, ch chan Streami
 		return err
 	}
 
-	var req *http.Request
-	req, err = http.NewRequest(method, url, &buf)
+	req, err := http.NewRequest(method, url, &buf)
 	if err != nil {
 		return err
 	}
 	req = c.addAuthHeaders(req)
 
-	// Set up a context with timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel() // Ensure cancellation to prevent resource leaks
+	// Create a context with a timeout to avoid endless streaming
+	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Second) // Set timeout as per your need
+	defer cancel()                                                            // Ensure the context is cancelled when the function ends
 
+	// Attach the context to the request
 	req = req.WithContext(ctx)
 
 	res, err := c.StreamingClient.Do(req)
@@ -259,24 +260,34 @@ func (c *Client) Stream(method string, path string, query Query, ch chan Streami
 
 	d := json.NewDecoder(res.Body)
 
-	// Set up ticker to prevent infinite loop
-	ticker := time.NewTicker(1 * time.Second)
+	ticker := time.NewTicker(1 * time.Second) // Optional: Adjust the ticker to throttle the loop
 	defer ticker.Stop()
 
+	// note from andrew: it might be a good idea to time.Sleep to not endlessly loop over this code
+	// you should look to see if this is done with the decoder already (it doesnt seem to be)
+	// currently this never ends unless there is an error. there should be an ending condition for this loop
+	// maybe a timeout similar to the client timeout. or maybe we can check to see if the client is timed out. not sure
 	for {
 		select {
-		case <-ctx.Done(): // If the context is canceled or times out, break the loop
+		case <-ctx.Done(): // End the loop if the context times out or gets cancelled
+			log.DefaultLogger.Info("Context done, ending stream", "reason", ctx.Err())
 			return ctx.Err()
 
-		case <-ticker.C: // Ticker will check periodically
+		case <-ticker.C: // Poll at regular intervals (throttling the loop)
 			var result StreamingResults
-			err := d.Decode(&result)
-			if err != nil {
+			if err := d.Decode(&result); err != nil {
+				log.DefaultLogger.Error("Error decoding stream result:", "err", err)
 				return err
 			}
+
 			if result != nil {
 				ch <- result
 			}
+
+		// Check for other signals (like done channel) if you have them in your code
+		case <-done:
+			log.DefaultLogger.Info("Stream done, exiting")
+			return nil
 		}
 	}
 }

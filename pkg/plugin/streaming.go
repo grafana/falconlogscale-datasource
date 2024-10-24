@@ -70,6 +70,7 @@ func formatDuration(d time.Duration) string {
 	return fmt.Sprintf("%.0fs", d.Seconds())
 }
 
+// calculate relative time for live query
 func getQueryStartTime(req *backend.RunStreamRequest) (string, error) {
 	type TimeRange struct {
 		From string `json:"from"`
@@ -138,15 +139,17 @@ func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, 
 			log.DefaultLogger.Info("Context done, exiting stream", "reason", ctx.Err())
 			return ctx.Err()
 		case <-done:
+			log.DefaultLogger.Info("Received done signal in RunStream")
 			return nil
 		case r := <-c:
 			if len(r) == 0 {
+				time.Sleep(100 * time.Millisecond)
 				continue
 			}
 			f, err := h.FrameMarshaller("events", r)
 			if err != nil {
 				log.DefaultLogger.Error("Failed to marshal frame", "err", err, "data", r)
-				return err
+				return fmt.Errorf("frame marshalling failed: %w", err)
 			}
 			if f != nil {
 				next, _ := data.FrameToJSONCache(f)
