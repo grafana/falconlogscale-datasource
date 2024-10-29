@@ -6,7 +6,7 @@ import {
   SelectableValue,
   updateDatasourcePluginOption,
 } from '@grafana/data';
-import { Field, InlineField, SecretInput, Switch, useTheme2 } from '@grafana/ui';
+import { Field, SecretInput, Switch, useTheme2 } from '@grafana/ui';
 import { DataLinks } from '../DataLinks';
 import { config, getBackendSrv } from '@grafana/runtime';
 import {
@@ -229,7 +229,7 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
                   Configure a data source connection proxy.
                 </a>
               </div>
-              <InlineField
+              <Field
                 label="Enable"
               >
                 <div className={styles.toggle}>
@@ -246,7 +246,7 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
                     }}
                   />
                 </div>
-              </InlineField>
+              </Field>
             </div>
           </>
         )}
