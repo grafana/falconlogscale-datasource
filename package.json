@@ -1,6 +1,6 @@
 {
   "name": "grafana-falconlogscale-datasource",
-  "version": "1.7.4",
+  "version": "1.7.5",
   "description": "Falcon LogScale data source plugin for Grafana",
   "scripts": {
     "build": "webpack -c ./.config/webpack/webpack.config.ts --env production",
