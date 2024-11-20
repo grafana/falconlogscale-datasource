@@ -253,7 +253,9 @@ func (c *Client) Stream(method string, path string, query Query, ch chan Streami
 		return err
 	}
 	defer func() {
-		res.Body.Close()
+		if err = res.Body.Close(); err != nil {
+		    log.DefaultLogger.Warn("failed to close response body", "error", err)
+		}
 	}()
 
 	d := json.NewDecoder(res.Body)
