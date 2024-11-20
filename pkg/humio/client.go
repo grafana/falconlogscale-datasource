@@ -152,7 +152,6 @@ func NewClient(config Config, httpOpts httpclient.Options, streamingOpts httpcli
 }
 
 func newStreamingClient(opts httpclient.Options) (*http.Client, error) {
-
 	c, err := httpclient.NewProvider().New(opts)
 	if err != nil {
 		return nil, err
