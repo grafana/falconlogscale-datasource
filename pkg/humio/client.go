@@ -253,15 +253,33 @@ func (c *Client) Stream(method string, path string, query Query, ch chan Streami
 		return err
 	}
 	defer func() {
-		if err = res.Body.Close(); err != nil {
-		    log.DefaultLogger.Warn("failed to close response body", "error", err)
+		if err := res.Body.Close(); err != nil {
+			log.DefaultLogger.Warn("Failed to close response body", "error", err)
 		}
 	}()
 
 	d := json.NewDecoder(res.Body)
 
-	ticker := time.NewTicker(1 * time.Second)
-	defer ticker.Stop()
+	// Create a channel for decoder errors
+	decodeErrChan := make(chan error, 1)
+
+	// Start decoding in a separate goroutine
+	go func() {
+		for {
+			var result StreamingResults
+			if err := d.Decode(&result); err != nil {
+				if err.Error() != "EOF" {
+					log.DefaultLogger.Error("Error decoding stream result:", "err", err)
+					decodeErrChan <- err // Send error to channel
+				}
+				close(decodeErrChan) // Signal decoding is complete
+				return
+			}
+			if result != nil {
+				ch <- result
+			}
+		}
+	}()
 
 	for {
 		select {
@@ -269,16 +287,13 @@ func (c *Client) Stream(method string, path string, query Query, ch chan Streami
 			log.DefaultLogger.Info("Context done, ending stream", "reason", ctx.Err())
 			return ctx.Err()
 
-		case <-ticker.C:
-			var result StreamingResults
-			if err := d.Decode(&result); err != nil {
-				log.DefaultLogger.Error("Error decoding stream result:", "err", err)
+		case err := <-decodeErrChan:
+			if err != nil {
+				log.DefaultLogger.Info("Decoder encountered an error, exiting stream")
 				return err
 			}
-
-			if result != nil {
-				ch <- result
-			}
+			log.DefaultLogger.Info("Decoder completed without error, exiting stream")
+			return nil
 
 		case <-done:
 			log.DefaultLogger.Info("Stream done, exiting")
