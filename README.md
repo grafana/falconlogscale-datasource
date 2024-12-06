@@ -6,4 +6,4 @@ The CrowdStrike Falcon LogScale data source plugin allows you to query and visua
 
 [Technical documentation](https://grafana.com/docs/plugins/grafana-falconlogscale-datasource/latest/)
 
-[License](https://github.com/grafana/falconlogscale-datasource/blob/mooose-update-docs-link/LICENSE))
+[License](https://github.com/grafana/falconlogscale-datasource/blob/mooose-update-docs-link/LICENSE)
