@@ -15,9 +15,9 @@ version: 0.1
 
 The CrowdStrike Falcon LogScale data source plugin allows you to query and visualize Falcon LogScale data from within Grafana.
 
-- [Configure the Falcon LogScale data source](/docs/plugins/grafana-falconlogscale-datasourcelatest/configure/)
-- [Falcon LogScale query editor](/docs/plugins/grafana-falconlogscale-datasourcelatest/editor/)
-- [Falcon LogScale templates and variables](/docs/plugins/grafana-falconlogscale-datasourcelatest/templates-and-variables/)
+- [Configure the Falcon LogScale data source](/docs/plugins/grafana-falconlogscale-datasource/<FALCON_LOGSCALE_PLUGIN_VERSION>/configure/)
+- [Falcon LogScale query editor](/docs/plugins/grafana-falconlogscale-datasource/<FALCON_LOGSCALE_PLUGIN_VERSION>/editor/)
+- [Falcon LogScale templates and variables](/docs/plugins/grafana-falconlogscale-datasource/<FALCON_LOGSCALE_PLUGIN_VERSION>/templates-and-variables/)
 
 ## Requirements
 
