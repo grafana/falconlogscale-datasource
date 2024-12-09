@@ -132,7 +132,13 @@ func TestRunStream(t *testing.T) {
 	t.Run("runs stream and sends frame successfully", func(t *testing.T) {
 		req := &backend.RunStreamRequest{
 			Path: "tail/test-path",
-			Data: json.RawMessage(`{"repository":"test-repository-1"}`),
+			Data: json.RawMessage(`{
+				"repository": "test-repository-1",
+				"timeRange": {
+					"from": "1633046400000", 
+					"to": "1633132800000"   
+				}
+			}`),
 		}
 
 		testHandler.FrameMarshaller = func(string, interface{}, ...framestruct.FramestructOption) (*data.Frame, error) {
