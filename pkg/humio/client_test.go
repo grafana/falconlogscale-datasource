@@ -1,11 +1,13 @@
 package humio_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/grafana/falconlogscale-datasource-backend/pkg/humio"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
@@ -25,6 +27,7 @@ func TestClient(t *testing.T) {
 		require.Nil(t, err)
 		require.Equal(t, "testid", id)
 	})
+
 	t.Run("it deletes a job", func(t *testing.T) {
 		setupClientTest()
 		defer teardownClientTest()
@@ -36,6 +39,7 @@ func TestClient(t *testing.T) {
 		err := testClient.DeleteJob("repo", "testid")
 		require.Nil(t, err)
 	})
+
 	t.Run("it polls a job", func(t *testing.T) {
 		setupClientTest()
 		defer teardownClientTest()
@@ -47,8 +51,7 @@ func TestClient(t *testing.T) {
 				"events": [],
 				"metaData": {
 				}
-				}`,
-			)
+			}`)
 		})
 
 		r, err := testClient.PollJob("repo", "testid")
@@ -57,6 +60,7 @@ func TestClient(t *testing.T) {
 		require.Equal(t, false, r.Cancelled)
 		require.Len(t, r.Events, 0)
 	})
+
 	t.Run("it lists all repos", func(t *testing.T) {
 		setupClientTest()
 		defer teardownClientTest()
@@ -69,8 +73,7 @@ func TestClient(t *testing.T) {
 							{ "name": "repo2" }
 						]
 				  }
-				}`,
-			)
+			}`)
 		})
 
 		r, err := testClient.ListRepos()
@@ -83,46 +86,67 @@ func TestClient(t *testing.T) {
 		defer teardownClientTest()
 		testMux.HandleFunc("/graphql", func(w http.ResponseWriter, req *http.Request) {
 			tokenHeader := "Bearer testToken"
-			reqTokenHeader := req.Header["Authorization"][0]
-			if reqTokenHeader != tokenHeader {
-				t.Errorf("Token header: got %s, want %s", reqTokenHeader, tokenHeader)
-			}
+			reqTokenHeader := req.Header.Get("Authorization")
+			require.Equal(t, tokenHeader, reqTokenHeader)
 			fmt.Fprint(w, "{}")
 		})
 		_, err := testClient.ListRepos()
 		require.Nil(t, err)
 	})
 
-	t.Run("d", func(t *testing.T) {
-		url, _ := url.Parse("https://cloud.community.humio.com/")
-		config := humio.Config{Address: url, Token: "fill this in"}
-		httpOpts := httpclient.Options{Header: http.Header{}}
-		streamingOpts := httpclient.Options{Header: http.Header{}}
-		c, _ := humio.NewClient(config, httpOpts, streamingOpts)
-		var humioQuery humio.Query
-		humioQuery.LSQL = ""
-		humioQuery.Start = "1m"
+	t.Run("it streams data successfully", func(t *testing.T) {
+		setupClientTest()
+		defer teardownClientTest()
+
+		testMux.HandleFunc("/api/v1/repositories/repo/query", func(w http.ResponseWriter, req *http.Request) {
+			testMethod(t, req, http.MethodPost)
+
+			// Simulate streaming results
+			w.Header().Set("Content-Type", "application/json")
+			enc := json.NewEncoder(w)
+			for i := 0; i < 3; i++ {
+				_ = enc.Encode(humio.StreamingResults{
+					fmt.Sprintf("Result%d", i+1): fmt.Sprintf("Data %d", i+1),
+				})
+				time.Sleep(100 * time.Millisecond) // Simulate delay in streaming
+			}
+		})
+
 		ch := make(chan humio.StreamingResults)
 		done := make(chan any)
-		go c.Stream(http.MethodPost, "api/v1/repositories/humio-organization-github-demo/query", humioQuery, ch, done)
-		for r := range ch {
-			println(r)
-		}
-		require.Nil(t, nil)
+
+		go func() {
+			err := testClient.Stream(http.MethodPost, "/api/v1/repositories/repo/query", humio.Query{LSQL: "test", Start: "5m"}, ch, done)
+			require.Nil(t, err)
+		}()
+
+		results := []string{}
+		go func() {
+			for r := range ch {
+				for key, value := range r {
+					results = append(results, fmt.Sprintf("%s: %s", key, value))
+				}
+			}
+			close(done) // Signal the end of the stream
+		}()
+
+		// Wait for the `done` signal to finish
+		<-done
+
+		require.Len(t, results, 3)
+		require.Equal(t, "Result1: Data 1", results[0])
+		require.Equal(t, "Result2: Data 2", results[1])
+		require.Equal(t, "Result3: Data 3", results[2])
 	})
 }
 
 var (
-	// testMux is the HTTP request multiplexer used with the test server.
-	testMux *http.ServeMux
-	// testClient is the Humio client being tested.
+	testMux    *http.ServeMux
 	testClient *humio.Client
-	// testServer is a test HTTP server used to provide mock API responses.
 	testServer *httptest.Server
 )
 
 func setupClientTest() {
-	// Test server
 	testMux = http.NewServeMux()
 	testServer = httptest.NewServer(testMux)
 
@@ -130,6 +154,7 @@ func setupClientTest() {
 	token := "testToken"
 	config := humio.Config{Address: url, Token: token}
 	httpOpts := httpclient.Options{Header: http.Header{}}
+
 	var err error
 	testClient, err = humio.NewClient(config, httpOpts, httpOpts)
 	if err != nil {
@@ -142,7 +167,5 @@ func teardownClientTest() {
 }
 
 func testMethod(t *testing.T, r *http.Request, want string) {
-	if got := r.Method; got != want {
-		t.Errorf("Request method: %v, want %v", got, want)
-	}
+	require.Equal(t, want, r.Method)
 }
