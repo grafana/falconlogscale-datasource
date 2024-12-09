@@ -4,6 +4,6 @@ The CrowdStrike Falcon LogScale data source plugin allows you to query and visua
 
 ## See also
 
-[Technical documentation](https://grafana.com/docs/plugins/grafana-azurecosmosdb-datasource/latest/)
+[Technical documentation](https://grafana.com/docs/plugins/grafana-falconlogscale-datasource/latest/)
 
-[License](LICENSE)
+[License](https://github.com/grafana/falconlogscale-datasource/blob/main/LICENSE)
