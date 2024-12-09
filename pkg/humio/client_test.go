@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
-	"time"
 
 	"github.com/grafana/falconlogscale-datasource-backend/pkg/humio"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
@@ -101,14 +100,17 @@ func TestClient(t *testing.T) {
 		testMux.HandleFunc("/api/v1/repositories/repo/query", func(w http.ResponseWriter, req *http.Request) {
 			testMethod(t, req, http.MethodPost)
 
-			// Simulate streaming results
 			w.Header().Set("Content-Type", "application/json")
 			enc := json.NewEncoder(w)
+
 			for i := 0; i < 3; i++ {
-				_ = enc.Encode(humio.StreamingResults{
+				result := humio.StreamingResults{
 					fmt.Sprintf("Result%d", i+1): fmt.Sprintf("Data %d", i+1),
-				})
-				time.Sleep(100 * time.Millisecond) // Simulate delay in streaming
+				}
+				if err := enc.Encode(result); err != nil {
+					t.Errorf("Failed to encode result: %v", err)
+					return
+				}
 			}
 		})
 
@@ -127,10 +129,8 @@ func TestClient(t *testing.T) {
 					results = append(results, fmt.Sprintf("%s: %s", key, value))
 				}
 			}
-			close(done) // Signal the end of the stream
 		}()
 
-		// Wait for the `done` signal to finish
 		<-done
 
 		require.Len(t, results, 3)
