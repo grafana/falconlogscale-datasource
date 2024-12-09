@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/grafana/falconlogscale-datasource-backend/pkg/humio"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
@@ -111,6 +112,7 @@ func TestClient(t *testing.T) {
 					t.Errorf("Failed to encode result: %v", err)
 					return
 				}
+				time.Sleep(100 * time.Millisecond)
 			}
 		})
 
