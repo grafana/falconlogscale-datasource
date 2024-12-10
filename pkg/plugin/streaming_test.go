@@ -107,22 +107,45 @@ func TestSubscribeStream(t *testing.T) {
 	setupStreamingTests(t)
 
 	t.Run("returns error for invalid path", func(t *testing.T) {
-		req := &backend.SubscribeStreamRequest{Path: "invalid/path"}
-		resp, err := testHandler.SubscribeStream(context.Background(), req)
+		ctx := context.Background()
+		ctx = backend.WithPluginContext(ctx, backend.PluginContext{
+			OrgID: 1,
+		})
+		req := &backend.SubscribeStreamRequest{Path: "invalid/path/1"}
+		resp, err := testHandler.SubscribeStream(ctx, req)
 
 		require.Error(t, err)
 		require.Equal(t, backend.SubscribeStreamStatusNotFound, resp.Status)
 	})
 
 	t.Run("subscribes successfully with valid path", func(t *testing.T) {
+		ctx := context.Background()
+		ctx = backend.WithPluginContext(ctx, backend.PluginContext{
+			OrgID: 1,
+		})
 		req := &backend.SubscribeStreamRequest{
-			Path: "tail/test-path",
+			Path: "tail/test-path/1",
 			Data: json.RawMessage(`{"repository":"test-repository"}`),
 		}
-		resp, err := testHandler.SubscribeStream(context.Background(), req)
+		resp, err := testHandler.SubscribeStream(ctx, req)
 
 		require.NoError(t, err)
 		require.Equal(t, backend.SubscribeStreamStatusOK, resp.Status)
+	})
+
+	t.Run("subscribe fails if org ID in path does not match plugin request", func(t *testing.T) {
+		ctx := context.Background()
+		ctx = backend.WithPluginContext(ctx, backend.PluginContext{
+			OrgID: 1,
+		})
+		req := &backend.SubscribeStreamRequest{
+			Path: "tail/test-path/2",
+			Data: json.RawMessage(`{"repository":"test-repository"}`),
+		}
+		resp, err := testHandler.SubscribeStream(ctx, req)
+
+		require.Error(t, err)
+		require.Equal(t, backend.SubscribeStreamStatusPermissionDenied, resp.Status)
 	})
 }
 

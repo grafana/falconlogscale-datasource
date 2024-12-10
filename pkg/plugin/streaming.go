@@ -21,12 +21,25 @@ func (h *Handler) SubscribeStream(ctx context.Context, req *backend.SubscribeStr
 		}, fmt.Errorf("expected tail in channel path")
 	}
 
+	pluginCfg := backend.PluginConfigFromContext(ctx)
+	orgId, err := strconv.ParseInt(strings.Split(req.Path, "/")[2], 10, 64)
+	if err != nil {
+		return &backend.SubscribeStreamResponse{
+			Status: backend.SubscribeStreamStatusNotFound,
+		}, fmt.Errorf("unable to determine orgId from request")
+	}
+
+	if orgId != pluginCfg.OrgID {
+		return &backend.SubscribeStreamResponse{
+			Status: backend.SubscribeStreamStatusPermissionDenied,
+		}, fmt.Errorf("invalid orgId supplied in request")
+	}
 	var qr humio.Query
 	if err := json.Unmarshal(req.Data, &qr); err != nil {
 		return nil, err
 	}
 
-	err := ValidateQuery(qr)
+	err = ValidateQuery(qr)
 	if err != nil {
 		return nil, err
 	}
