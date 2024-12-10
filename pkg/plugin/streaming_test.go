@@ -124,7 +124,7 @@ func TestSubscribeStream(t *testing.T) {
 			OrgID: 1,
 		})
 		req := &backend.SubscribeStreamRequest{
-			Path: "tail/test-path/1",
+			Path: "tail/dsId/test-path/1",
 			Data: json.RawMessage(`{"repository":"test-repository"}`),
 		}
 		resp, err := testHandler.SubscribeStream(ctx, req)
@@ -139,7 +139,7 @@ func TestSubscribeStream(t *testing.T) {
 			OrgID: 1,
 		})
 		req := &backend.SubscribeStreamRequest{
-			Path: "tail/test-path/2",
+			Path: "tail/dsId/test-path/2",
 			Data: json.RawMessage(`{"repository":"test-repository"}`),
 		}
 		resp, err := testHandler.SubscribeStream(ctx, req)

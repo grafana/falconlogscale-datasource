@@ -22,7 +22,7 @@ func (h *Handler) SubscribeStream(ctx context.Context, req *backend.SubscribeStr
 	}
 
 	pluginCfg := backend.PluginConfigFromContext(ctx)
-	orgId, err := strconv.ParseInt(strings.Split(req.Path, "/")[2], 10, 64)
+	orgId, err := strconv.ParseInt(strings.Split(req.Path, "/")[3], 10, 64)
 	if err != nil {
 		return &backend.SubscribeStreamResponse{
 			Status: backend.SubscribeStreamStatusNotFound,
