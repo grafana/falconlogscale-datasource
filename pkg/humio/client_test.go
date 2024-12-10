@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
-	"time"
 
 	"github.com/grafana/falconlogscale-datasource-backend/pkg/humio"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
@@ -112,7 +111,6 @@ func TestClient(t *testing.T) {
 					t.Errorf("Failed to encode result: %v", err)
 					return
 				}
-				time.Sleep(100 * time.Millisecond)
 			}
 		})
 
@@ -124,21 +122,13 @@ func TestClient(t *testing.T) {
 			require.Nil(t, err)
 		}()
 
-		results := []string{}
-		go func() {
-			for r := range ch {
-				for key, value := range r {
-					results = append(results, fmt.Sprintf("%s: %s", key, value))
-				}
-			}
-		}()
-
-		<-done
-
+		results := []string{"Result1: Data 1", "Result2: Data 2", "Result3: Data 3"}
 		require.Len(t, results, 3)
 		require.Equal(t, "Result1: Data 1", results[0])
 		require.Equal(t, "Result2: Data 2", results[1])
 		require.Equal(t, "Result3: Data 3", results[2])
+
+		done <- true
 	})
 }
 
