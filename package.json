@@ -89,7 +89,7 @@
     "react-dom": "18.2.0",
     "react-router-dom": "5.3.4",
     "react-select-event": "^5.5.1",
-    "react-use": "^17.5.1",
+    "react-use": "^17.6.0",
     "tslib": "2.6.2"
   },
   "resolutions": {
