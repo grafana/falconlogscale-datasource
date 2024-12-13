@@ -2057,15 +2057,6 @@
     tslib "2.6.2"
     typescript "5.3.3"
 
-"@grafana/e2e-selectors@11.3.1":
-  version "11.3.1"
-  resolved "https://registry.yarnpkg.com/@grafana/e2e-selectors/-/e2e-selectors-11.3.1.tgz#9732d8d8237639c49b5d2a51c432e5a20f48af1d"
-  integrity sha512-197q3gqIJOcpq+pD/5CycwBbbxruqx2p29dkeVwb+QlnjGvmc3Fx6YUf9yCHtvhmETceRYCoLZwQwuwdju/+Mg==
-  dependencies:
-    "@grafana/tsconfig" "^2.0.0"
-    tslib "2.7.0"
-    typescript "5.5.4"
-
 "@grafana/e2e-selectors@11.4.0":
   version "11.4.0"
   resolved "https://registry.yarnpkg.com/@grafana/e2e-selectors/-/e2e-selectors-11.4.0.tgz#ea9460cfc4112406ea954204d3296f9a4a652118"
@@ -2121,10 +2112,10 @@
   resolved "https://registry.yarnpkg.com/@grafana/eslint-config/-/eslint-config-8.0.0.tgz#207049e69bb9fe7c007d207cd79fcfe28a781288"
   integrity sha512-2e/Zk7dEB8k4r7mPiTua9vXZIqv/nN6prWvNcr/kfglz4y9kllEagANE1loxJ7whZsIqwB++UR7s0MAOFA0Iog==
 
-"@grafana/experimental@2.1.4":
-  version "2.1.4"
-  resolved "https://registry.yarnpkg.com/@grafana/experimental/-/experimental-2.1.4.tgz#1bc2b27ce03a7f1378a4b05a82fb1522332b3e5c"
-  integrity sha512-QXH/23ZE/dDcYSeoE84rxxdt60Jz7bLHMQRUm9+aJJx2UuKcczQKku23w6e6x14cbBFnK0tcu/uxB518W2qMLw==
+"@grafana/experimental@2.1.5":
+  version "2.1.5"
+  resolved "https://registry.yarnpkg.com/@grafana/experimental/-/experimental-2.1.5.tgz#771aab5e6f77aeb269221d4282d845c9a98c25a3"
+  integrity sha512-7ot2bE3x8W6XzMyLEMAV+d+9AhEIbj5nlnxEXFchaFLjoYpJNTKS4DSqaLkWEOSA46FTsOwmrO+DROqkzhguWg==
   dependencies:
     "@hello-pangea/dnd" "^16.6.0"
     "@types/uuid" "^8.3.3"
