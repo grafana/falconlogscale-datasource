@@ -9,6 +9,14 @@ export const components = {
       button: 'data-testid load-repositories',
     },
   },
+  queryEditor: {
+    queryField: {
+      input: 'data-testid query-field',
+    },
+    repository: {
+      input: 'data-testid repository',
+    },
+  },
   variableEditor: {
     queryType: {
       input: 'data-testid query-type',
