@@ -72,7 +72,7 @@
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-jsdoc": "^46.8.0",
     "eslint-plugin-react": "^7.33.0",
-    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
     "imports-loader": "^5.0.0",
     "terser-webpack-plugin": "^5.3.10",
     "webpack-subresource-integrity": "^5.1.0",
