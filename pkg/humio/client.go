@@ -9,15 +9,18 @@ import (
 	"net/url"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/experimental/errorsource"
 	"github.com/hasura/go-graphql-client"
 )
 
 type Client struct {
-	URL        *url.URL
-	HTTPClient *http.Client
+	URL             *url.URL
+	HTTPClient      *http.Client
+	StreamingClient *http.Client
 	Auth
 }
 
@@ -38,12 +41,14 @@ func (c *Client) CreateJob(repo string, query Query) (string, error) {
 	}
 	var humioQuery struct {
 		QueryString string `json:"queryString"`
-		Start       string `json:"start"`
-		End         string `json:"end"`
+		Start       string `json:"start,omitempty"`
+		End         string `json:"end,omitempty"`
+		Live        bool   `json:"isLive"`
 	}
 	humioQuery.QueryString = query.LSQL
 	humioQuery.Start = query.Start
 	humioQuery.End = query.End
+	humioQuery.Live = false
 	var buf bytes.Buffer
 	err := json.NewEncoder(&buf).Encode(humioQuery)
 	if err != nil {
@@ -122,7 +127,7 @@ func (c *Client) GraphQLQuery(query interface{}, variables map[string]interface{
 	return client.Query(context.Background(), query, variables)
 }
 
-func NewClient(config Config, httpOpts httpclient.Options) (*Client, error) {
+func NewClient(config Config, httpOpts httpclient.Options, streamingOpts httpclient.Options) (*Client, error) {
 	client := &Client{
 		URL: config.Address,
 		Auth: Auth{
@@ -132,14 +137,26 @@ func NewClient(config Config, httpOpts httpclient.Options) (*Client, error) {
 	}
 
 	httpOpts.Header.Add("Content-Type", "application/json")
-
 	c, err := httpclient.NewProvider().New(httpOpts)
 	if err != nil {
 		return nil, err
 	}
 	client.HTTPClient = c
 
+	client.StreamingClient, err = newStreamingClient(streamingOpts)
+	if err != nil {
+		return nil, err
+	}
+
 	return client, nil
+}
+
+func newStreamingClient(opts httpclient.Options) (*http.Client, error) {
+	c, err := httpclient.NewProvider().New(opts)
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
 }
 
 type ErrorResponse struct {
@@ -195,4 +212,92 @@ func (c *Client) Fetch(method string, path string, body *bytes.Buffer, out inter
 		return fmt.Errorf("%s %s", res.Status, err.Error())
 	}
 	return fmt.Errorf("%s %s", res.Status, strings.TrimSpace(errResponse.Detail))
+}
+
+func (c *Client) Stream(method string, path string, query Query, ch chan StreamingResults, done chan any) error {
+	var humioQuery struct {
+		QueryString string `json:"queryString"`
+		Start       string `json:"start,omitempty"`
+		Live        bool   `json:"isLive"`
+	}
+	humioQuery.QueryString = query.LSQL
+	humioQuery.Start = query.Start
+	humioQuery.Live = true
+
+	defer close(done)
+
+	var buf bytes.Buffer
+	err := json.NewEncoder(&buf).Encode(humioQuery)
+	if err != nil {
+		return err
+	}
+	url, err := url.JoinPath(c.URL.String(), path)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest(method, url, &buf)
+	if err != nil {
+		return err
+	}
+	req = c.addAuthHeaders(req)
+
+	// Create a context with a timeout to avoid endless streaming
+	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Second)
+	defer cancel()
+
+	req = req.WithContext(ctx)
+
+	res, err := c.StreamingClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := res.Body.Close(); err != nil {
+			log.DefaultLogger.Warn("Failed to close response body", "error", err)
+		}
+	}()
+
+	d := json.NewDecoder(res.Body)
+
+	// Create a channel for decoder errors
+	decodeErrChan := make(chan error, 1)
+
+	// Start decoding in a separate goroutine
+	go func() {
+		for {
+			var result StreamingResults
+			if err := d.Decode(&result); err != nil {
+				if err.Error() != "EOF" {
+					log.DefaultLogger.Error("Error decoding stream result:", "err", err)
+					decodeErrChan <- err // Send error to channel
+				}
+				close(decodeErrChan) // Signal decoding is complete
+				return
+			}
+			if result != nil {
+				ch <- result
+			}
+		}
+	}()
+
+	for {
+		select {
+		case <-ctx.Done():
+			log.DefaultLogger.Info("Context done, ending stream", "reason", ctx.Err())
+			return ctx.Err()
+
+		case err := <-decodeErrChan:
+			if err != nil {
+				log.DefaultLogger.Info("Decoder encountered an error, exiting stream")
+				return err
+			}
+			log.DefaultLogger.Info("Decoder completed without error, exiting stream")
+			return nil
+
+		case <-done:
+			log.DefaultLogger.Info("Stream done, exiting")
+			return nil
+		}
+	}
 }

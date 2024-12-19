@@ -5,7 +5,6 @@ type Query struct {
 	LSQL           string `json:"lsql"`
 	Start          string `json:"start,omitempty"`
 	End            string `json:"end,omitempty"`
-	Live           bool   `json:"isLive,omitempty"`
 	TimezoneOffset *int   `json:"timeZoneOffsetMinutes,omitempty"`
 	FormatAs       string `json:"formatAs"`
 	QueryType      string `json:"queryType,omitempty"`
@@ -31,6 +30,8 @@ type QueryResult struct {
 	Events    []map[string]any    `json:"events"`
 	Metadata  QueryResultMetadata `json:"metaData"`
 }
+
+type StreamingResults map[string]any
 
 type QueryResultMetadata struct {
 	EventCount       uint64                 `json:"eventCount"`
