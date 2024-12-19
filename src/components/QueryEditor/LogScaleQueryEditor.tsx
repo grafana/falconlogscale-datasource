@@ -5,6 +5,7 @@ import { EditorRows, EditorRow, EditorField } from '@grafana/experimental';
 import { DataSource } from '../../DataSource';
 import { LogScaleOptions, LogScaleQuery } from '../../types';
 import { parseRepositoriesResponse } from '../../utils/utils';
+import { selectors } from 'e2e/selectors';
 
 export type Props = QueryEditorProps<DataSource, LogScaleQuery, LogScaleOptions>;
 
@@ -44,7 +45,7 @@ export function LogScaleQueryEditor(props: Props) {
   return (
     <EditorRows>
       <EditorRow>
-        <EditorField label="Query" width={'100%'}>
+        <EditorField label="Query" width={'100%'} data-testid={selectors.components.queryEditor.queryField.input}>
           <QueryField
             query={query.lsql}
             onChange={(val) => onChange({ ...query, lsql: val })}
@@ -61,6 +62,7 @@ export function LogScaleQueryEditor(props: Props) {
             options={repositories}
             value={query.repository}
             onChange={(val) => onChange({ ...query, repository: val.value!.toString() })}
+            data-testid={selectors.components.queryEditor.repository.input}
           />
         </EditorField>
       </EditorRow>

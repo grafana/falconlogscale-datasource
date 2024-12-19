@@ -6,9 +6,13 @@ services:
     build:
       context: ./.config
       args:
-        grafana_version: ${GRAFANA_VERSION:-9.5.3}
+        grafana_image: ${GRAFANA_IMAGE:-grafana-enterprise}
+        grafana_version: ${GRAFANA_VERSION:-9.1.2}
     ports:
       - 3000:3000/tcp
     volumes:
       - ./dist:/var/lib/grafana/plugins/grafana-falconlogscale-datasource
       - ./provisioning:/etc/grafana/provisioning
+    environment:
+      LOGSCALE_URL: ${LOGSCALE_URL}
+      ACCESS_TOKEN: ${ACCESS_TOKEN}
