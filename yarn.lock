@@ -2057,15 +2057,6 @@
     tslib "2.6.2"
     typescript "5.3.3"
 
-"@grafana/e2e-selectors@11.3.1":
-  version "11.3.1"
-  resolved "https://registry.yarnpkg.com/@grafana/e2e-selectors/-/e2e-selectors-11.3.1.tgz#9732d8d8237639c49b5d2a51c432e5a20f48af1d"
-  integrity sha512-197q3gqIJOcpq+pD/5CycwBbbxruqx2p29dkeVwb+QlnjGvmc3Fx6YUf9yCHtvhmETceRYCoLZwQwuwdju/+Mg==
-  dependencies:
-    "@grafana/tsconfig" "^2.0.0"
-    tslib "2.7.0"
-    typescript "5.5.4"
-
 "@grafana/e2e-selectors@11.4.0":
   version "11.4.0"
   resolved "https://registry.yarnpkg.com/@grafana/e2e-selectors/-/e2e-selectors-11.4.0.tgz#ea9460cfc4112406ea954204d3296f9a4a652118"
@@ -2075,14 +2066,14 @@
     tslib "2.7.0"
     typescript "5.5.4"
 
-"@grafana/e2e-selectors@^11.5.0-212629":
-  version "11.5.0-213315"
-  resolved "https://registry.yarnpkg.com/@grafana/e2e-selectors/-/e2e-selectors-11.5.0-213315.tgz#eeb7b089216c97ad6258324af84d4ae913df7f5b"
-  integrity sha512-NZQQGvFDbzQlUo6roXhW0vw092QE1hXMLmYmqDscOYo7FMuj6RXr4+5UYIWoOIe7CzCmzclbb2W9X7W/0HqQzQ==
+"@grafana/e2e-selectors@^11.5.0-215208":
+  version "11.5.0-215476"
+  resolved "https://registry.yarnpkg.com/@grafana/e2e-selectors/-/e2e-selectors-11.5.0-215476.tgz#293f61f04b564c4d941ff36370959cbc8ab56b74"
+  integrity sha512-2/H+c8Wxm5IxjFL/i/VVM7UeS7ha+eWwQYTFM0L1O/RjC0frb92kLlSkCvRxfhBkDEYQY+YtwkUGOBBrE17lEQ==
   dependencies:
     "@grafana/tsconfig" "^2.0.0"
     semver "7.6.3"
-    tslib "2.7.0"
+    tslib "2.8.1"
     typescript "5.5.4"
 
 "@grafana/e2e@11.0.4":
@@ -2121,10 +2112,10 @@
   resolved "https://registry.yarnpkg.com/@grafana/eslint-config/-/eslint-config-8.0.0.tgz#207049e69bb9fe7c007d207cd79fcfe28a781288"
   integrity sha512-2e/Zk7dEB8k4r7mPiTua9vXZIqv/nN6prWvNcr/kfglz4y9kllEagANE1loxJ7whZsIqwB++UR7s0MAOFA0Iog==
 
-"@grafana/experimental@2.1.4":
-  version "2.1.4"
-  resolved "https://registry.yarnpkg.com/@grafana/experimental/-/experimental-2.1.4.tgz#1bc2b27ce03a7f1378a4b05a82fb1522332b3e5c"
-  integrity sha512-QXH/23ZE/dDcYSeoE84rxxdt60Jz7bLHMQRUm9+aJJx2UuKcczQKku23w6e6x14cbBFnK0tcu/uxB518W2qMLw==
+"@grafana/experimental@2.1.6":
+  version "2.1.6"
+  resolved "https://registry.yarnpkg.com/@grafana/experimental/-/experimental-2.1.6.tgz#eccca8ca0936b61bf887fa8703d7f48487114bf9"
+  integrity sha512-jJFFEFC0aquD1nOelW8bTtlRXYM3+xdKRXPPR2IrLGqMSO3UI5/0VzH0hlOrVwOsNMDJMC8BwJzCQnwzUB4DGg==
   dependencies:
     "@hello-pangea/dnd" "^16.6.0"
     "@types/uuid" "^8.3.3"
@@ -2152,12 +2143,12 @@
     ua-parser-js "^1.0.32"
     web-vitals "^3.1.1"
 
-"@grafana/plugin-e2e@^1.13.1":
-  version "1.13.1"
-  resolved "https://registry.yarnpkg.com/@grafana/plugin-e2e/-/plugin-e2e-1.13.1.tgz#49b314e669375e8e70fa57036821a735cd4d0654"
-  integrity sha512-Ot1pE9VvJLuzqfmqO7mchxO6C42ncf56yWNV1HRA3M+j/9BytQ0zlsPb7FuZs72K3PJG77SsdfOc9zUa29smWw==
+"@grafana/plugin-e2e@^1.14.3":
+  version "1.14.3"
+  resolved "https://registry.yarnpkg.com/@grafana/plugin-e2e/-/plugin-e2e-1.14.3.tgz#6eaca99ce05d52eaf59b30b9c41e178c2816cf32"
+  integrity sha512-LQMak9mZJJ/ZNoaIVc9kLp5XogMit9SjmKAWAp0TfM/t6I5jFYdfpygwpf0lyzzGsMFTKMVH1S/lEQj3fxDGCA==
   dependencies:
-    "@grafana/e2e-selectors" "^11.5.0-212629"
+    "@grafana/e2e-selectors" "^11.5.0-215208"
     semver "^7.5.4"
     uuid "^11.0.2"
     yaml "^2.3.4"
@@ -11884,7 +11875,7 @@ tslib@2.7.0:
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.7.0.tgz#d9b40c5c40ab59e8738f297df3087bf1a2690c01"
   integrity sha512-gLXCKdN1/j47AiHiOkJN69hJmcbGTHI0ImLmbYLHykhgeN0jVGola9yVjFgzCUklsZQMW55o+dW7IXv3RCXDzA==
 
-tslib@^2.1.0, tslib@^2.3.1, tslib@^2.4.0, tslib@^2.6.2:
+tslib@2.8.1, tslib@^2.1.0, tslib@^2.3.1, tslib@^2.4.0, tslib@^2.6.2:
   version "2.8.1"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.8.1.tgz#612efe4ed235d567e8aba5f2a5fab70280ade83f"
   integrity sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==
@@ -12608,12 +12599,7 @@ yaml@^1.10.0:
   resolved "https://registry.yarnpkg.com/yaml/-/yaml-1.10.2.tgz#2301c5ffbf12b467de8da2333a459e29e7920e4b"
   integrity sha512-r3vXyErRCYJ7wg28yvBY5VSoAF8ZvlcW9/BwUzEtUsjvX/DKs24dIkuwjtuprwJJHsbyUbLApepYTR1BN4uHrg==
 
-yaml@^2.0.0:
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/yaml/-/yaml-2.5.0.tgz#c6165a721cf8000e91c36490a41d7be25176cf5d"
-  integrity sha512-2wWLbGbYDiSqqIKoPjar3MPgB94ErzCtrNE1FdqGuaO0pi2JGjmE8aW8TDZwzU7vuxcGRdL/4gPQwQ7hD5AMSw==
-
-yaml@^2.3.4, yaml@^2.6.1:
+yaml@^2.0.0, yaml@^2.3.4, yaml@^2.6.1:
   version "2.6.1"
   resolved "https://registry.yarnpkg.com/yaml/-/yaml-2.6.1.tgz#42f2b1ba89203f374609572d5349fb8686500773"
   integrity sha512-7r0XPzioN/Q9kXBro/XPnA6kznR73DHq+GXh5ON7ZozRO6aMjbmiBuKste2wslTFkC5d1dw0GooOCepZXJ2SAg==
