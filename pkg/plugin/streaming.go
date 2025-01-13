@@ -159,7 +159,8 @@ func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, 
 				time.Sleep(100 * time.Millisecond)
 				continue
 			}
-			f, err := h.FrameMarshaller("events", r)
+			converters := GetStreamingConverters(r)
+			f, err := h.FrameMarshaller("events", r, converters...)
 			if err != nil {
 				log.DefaultLogger.Error("Failed to marshal frame", "err", err, "data", r)
 				return fmt.Errorf("frame marshalling failed: %w", err)
