@@ -92,7 +92,6 @@ func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
 func (qr *QueryRunner) RunChannel(ctx context.Context, query Query, c chan StreamingResults, done chan any) {
 	endPoint := fmt.Sprintf("api/v1/repositories/%s/query", query.Repository)
 	go func() {
-		defer close(done)
 		err := qr.JobQuerier.Stream(http.MethodPost, endPoint, query, c, done)
 		if err != nil {
 			log.DefaultLogger.Error(err.Error())

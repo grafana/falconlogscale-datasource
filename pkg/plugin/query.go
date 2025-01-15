@@ -181,18 +181,6 @@ func GetConverters(events Events) []framestruct.FramestructOption {
 	return converters
 }
 
-func GetStreamingConverters(events humio.StreamingResults) []framestruct.FramestructOption {
-	var converters []framestruct.FramestructOption
-	for key := range events {
-		// Theses fields are defined by Humio and should be treated as time
-		if key == "@timestamp" || key == "@ingesttimestamp" || key == "@timestamp.nanos" || key == "@collect.timestamp" || key == "_now" || key == "_end" || key == "_start" || key == "_bucket" {
-			converters = append(converters, framestruct.WithConverterFor(key, ConverterForStringToTime))
-			continue
-		}
-	}
-	return converters
-}
-
 func ConverterForStringToTime(input any) (any, error) {
 	var num int64
 	switch v := input.(type) {

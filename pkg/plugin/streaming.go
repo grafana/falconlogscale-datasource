@@ -12,6 +12,7 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
+	"github.com/grafana/grafana-plugin-sdk-go/data/framestruct"
 )
 
 func (h *Handler) SubscribeStream(ctx context.Context, req *backend.SubscribeStreamRequest) (*backend.SubscribeStreamResponse, error) {
@@ -68,18 +69,6 @@ func (h *Handler) PublishStream(context.Context, *backend.PublishStreamRequest) 
 }
 
 func formatDuration(d time.Duration) string {
-	if d.Hours() >= 24*365 {
-		return fmt.Sprintf("%.0fy", d.Hours()/(24*365))
-	}
-	if d.Hours() >= 24 {
-		return fmt.Sprintf("%.0fd", d.Hours()/24)
-	}
-	if d.Hours() >= 1 {
-		return fmt.Sprintf("%.0fh", d.Hours())
-	}
-	if d.Minutes() >= 1 {
-		return fmt.Sprintf("%.0fm", d.Minutes())
-	}
 	return fmt.Sprintf("%.0fs", d.Seconds())
 }
 
@@ -146,6 +135,22 @@ func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, 
 
 	h.QueryRunner.RunChannel(ctx, qr, c, done)
 
+	f := data.NewFrame(
+		"results",
+		data.NewField("@timestamp", nil, []*time.Time{}),
+		data.NewField("@rawstring", nil, []string{}),
+	)
+	if qr.FormatAs == humio.FormatLogs {
+		f.Meta = &data.FrameMeta{
+			PreferredVisualization: data.VisTypeLogs,
+		}
+	}
+	err = sender.SendFrame(f, data.IncludeAll)
+	if err != nil {
+		log.DefaultLogger.Error(("Websocket write:"), "err", err)
+		return err
+	}
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -155,17 +160,39 @@ func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, 
 			log.DefaultLogger.Info("Received done signal in RunStream")
 			return nil
 		case r := <-c:
-			if len(r) == 0 {
-				time.Sleep(100 * time.Millisecond)
+			// if len(r) == 0 {
+			// 	(100 * time.Millisecond)
+			// 	continue
+			// }
+			//converters := GetStreamingConverters(r)
+			//f, err := h.FrameMarshaller("events", r, converters...)
+			f := data.NewFrame(
+				"results",
+				data.NewField("@timestamp", nil, []*time.Time{}),
+				data.NewField("@rawstring", nil, []string{}),
+			)
+			if qr.FormatAs == humio.FormatLogs {
+				f.Meta = &data.FrameMeta{
+					PreferredVisualization: data.VisTypeLogs,
+				}
+			}
+			t, err := ConverterForStringToTime(r["@timestamp"])
+			if err != nil {
 				continue
 			}
-			converters := GetStreamingConverters(r)
-			f, err := h.FrameMarshaller("events", r, converters...)
-			if err != nil {
-				log.DefaultLogger.Error("Failed to marshal frame", "err", err, "data", r)
-				return fmt.Errorf("frame marshalling failed: %w", err)
+			raw, ok := r["@rawstring"]
+			if !ok {
+				continue
 			}
-			if f != nil {
+			f.AppendRow(
+				t,
+				raw,
+			)
+			// if err != nil {
+			// 	log.DefaultLogger.Error("Failed to marshal frame", "err", err, "data", r)
+			// 	return fmt.Errorf("frame marshalling failed: %w", err)
+			// }
+			if f != nil && len(f.Fields) > 0 {
 				next, _ := data.FrameToJSONCache(f)
 				if next.SameSchema(&prev) {
 					err = sender.SendFrame(f, data.IncludeDataOnly)
@@ -185,4 +212,15 @@ func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, 
 			}
 		}
 	}
+}
+
+func GetStreamingConverters(events humio.StreamingResults) []framestruct.FramestructOption {
+	var converters []framestruct.FramestructOption
+	// for key := range events {
+	// 	if key == "@timestamp" {
+	// 		converters = append(converters, framestruct.WithConverterFor(key, ConverterForStringToTime))
+	// 		continue
+	// 	}
+	// }
+	return converters
 }

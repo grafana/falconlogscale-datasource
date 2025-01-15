@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
@@ -242,12 +241,6 @@ func (c *Client) Stream(method string, path string, query Query, ch chan Streami
 	}
 	req = c.addAuthHeaders(req)
 
-	// Create a context with a timeout to avoid endless streaming
-	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Second)
-	defer cancel()
-
-	req = req.WithContext(ctx)
-
 	res, err := c.StreamingClient.Do(req)
 	if err != nil {
 		return err
@@ -260,44 +253,16 @@ func (c *Client) Stream(method string, path string, query Query, ch chan Streami
 
 	d := json.NewDecoder(res.Body)
 
-	// Create a channel for decoder errors
-	decodeErrChan := make(chan error, 1)
-
-	// Start decoding in a separate goroutine
-	go func() {
-		for {
-			var result StreamingResults
-			if err := d.Decode(&result); err != nil {
-				if err.Error() != "EOF" {
-					log.DefaultLogger.Error("Error decoding stream result:", "err", err)
-					decodeErrChan <- err // Send error to channel
-				}
-				close(decodeErrChan) // Signal decoding is complete
-				return
-			}
-			if result != nil {
-				ch <- result
-			}
-		}
-	}()
-
 	for {
-		select {
-		case <-ctx.Done():
-			log.DefaultLogger.Info("Context done, ending stream", "reason", ctx.Err())
-			return ctx.Err()
-
-		case err := <-decodeErrChan:
-			if err != nil {
-				log.DefaultLogger.Info("Decoder encountered an error, exiting stream")
-				return err
+		var result StreamingResults
+		if err := d.Decode(&result); err != nil {
+			if err.Error() != "EOF" {
+				log.DefaultLogger.Error("Error decoding stream result:", "err", err)
 			}
-			log.DefaultLogger.Info("Decoder completed without error, exiting stream")
-			return nil
-
-		case <-done:
-			log.DefaultLogger.Info("Stream done, exiting")
-			return nil
+			return err
+		}
+		if result != nil {
+			ch <- result
 		}
 	}
 }
