@@ -256,10 +256,8 @@ func (c *Client) Stream(method string, path string, query Query, ch chan Streami
 	for {
 		var result StreamingResults
 		if err := d.Decode(&result); err != nil {
-			if err.Error() != "EOF" {
-				log.DefaultLogger.Error("Error decoding stream result:", "err", err)
-			}
-			return err
+			log.DefaultLogger.Error("Error decoding stream result:", "err", err)
+			continue
 		}
 		if result != nil {
 			ch <- result
