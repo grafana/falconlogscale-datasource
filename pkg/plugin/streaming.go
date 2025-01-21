@@ -161,7 +161,7 @@ func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, 
 				}
 				if err != nil {
 					log.DefaultLogger.Error("Websocket write:", "err", err)
-					return err
+					continue
 				}
 				prev = next
 

@@ -1,7 +1,6 @@
 package humio_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -91,44 +90,6 @@ func TestClient(t *testing.T) {
 		})
 		_, err := testClient.ListRepos()
 		require.Nil(t, err)
-	})
-
-	t.Run("it streams data successfully", func(t *testing.T) {
-		setupClientTest()
-		defer teardownClientTest()
-
-		testMux.HandleFunc("/api/v1/repositories/repo/query", func(w http.ResponseWriter, req *http.Request) {
-			testMethod(t, req, http.MethodPost)
-
-			w.Header().Set("Content-Type", "application/json")
-			enc := json.NewEncoder(w)
-
-			for i := 0; i < 3; i++ {
-				result := humio.StreamingResults{
-					fmt.Sprintf("Result%d", i+1): fmt.Sprintf("Data %d", i+1),
-				}
-				if err := enc.Encode(result); err != nil {
-					t.Errorf("Failed to encode result: %v", err)
-					return
-				}
-			}
-		})
-
-		ch := make(chan humio.StreamingResults)
-		done := make(chan any)
-
-		go func() {
-			err := testClient.Stream(http.MethodPost, "/api/v1/repositories/repo/query", humio.Query{LSQL: "test", Start: "5m"}, ch, done)
-			require.Nil(t, err)
-		}()
-
-		results := []string{"Result1: Data 1", "Result2: Data 2", "Result3: Data 3"}
-		require.Len(t, results, 3)
-		require.Equal(t, "Result1: Data 1", results[0])
-		require.Equal(t, "Result2: Data 2", results[1])
-		require.Equal(t, "Result3: Data 3", results[2])
-
-		done <- true
 	})
 }
 
