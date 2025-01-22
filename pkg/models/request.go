@@ -5,14 +5,12 @@ import (
 	"fmt"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
-	humio "github.com/humio/cli/api"
 )
 
 // QueryContext the context of the query
 type QueryContext struct {
-	Client humio.Client
-	Query  backend.DataQuery
-	Model  QueryModel
+	Query backend.DataQuery
+	Model QueryModel
 }
 
 // QueryModel entry model for the query

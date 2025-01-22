@@ -6,16 +6,14 @@ require (
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/gorilla/mux v1.8.1
 	github.com/grafana/grafana-plugin-sdk-go v0.260.3
-	github.com/humio/cli v0.36.0
 	github.com/stretchr/testify v1.10.0
 )
 
 require (
-	github.com/Masterminds/semver/v3 v3.2.1 // indirect
 	github.com/apache/arrow-go/v18 v18.0.1-0.20241212180703-82be143d7c30 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
-	github.com/cli/shurcooL-graphql v0.0.4 // indirect
 	github.com/coder/websocket v1.8.12 // indirect
+	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/goccy/go-json v0.10.4 // indirect
