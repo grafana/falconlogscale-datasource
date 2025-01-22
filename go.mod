@@ -6,7 +6,7 @@ require (
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/gorilla/mux v1.8.1
 	github.com/grafana/grafana-plugin-sdk-go v0.260.3
-	github.com/humio/cli v0.36.0
+	github.com/humio/cli v0.37.0
 	github.com/stretchr/testify v1.10.0
 )
 
