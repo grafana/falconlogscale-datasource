@@ -36,7 +36,7 @@ var mockSender *backend.StreamSender
 
 type mockQueryRunner struct {
 	runFunc            func(humio.Query) ([]humio.QueryResult, error)
-	runChannelFunc     func(context.Context, humio.Query, chan humio.StreamingResults, chan any)
+	runChannelFunc     func(context.Context, humio.Query, chan humio.StreamingResults)
 	getRepoNamesFunc   func() ([]string, error)
 	setAuthHeadersFunc func(authHeaders map[string]string)
 }
@@ -48,9 +48,9 @@ func (m *mockQueryRunner) Run(q humio.Query) ([]humio.QueryResult, error) {
 	return nil, nil
 }
 
-func (m *mockQueryRunner) RunChannel(ctx context.Context, qr humio.Query, c chan humio.StreamingResults, done chan any) {
+func (m *mockQueryRunner) RunChannel(ctx context.Context, qr humio.Query, c chan humio.StreamingResults) {
 	if m.runChannelFunc != nil {
-		m.runChannelFunc(ctx, qr, c, done)
+		m.runChannelFunc(ctx, qr, c)
 	}
 }
 
@@ -84,11 +84,10 @@ func setupStreamingTests(t *testing.T) {
 	mockSender = backend.NewStreamSender(mockPacketSender)
 
 	mockQueryRunner := &mockQueryRunner{
-		runChannelFunc: func(ctx context.Context, qr humio.Query, c chan humio.StreamingResults, done chan any) {
+		runChannelFunc: func(ctx context.Context, qr humio.Query, c chan humio.StreamingResults) {
 			go func() {
 				c <- humio.StreamingResults{"event": "mock event data"}
 				close(c)
-				close(done)
 			}()
 		},
 	}

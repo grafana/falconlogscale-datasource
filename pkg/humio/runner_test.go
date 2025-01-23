@@ -1,6 +1,7 @@
 package humio_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/grafana/falconlogscale-datasource-backend/pkg/humio"
@@ -33,7 +34,7 @@ type TestJobQuerier struct {
 }
 
 // Stream implements humio.JobQuerier.
-func (t TestJobQuerier) Stream(method string, path string, query humio.Query, ch chan humio.StreamingResults, done chan any) error {
+func (t TestJobQuerier) Stream(ctx context.Context, method string, path string, query humio.Query, ch chan humio.StreamingResults) error {
 	panic("unimplemented")
 }
 
