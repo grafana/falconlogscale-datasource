@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
-	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/experimental/errorsource"
 	"github.com/hasura/go-graphql-client"
 )
@@ -213,17 +212,13 @@ func (c *Client) Fetch(method string, path string, body *bytes.Buffer, out inter
 	return fmt.Errorf("%s %s", res.Status, strings.TrimSpace(errResponse.Detail))
 }
 
-func (c *Client) Stream(method string, path string, query Query, ch chan StreamingResults, done chan any) error {
+func (c *Client) Stream(ctx context.Context, method string, path string, query Query, ch chan StreamingResults) error {
 	var humioQuery struct {
 		QueryString string `json:"queryString"`
-		Start       string `json:"start,omitempty"`
 		Live        bool   `json:"isLive"`
 	}
 	humioQuery.QueryString = query.LSQL
-	humioQuery.Start = query.Start
 	humioQuery.Live = true
-
-	defer close(done)
 
 	var buf bytes.Buffer
 	err := json.NewEncoder(&buf).Encode(humioQuery)
@@ -235,7 +230,7 @@ func (c *Client) Stream(method string, path string, query Query, ch chan Streami
 		return err
 	}
 
-	req, err := http.NewRequest(method, url, &buf)
+	req, err := http.NewRequestWithContext(ctx, method, url, &buf)
 	if err != nil {
 		return err
 	}
@@ -246,18 +241,23 @@ func (c *Client) Stream(method string, path string, query Query, ch chan Streami
 		return err
 	}
 	defer func() {
-		if err := res.Body.Close(); err != nil {
-			log.DefaultLogger.Warn("Failed to close response body", "error", err)
-		}
+		res.Body.Close()
 	}()
 
 	d := json.NewDecoder(res.Body)
 
 	for {
+		select {
+		case <-ctx.Done():
+			if ctx.Err() == context.Canceled {
+				return nil
+			}
+			return ctx.Err()
+		default:
+		}
 		var result StreamingResults
 		if err := d.Decode(&result); err != nil {
-			log.DefaultLogger.Error("Error decoding stream result:", "err", err)
-			continue
+			return fmt.Errorf("error decoding stream result: %s", err)
 		}
 		if result != nil {
 			ch <- result

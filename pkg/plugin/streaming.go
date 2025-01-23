@@ -67,50 +67,6 @@ func (h *Handler) PublishStream(context.Context, *backend.PublishStreamRequest) 
 	}, nil
 }
 
-func formatDuration(d time.Duration) string {
-	return fmt.Sprintf("%.0fs", d.Seconds())
-}
-
-// calculate relative time for live query
-func getQueryStartTime(req *backend.RunStreamRequest) (string, error) {
-	type TimeRange struct {
-		From string `json:"from"`
-		To   string `json:"to"`
-	}
-
-	type reqData struct {
-		Repository string    `json:"repository"`
-		QueryType  string    `json:"queryType"`
-		Version    string    `json:"version"`
-		TimeRange  TimeRange `json:"timeRange"`
-	}
-
-	var queryTimeRange reqData
-
-	err := json.Unmarshal(req.Data, &queryTimeRange)
-	if err != nil {
-		log.DefaultLogger.Error("Error converting JSON to struct:", err)
-		return "", err
-	}
-
-	fromTime := queryTimeRange.TimeRange.From
-	toTime := queryTimeRange.TimeRange.To
-
-	from, err1 := strconv.ParseInt(fromTime, 10, 64)
-	to, err2 := strconv.ParseInt(toTime, 10, 64)
-
-	if err1 != nil || err2 != nil {
-		log.DefaultLogger.Error("Error converting strings to integers:", err1, err2)
-		return "", err
-	}
-
-	timeDifference := to - from
-	duration := time.Duration(timeDifference) * time.Millisecond
-	relativeTime := formatDuration(duration)
-
-	return relativeTime, nil
-}
-
 func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, sender *backend.StreamSender) error {
 	var qr humio.Query
 	if err := json.Unmarshal(req.Data, &qr); err != nil {
@@ -121,27 +77,17 @@ func (h *Handler) RunStream(ctx context.Context, req *backend.RunStreamRequest, 
 		return err
 	}
 
-	var queryStartTime string
-	queryStartTime, err = getQueryStartTime(req)
-	if err != nil {
-		return err
-	}
-
-	qr.Start = queryStartTime
 	c := make(chan humio.StreamingResults)
+	defer close(c)
 	prev := data.FrameJSONCache{}
-	done := make(chan any)
 
-	h.QueryRunner.RunChannel(ctx, qr, c, done)
+	h.QueryRunner.RunChannel(ctx, qr, c)
 
 	for {
 		select {
 		case <-ctx.Done():
 			log.DefaultLogger.Info("Context done, exiting stream", "reason", ctx.Err())
 			return ctx.Err()
-		case <-done:
-			log.DefaultLogger.Info("Received done signal in RunStream")
-			return nil
 		case r := <-c:
 			f, err := convertResultsToFrame(qr.FormatAs, r)
 			if err != nil {
