@@ -203,7 +203,11 @@ func ConverterForStringToTime(input any) (any, error) {
 }
 
 func ConverterForStringToFloat64(input any) (any, error) {
-	num, err := strconv.ParseFloat(input.(string), 64)
+	s, ok := input.(string)
+	if !ok {
+		return nil, errors.New("cannot convert to string")
+	}
+	num, err := strconv.ParseFloat(s, 64)
 	if err != nil {
 		return nil, err
 	}

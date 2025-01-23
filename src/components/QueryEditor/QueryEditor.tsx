@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { QueryEditorProps } from '@grafana/data';
-import { EditorRow } from '@grafana/experimental';
+import { EditorField, EditorRow } from '@grafana/experimental';
 import { DataSource } from '../../DataSource';
 import { FormatAs, LogScaleOptions, LogScaleQuery, LogScaleQueryType } from '../../types';
 import { LogScaleQueryEditor } from 'components/QueryEditor/LogScaleQueryEditor';
 import { Field, Switch } from '@grafana/ui';
-import { pluginVersion } from 'utils/version';
+import { pluginVersion } from 'utils/version'; 
 
 export type Props = QueryEditorProps<DataSource, LogScaleQuery, LogScaleOptions>;
 
@@ -34,6 +34,11 @@ export function QueryEditor(props: Props) {
     onRunQuery();
   };
 
+  const onLiveQueryChange = () => {
+    query.live = !query.live;
+    onRunQuery();
+  };
+
   return (
     <div>
       <LogScaleQueryEditor {...props} />
@@ -47,6 +52,21 @@ export function QueryEditor(props: Props) {
             />
           </Field>
         </EditorRow>
+      ) : (
+        ''
+      )}
+      {props.app === 'panel-editor' ? (
+        <div style={{padding: '5px 0 0 0'}}>
+          <EditorRow>
+            <EditorField label="Enable live querying">
+              <Switch
+                id="liveQuerying"
+                value={query.live || false}
+                onChange={onLiveQueryChange}
+              />
+            </EditorField>
+          </EditorRow>
+        </div>
       ) : (
         ''
       )}

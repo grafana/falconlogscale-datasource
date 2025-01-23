@@ -32,6 +32,11 @@ type TestJobQuerier struct {
 	repos       []string
 }
 
+// Stream implements humio.JobQuerier.
+func (t TestJobQuerier) Stream(method string, path string, query humio.Query, ch chan humio.StreamingResults, done chan any) error {
+	panic("unimplemented")
+}
+
 func (t TestJobQuerier) CreateJob(repo string, query humio.Query) (string, error) {
 	return t.id, nil
 }
