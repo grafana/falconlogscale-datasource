@@ -241,7 +241,9 @@ func (c *Client) Stream(ctx context.Context, method string, path string, query Q
 		return err
 	}
 	defer func() {
-		res.Body.Close()
+		if err := res.Body.Close(); err != nil {
+			log.DefaultLogger.Warn("Failed to close response body", "error", err)
+		}
 	}()
 
 	d := json.NewDecoder(res.Body)
