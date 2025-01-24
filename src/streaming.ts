@@ -7,7 +7,7 @@ import { config } from '@grafana/runtime';
  * possible collisions
  */
 export async function getLiveStreamKey(query: LogScaleQuery): Promise<string> {
-  const str = JSON.stringify({ expr: query.lsql, repo: query.repository });
+  const str = JSON.stringify({ expr: query.lsql, repo: query.repository, format: query.formatAs });
 
   const orgId = config.bootData.user.orgId;
   const msgUint8 = new TextEncoder().encode(str); // encode as (utf-8) Uint8Array

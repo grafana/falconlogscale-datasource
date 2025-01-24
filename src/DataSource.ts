@@ -76,7 +76,6 @@ export class DataSource
 
   runLiveQuery(request: DataQueryRequest<LogScaleQuery>): Observable<DataQueryResponse> {
     const ds = this;
-    const range = request.range;
     
     const observables = request.targets.map((query, index) => {
       return defer(() => getLiveStreamKey(query)).pipe(
@@ -89,10 +88,6 @@ export class DataSource
                 path: `tail/${key}`,
                 data: {
                   ...query,
-                  timeRange: {
-                    from: range.from.valueOf().toString(),
-                    to: range.to.valueOf().toString(),
-                  },
                 },
               },
             })
