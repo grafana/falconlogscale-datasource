@@ -17,7 +17,7 @@ import {
   ConnectionSettings,
   DataSourceDescription,
   convertLegacyAuthProps,
-} from '@grafana/experimental';
+} from '@grafana/plugin-ui';
 
 import { LogScaleOptions, SecretLogScaleOptions } from '../../types';
 import { lastValueFrom } from 'rxjs';
@@ -42,7 +42,7 @@ export interface Props extends DataSourcePluginOptionsEditorProps<LogScaleOption
 export const ConfigEditor: React.FC<Props> = (props: Props) => {
   const theme = useTheme2();
   const styles = getStyles(theme);
-  
+
   const { onOptionsChange, options } = props;
   const onTokenReset = () => {
     setUnsaved(true);
@@ -215,7 +215,7 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
           }}
         />
 
-      {config.secureSocksDSProxyEnabled && (
+        {config.secureSocksDSProxyEnabled && (
           <>
             <div className="gf-form-group">
               <h3 className="page-heading">Secure Socks Proxy</h3>
@@ -229,9 +229,7 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
                   Configure a data source connection proxy.
                 </a>
               </div>
-              <Field
-                label="Enable"
-              >
+              <Field label="Enable">
                 <div className={styles.toggle}>
                   <Switch
                     value={options.jsonData.enableSecureSocksProxy}
