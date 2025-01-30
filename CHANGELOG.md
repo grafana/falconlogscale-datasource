@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.8.0
+
+- Feature: Tail live logs (Live query). Read more about Live querying in [Falcon LogScale query editor](/docs/plugins/grafana-falconlogscale-datasource/<FALCON_LOGSCALE_PLUGIN_VERSION>/editor/)
+- Dependency updates.
+
 ## 1.7.6
 
 - Dependency updates.

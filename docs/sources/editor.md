@@ -32,3 +32,15 @@ Here are some useful LQL functions to get you started with Grafana visualization
 The Explore view allows you to run LQL queries and visualize the results as logs or charts. For more information about Explore, refer to [Explore](https://grafana.com/docs/grafana/latest/features/explore/). For more information about Logs in Explore, refer to [Explore logs](https://grafana.com/docs/grafana/latest/explore/logs-integration/).
 
 Grafana v9.4.8 and later allows you to create data links in Tempo, Grafana Enterprise Traces, Jaeger, and Zipkin that target Falcon LogScale. To configure data links, refer to [Configure data links](/docs/plugins/grafana-falconlogscale-datasourcelatest/configure#configure-data-links)
+
+## Tail live logs (Live query)
+
+Falcon LogScale supports live tailing of logs in real-time in [Explore view](https://grafana.com/docs/grafana/next/explore/) and [Dashboards](https://grafana.com/docs/grafana/latest/dashboards/).
+
+Live tailing relies on a websocket connections between the browser and Grafana server.
+
+To start tailing logs in Explore view, click the `Live` button in the top right corner next to the `Run query` button.
+
+To start making a live panel in a dashboard, enable `Refresh live dashboards` in the dashboard's settings under the General tab. After enabling this setting, you can `Enable live querying` in the panel query editor. Live query data is not formatted by default. To format data into types, use [Transforms](https://grafana.com/docs/grafana/latest/panels-visualizations/query-transform-data/transform-data/). You can separate fields returned by using the `Extract fields` transform on `@rawstring`.
+
+For information on setting up Grafana Live for your own instance of Grafana refer to [Set up Grafana Live](https://grafana.com/docs/grafana/latest/setup-grafana/set-up-grafana-live/)
