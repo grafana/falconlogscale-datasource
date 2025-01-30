@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { QueryEditorProps, SelectableValue, toOption } from '@grafana/data';
 import { Select, QueryField } from '@grafana/ui';
-import { EditorRows, EditorRow, EditorField } from '@grafana/experimental';
+import { EditorRows, EditorRow, EditorField } from '@grafana/plugin-ui';
 import { DataSource } from '../../DataSource';
 import { LogScaleOptions, LogScaleQuery } from '../../types';
 import { parseRepositoriesResponse } from '../../utils/utils';
