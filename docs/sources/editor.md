@@ -37,7 +37,7 @@ Grafana v9.4.8 and later allows you to create data links in Tempo, Grafana Enter
 
 Falcon LogScale supports live tailing of logs in real-time in [Explore view](https://grafana.com/docs/grafana/next/explore/) and [Dashboards](https://grafana.com/docs/grafana/latest/dashboards/).
 
-Live tailing relies on a websocket connections between the browser and Grafana server.
+Live tailing relies on a websocket connection between the browser and Grafana server.
 
 To start tailing logs in Explore view, click the `Live` button in the top right corner next to the `Run query` button.
 
