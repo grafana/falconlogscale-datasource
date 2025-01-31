@@ -48,7 +48,8 @@ func (m *mockQueryRunner) Run(q humio.Query) ([]humio.QueryResult, error) {
 	return nil, nil
 }
 
-func (m *mockQueryRunner) RunChannel(ctx context.Context, qr humio.Query, c chan humio.StreamingResults, done chan any) {
+func (m *mockQueryRunner) RunChannel(ctx context.Context, qr humio.Query, c chan humio.StreamingResults) {
+	done := make(chan any)
 	if m.runChannelFunc != nil {
 		m.runChannelFunc(ctx, qr, c, done)
 	}

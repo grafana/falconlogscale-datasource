@@ -1,6 +1,7 @@
 package humio_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -92,7 +93,63 @@ func TestClient(t *testing.T) {
 		_, err := testClient.ListRepos()
 		require.Nil(t, err)
 	})
+
+	t.Run("it streams results", func(t *testing.T) {
+		setupClientTest()
+		defer teardownClientTest()
+		testMux.HandleFunc("/api/v1/repositories/repo/queryjobs/stream", func(w http.ResponseWriter, req *http.Request) {
+			testMethod(t, req, http.MethodPost)
+			w.Header().Set("Content-Type", "application/json")
+			fmt.Fprint(w, `{"events": [{"message": "test event"}]}`)
+		})
+
+		ch := make(chan humio.StreamingResults)
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		go func() {
+			err := testClient.Stream(ctx, http.MethodPost, "api/v1/repositories/repo/queryjobs/stream", humio.Query{LSQL: "test query"}, ch)
+			require.Nil(t, err)
+		}()
+
+		select {
+		case result := <-ch:
+			require.Len(t, result, 1)
+			require.Equal(t, `[{"message": "test event"}]`, result["events"])
+		case <-ctx.Done():
+			t.Fatal("context cancelled before receiving result")
+		}
+	})
+
+	t.Run("it handles stream context cancellation", func(t *testing.T) {
+		setupClientTest()
+		defer teardownClientTest()
+		testMux.HandleFunc("/api/v1/repositories/repo/queryjobs/stream", func(w http.ResponseWriter, req *http.Request) {
+			testMethod(t, req, http.MethodPost)
+			w.Header().Set("Content-Type", "application/json")
+			fmt.Fprint(w, `{"events": [{"message": "test event"}]}`)
+		})
+
+		ch := make(chan humio.StreamingResults)
+		ctx, cancel := context.WithCancel(context.Background())
+
+		go func() {
+			err := testClient.Stream(ctx, http.MethodPost, "api/v1/repositories/repo/queryjobs/stream", humio.Query{LSQL: "test query"}, ch)
+			require.Nil(t, err)
+		}()
+
+		cancel()
+
+		select {
+		case <-ctx.Done():
+			require.Equal(t, context.Canceled, ctx.Err())
+		case <-ch:
+			t.Fatal("received result after context was cancelled")
+		}
+	})
 }
+
+// Existing setup and teardown functions...
 
 var (
 	testMux    *http.ServeMux
