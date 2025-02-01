@@ -206,6 +206,17 @@ func TestValidateQuery(t *testing.T) {
 	})
 }
 
+func TestFormatAsVariableQuery(t *testing.T) {
+	t.Run("query uses default frame converters when formatAs is set to variable", func(t *testing.T) {
+		events := []map[string]any{
+			{"_count": "100", "stringField": "hello", "@timestamp": "2020-01-01T00:00:00Z"},
+			{"stringField": "hello", "extraField": "extra"},
+		}
+		err := plugin.BuildDataFrame(humio.FormatVariable, fakeFrameMarshaller, events)
+		require.NoError(t, err)
+	})
+}
+
 func newFakeFalconClient() *fakeFalconClient {
 	return &fakeFalconClient{}
 }

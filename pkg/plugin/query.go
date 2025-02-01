@@ -68,27 +68,10 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 					continue
 				}
 
-				converters := GetConverters(r.Events)
-				f, err := h.FrameMarshaller("events", r.Events, converters...)
+				f, err := BuildDataFrame(qr.FormatAs, h.FrameMarshaller, r)
 				if err != nil {
 					errorsource.AddErrorToResponse(q.RefID, response, err)
 					continue
-				}
-
-				OrderFrameFieldsByMetaData(r.Metadata.FieldOrder, f)
-				PrependTimestampField(f)
-
-				if _, ok := r.Events[0]["_bucket"]; ok {
-					f, err = ConvertToWideFormat(f)
-					if err != nil {
-						return nil, err
-					}
-				}
-
-				if qr.FormatAs == humio.FormatLogs {
-					f.Meta = &data.FrameMeta{
-						PreferredVisualization: data.VisTypeLogs,
-					}
 				}
 
 				frames = append(frames, f)
@@ -101,6 +84,41 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 	}
 
 	return response, nil
+}
+
+func BuildDataFrame(formatAs string, fm FrameMarshallerFunc, r humio.QueryResult) (*data.Frame, error) {
+	// if our query is for template variable options, then we do not want to use the default frame marshaller so everything will be strings
+	if formatAs == humio.FormatVariable {
+		f, err := fm("events", r.Events)
+		if err != nil {
+			return nil, err
+		}
+		return f, nil
+	}
+
+	converters := GetConverters(r.Events)
+	f, err := fm("events", r.Events, converters...)
+	if err != nil {
+		return nil, err
+	}
+
+	OrderFrameFieldsByMetaData(r.Metadata.FieldOrder, f)
+	PrependTimestampField(f)
+
+	if _, ok := r.Events[0]["_bucket"]; ok {
+		f, err = ConvertToWideFormat(f)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if formatAs == humio.FormatLogs {
+		f.Meta = &data.FrameMeta{
+			PreferredVisualization: data.VisTypeLogs,
+		}
+	}
+
+	return f, nil
 }
 
 func ConvertToWideFormat(frame *data.Frame) (*data.Frame, error) {
