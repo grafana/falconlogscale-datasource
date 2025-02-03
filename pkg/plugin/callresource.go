@@ -35,8 +35,8 @@ func handleRepositories(c *humio.Client, repositories func() ([]string, error)) 
 
 		// We don't lint the next line as the headers are expected to be canonical but this is not the case
 		//nolint:all
-		if len(req.Header["X-ID-Token"]) > 0 {
-			idTokenHeader = req.Header["X-ID-Token"][0]
+		if len(req.Header["X-Id-Token"]) > 0 {
+			idTokenHeader = req.Header["X-Id-Token"][0]
 		}
 
 		authHeaders := map[string]string{
