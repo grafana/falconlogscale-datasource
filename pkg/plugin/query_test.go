@@ -206,13 +206,29 @@ func TestValidateQuery(t *testing.T) {
 	})
 }
 
-func TestFormatAsVariableQuery(t *testing.T) {
+func TestFormatQuery(t *testing.T) {
 	t.Run("query uses default frame converters when formatAs is set to variable", func(t *testing.T) {
 		events := []map[string]any{
-			{"_count": "100", "stringField": "hello", "@timestamp": "2020-01-01T00:00:00Z"},
-			{"stringField": "hello", "extraField": "extra"},
+			{"numberField": "100", "@timestamp": "2020-01-01T00:00:00Z"},
+			{"numberField": "101", "@timestamp": "2020-01-01T00:01:00Z"},
 		}
-		err := plugin.BuildDataFrame(humio.FormatVariable, fakeFrameMarshaller, events)
+
+		queryResult := humio.QueryResult{Events: events}
+		frame, err := plugin.BuildDataFrame(humio.FormatVariable, framestruct.ToDataFrame, queryResult)
+		//in the frame, numberField should be a string and @timestamp should be string
+		experimental.CheckGoldenJSONFrame(t, "../test_data", "formatAs_set_to_variable", frame, false)
+		require.NoError(t, err)
+	})
+	t.Run("query uses custom frame converters when formatAs is set to metrics", func(t *testing.T) {
+		events := []map[string]any{
+			{"numberField": "100", "@timestamp": "2020-01-01T00:00:00Z"},
+			{"numberField": "101", "@timestamp": "2020-01-01T00:01:00Z"},
+		}
+
+		queryResult := humio.QueryResult{Events: events}
+		frame, err := plugin.BuildDataFrame(humio.FormatMetrics, framestruct.ToDataFrame, queryResult)
+		//in the frame, numberField should be a number and @timestamp should be time
+		experimental.CheckGoldenJSONFrame(t, "../test_data", "formatAs_set_to_metric", frame, false)
 		require.NoError(t, err)
 	})
 }
