@@ -29,19 +29,19 @@ func handleRepositories(c *humio.Client, repositories func() ([]string, error)) 
 	return func(w http.ResponseWriter, req *http.Request) {
 		authorizationHeader := ""
 		idTokenHeader := ""
-		if len(req.Header["Authorization"]) > 0 {
-			authorizationHeader = req.Header["Authorization"][0]
+		if len(req.Header[backend.OAuthIdentityTokenHeaderName]) > 0 {
+			authorizationHeader = req.Header[backend.OAuthIdentityTokenHeaderName][0]
 		}
 
 		// We don't lint the next line as the headers are expected to be canonical but this is not the case
 		//nolint:all
-		if len(req.Header["X-Id-Token"]) > 0 {
-			idTokenHeader = req.Header["X-Id-Token"][0]
+		if len(req.Header[backend.OAuthIdentityIDTokenHeaderName]) > 0 {
+			idTokenHeader = req.Header[backend.OAuthIdentityIDTokenHeaderName][0]
 		}
 
 		authHeaders := map[string]string{
-			"Authorization": authorizationHeader,
-			"X-Id-Token":    idTokenHeader,
+			backend.OAuthIdentityTokenHeaderName: authorizationHeader,
+			backend.OAuthIdentityIDTokenHeaderName:    idTokenHeader,
 		}
 		c.SetAuthHeaders(authHeaders)
 		resp, err := repositories()

@@ -84,7 +84,7 @@ func TestClient(t *testing.T) {
 		defer teardownClientTest()
 		testMux.HandleFunc("/graphql", func(w http.ResponseWriter, req *http.Request) {
 			tokenHeader := "Bearer testToken"
-			reqTokenHeader := req.Header.Get("Authorization")
+			reqTokenHeader := req.Header.Get(backend.OAuthIdentityTokenHeaderName)
 			require.Equal(t, tokenHeader, reqTokenHeader)
 			fmt.Fprint(w, "{}")
 		})
