@@ -27,19 +27,9 @@ func ResourceHandler(c *humio.Client) http.Handler {
 
 func handleRepositories(c *humio.Client, repositories func() ([]string, error)) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
-		authorizationHeader := ""
-		idTokenHeader := ""
-		if len(req.Header[backend.OAuthIdentityTokenHeaderName]) > 0 {
-			authorizationHeader = req.Header[backend.OAuthIdentityTokenHeaderName][0]
-		}
-
-		if len(req.Header[backend.OAuthIdentityIDTokenHeaderName]) > 0 {
-			idTokenHeader = req.Header[backend.OAuthIdentityIDTokenHeaderName][0]
-		}
-
 		authHeaders := map[string]string{
-			backend.OAuthIdentityTokenHeaderName:   authorizationHeader,
-			backend.OAuthIdentityIDTokenHeaderName: idTokenHeader,
+			backend.OAuthIdentityTokenHeaderName:   req.Header.Get(backend.OAuthIdentityTokenHeaderName),
+			backend.OAuthIdentityIDTokenHeaderName: req.Header.Get(backend.OAuthIdentityIDTokenHeaderName),
 		}
 		c.SetAuthHeaders(authHeaders)
 		resp, err := repositories()
