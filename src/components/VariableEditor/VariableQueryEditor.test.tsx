@@ -38,7 +38,7 @@ describe('<VariableQueryEditor />', () => {
     expect(props.onChange).toHaveBeenCalledWith(
       expect.objectContaining({
         lsql: 'test-lql-query',
-        formatAs: FormatAs.Logs,
+        formatAs: FormatAs.Variable,
         queryType: LogScaleQueryType.LQL,
         repository: 'test-repository',
       })

@@ -34,4 +34,5 @@ export enum LogScaleQueryType {
 export enum FormatAs {
   Logs = 'logs',
   Metrics = 'metrics',
+  Variable = 'variable',
 }

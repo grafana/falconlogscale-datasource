@@ -28,7 +28,7 @@ const VariableQueryEditor = (props: Props) => {
       onChange({
         refId: 'A',
         repository: datasource.defaultRepository ?? '',
-        formatAs: FormatAs.Logs,
+        formatAs: FormatAs.Variable,
         lsql: query,
         queryType: LogScaleQueryType.LQL,
         version
