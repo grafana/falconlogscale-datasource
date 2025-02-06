@@ -30,8 +30,8 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 		}
 
 		authHeaders := map[string]string{
-			"Authorization": req.GetHTTPHeader("Authorization"),
-			"X-Id-Token":    req.GetHTTPHeader("X-Id-Token"),
+			backend.OAuthIdentityTokenHeaderName:   req.GetHTTPHeader(backend.OAuthIdentityTokenHeaderName),
+			backend.OAuthIdentityIDTokenHeaderName: req.GetHTTPHeader(backend.OAuthIdentityIDTokenHeaderName),
 		}
 		h.QueryRunner.SetAuthHeaders(authHeaders)
 
