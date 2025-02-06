@@ -1,7 +1,7 @@
 import { DataFrame, DataQueryRequest, DataQueryResponse, Field, isDataFrame } from '@grafana/data';
 import { getDataLinks } from 'dataLink';
 import { DataLinkConfig } from './components/DataLinks';
-import { LogScaleQuery } from 'types';
+import { FormatAs, LogScaleQuery } from 'types';
 
 export function transformBackendResult(
   response: DataQueryResponse,
@@ -30,7 +30,7 @@ function processFrames(
 ): DataFrame[] {
   return frames.map((frame) => {
     const targetQuery = request.targets.find((x) => x.refId === frame.refId);
-    if (!targetQuery || targetQuery.formatAs !== 'logs') {
+    if (!targetQuery || targetQuery.formatAs !== FormatAs.Logs) {
       return {
         ...frame,
         fields: [...orderFields(frame.fields)],
@@ -43,7 +43,7 @@ function processFrames(
   });
 }
 
-function orderFields(fields: Array<Field<any, any[]>>): Array<Field<any, any[]>> {
+function orderFields(fields: Array<Field<any>>): Array<Field<any>> {
   const rawstringFieldIndex = fields.findIndex((x) => x.name === '@rawstring');
   if (rawstringFieldIndex === -1) {
     return fields;

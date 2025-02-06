@@ -10,6 +10,7 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/data/framestruct"
 )
 
+type FrameMarshallerFunc func(string, interface{}, ...framestruct.FramestructOption) (*data.Frame, error)
 type humioClient interface {
 }
 
@@ -25,7 +26,7 @@ type Handler struct {
 	Client          humioClient
 	QueryRunner     queryRunner
 	ResourceHandler backend.CallResourceHandler
-	FrameMarshaller func(string, interface{}, ...framestruct.FramestructOption) (*data.Frame, error)
+	FrameMarshaller FrameMarshallerFunc
 	Settings        Settings
 
 	// open streams

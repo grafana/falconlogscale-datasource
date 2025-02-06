@@ -1,0 +1,56 @@
+//  🌟 This was machine generated.  Do not edit. 🌟
+//  
+//  Frame[0] 
+//  Name: events
+//  Dimensions: 2 Fields by 2 Rows
+//  +----------------------+-------------------+
+//  | Name: @timestamp     | Name: numberField |
+//  | Labels:              | Labels:           |
+//  | Type: []*string      | Type: []*string   |
+//  +----------------------+-------------------+
+//  | 2020-01-01T00:00:00Z | 100               |
+//  | 2020-01-01T00:01:00Z | 101               |
+//  +----------------------+-------------------+
+//  
+//  
+//  🌟 This was machine generated.  Do not edit. 🌟
+{
+  "status": 200,
+  "frames": [
+    {
+      "schema": {
+        "name": "events",
+        "fields": [
+          {
+            "name": "@timestamp",
+            "type": "string",
+            "typeInfo": {
+              "frame": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "numberField",
+            "type": "string",
+            "typeInfo": {
+              "frame": "string",
+              "nullable": true
+            }
+          }
+        ]
+      },
+      "data": {
+        "values": [
+          [
+            "2020-01-01T00:00:00Z",
+            "2020-01-01T00:01:00Z"
+          ],
+          [
+            "100",
+            "101"
+          ]
+        ]
+      }
+    }
+  ]
+}

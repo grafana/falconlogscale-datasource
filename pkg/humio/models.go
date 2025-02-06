@@ -20,8 +20,9 @@ const (
 )
 
 const (
-	FormatMetrics = "metrics"
-	FormatLogs    = "logs"
+	FormatMetrics  = "metrics"
+	FormatLogs     = "logs"
+	FormatVariable = "variable"
 )
 
 type QueryResult struct {

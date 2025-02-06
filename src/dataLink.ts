@@ -29,7 +29,7 @@ export function getDataLinks(dataFrame: DataFrame, dataLinkConfigs: DataLinkConf
   return dataLinks.map((f) => f.newField);
 }
 
-function dataLinkConfigToDataFrameField(dataLinkConfig: DataLinkConfig): Field<any, Array<string | null>> {
+function dataLinkConfigToDataFrameField(dataLinkConfig: DataLinkConfig): Field<any> {
   const dataSourceSrv = getDataSourceSrv();
 
   let dataLink = {} as DataLink;
