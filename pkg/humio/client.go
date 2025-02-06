@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/experimental/errorsource"
@@ -163,13 +164,13 @@ type ErrorResponse struct {
 }
 
 func (c *Client) addAuthHeaders(req *http.Request) *http.Request {
-	authHeader := c.Auth.AuthHeaders["Authorization"]
-	idTokenHeader := c.Auth.AuthHeaders["X-Id-Token"]
+	authHeader := c.Auth.AuthHeaders[backend.OAuthIdentityTokenHeaderName]
+	idTokenHeader := c.Auth.AuthHeaders[backend.OAuthIdentityIDTokenHeaderName]
 	if c.OAuthPassThru && authHeader != "" && idTokenHeader != "" {
-		req.Header.Set("Authorization", authHeader)
-		req.Header.Set("X-Id-Token", idTokenHeader)
+		req.Header.Set(backend.OAuthIdentityTokenHeaderName, authHeader)
+		req.Header.Set(backend.OAuthIdentityIDTokenHeaderName, idTokenHeader)
 	} else {
-		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.AccessToken))
+		req.Header.Set(backend.OAuthIdentityTokenHeaderName, fmt.Sprintf("Bearer %s", c.AccessToken))
 	}
 
 	return req
