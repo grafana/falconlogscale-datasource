@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.1
+
+- Any field can be used for query template variables [#488](https://github.com/grafana/falconlogscale-datasource/pull/488)
+- Bug: Correctly set format as logs flag in Explore by default. [#492](https://github.com/grafana/falconlogscale-datasource/pull/492)
+- Bug: Correct X-Id-Token when fetching repos. [#489](https://github.com/grafana/falconlogscale-datasource/pull/489)
+
 ## 1.8.0
 
 - Feature: Tail live logs (Live query). Read more about Live querying in [Falcon LogScale query editor](/docs/plugins/grafana-falconlogscale-datasource/<FALCON_LOGSCALE_PLUGIN_VERSION>/editor/)
