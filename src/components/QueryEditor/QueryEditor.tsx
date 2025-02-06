@@ -16,7 +16,7 @@ export function QueryEditor(props: Props) {
   // This sets the query type to logs if the user is in Explore and the query type is not set
   useEffect(() => {
     if (props.app === 'explore' && !query.queryType) {
-      onChange({ ...query, queryType: LogScaleQueryType.LQL });
+      onChange({ ...query, queryType: LogScaleQueryType.LQL, formatAs: FormatAs.Logs });
       setIsLogFormat(true);
       onRunQuery();
     }
