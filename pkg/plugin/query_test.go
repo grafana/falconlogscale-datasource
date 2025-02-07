@@ -38,6 +38,7 @@ func setup(opts ...plugin.HandlerOption) (*plugin.Handler, testContext) {
 			AuthenticateWithToken: true,
 		},
 	}
+	tc.queryRunner.ctx, tc.queryRunner.cancel = context.WithCancel(context.Background())
 
 	handler := plugin.NewHandler(
 		tc.falconClient,
@@ -246,6 +247,8 @@ type fakeQueryRunner struct {
 	errs     chan error
 	views    []string
 	viewsErr error
+	ctx      context.Context
+	cancel   context.CancelFunc
 }
 
 func (qr *fakeQueryRunner) Run(req humio.Query) ([]humio.QueryResult, error) {
@@ -260,7 +263,11 @@ func (qr *fakeQueryRunner) Run(req humio.Query) ([]humio.QueryResult, error) {
 	}
 }
 
-func (qr *fakeQueryRunner) RunChannel(context.Context, humio.Query, chan humio.StreamingResults) {
+func (qr *fakeQueryRunner) RunChannel(ctx context.Context, _ humio.Query, c chan humio.StreamingResults) {
+	go func() {
+		c <- humio.StreamingResults{"@rawstring": "category=\"Request\" severity=\"Info\" @timestamp=\"1738870715419\" message=\"\" orgId=\"I1ojRsmWuJJ4WnmXkaW0Fc9BCHgyHrIe\" route=\"humio\" method=\"POST\" remote=\"99.105.226.205\" uri=\"http://cloud.community.humio.com/graphql\" time=\"2\" userAgent=\"Go-http-client/1.1\" timedOut=\"false\" userID=\"Oktou9HhFCstQ79VDHGjUchU\" user=\"andreas.christou@grafana.com\" organisationId=\"I1ojRsmWuJJ4WnmXkaW0Fc9BCHgyHrIe\" organisationName=\"Grafana\" status=\"200\" internal=\"false\" contentLength=\"34\" decodedContentLength=\"34\" responseLength=\"0\"", "@timestamp": "1633132800000"}
+		qr.cancel()
+	}()
 }
 
 func (qr *fakeQueryRunner) GetAllRepoNames() ([]string, error) {
