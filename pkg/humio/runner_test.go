@@ -25,6 +25,17 @@ func TestRunner(t *testing.T) {
 		require.Nil(t, err)
 		require.Equal(t, repos, r)
 	})
+	t.Run("it returns on a result on the channel", func(t *testing.T) {
+		repos := []string{"repo1", "repo2"}
+		q := humio.Query{}
+		jq := TestJobQuerier{repos: repos}
+		qr := humio.NewQueryRunner(jq)
+		c := make(chan humio.StreamingResults)
+		qr.RunChannel(context.Background(), q, c)
+		result := <-c
+		expected := humio.StreamingResults{}
+		require.Equal(t, expected, result)
+	})
 }
 
 type TestJobQuerier struct {
@@ -35,7 +46,8 @@ type TestJobQuerier struct {
 
 // Stream implements humio.JobQuerier.
 func (t TestJobQuerier) Stream(ctx context.Context, method string, path string, query humio.Query, ch chan humio.StreamingResults) error {
-	panic("unimplemented")
+	ch <- humio.StreamingResults{}
+	return nil
 }
 
 func (t TestJobQuerier) CreateJob(repo string, query humio.Query) (string, error) {
