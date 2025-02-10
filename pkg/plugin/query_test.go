@@ -265,7 +265,7 @@ func (qr *fakeQueryRunner) Run(req humio.Query) ([]humio.QueryResult, error) {
 
 func (qr *fakeQueryRunner) RunChannel(ctx context.Context, _ humio.Query, c chan humio.StreamingResults) {
 	go func() {
-		c <- humio.StreamingResults{"@rawstring": "category=\"Request\" severity=\"Info\" @timestamp=\"1738870715419\" message=\"\" orgId=\"I1ojRsmWuJJ4WnmXkaW0Fc9BCHgyHrIe\" route=\"humio\" method=\"POST\" remote=\"99.105.226.205\" uri=\"http://cloud.community.humio.com/graphql\" time=\"2\" userAgent=\"Go-http-client/1.1\" timedOut=\"false\" userID=\"Oktou9HhFCstQ79VDHGjUchU\" user=\"andreas.christou@grafana.com\" organisationId=\"I1ojRsmWuJJ4WnmXkaW0Fc9BCHgyHrIe\" organisationName=\"Grafana\" status=\"200\" internal=\"false\" contentLength=\"34\" decodedContentLength=\"34\" responseLength=\"0\"", "@timestamp": "1633132800000"}
+		c <- humio.StreamingResults{"@rawstring": "test", "@timestamp": "1633132800000"}
 		qr.cancel()
 	}()
 }
