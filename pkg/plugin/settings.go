@@ -28,13 +28,13 @@ var (
 func LoadSettings(config backend.DataSourceInstanceSettings) (Settings, error) {
 	settings := Settings{}
 	if err := json.Unmarshal(config.JSONData, &settings); err != nil {
-		return settings, fmt.Errorf("could not unmarshal DataSourceInfo json: %w", err)
+		return settings, backend.DownstreamError(fmt.Errorf("could not unmarshal DataSourceInfo json: %w", err))
 	}
 
 	baseURL := config.URL
 	settings.BaseURL = baseURL
 	if baseURL == "" {
-		return Settings{}, errEmptyURL
+		return Settings{}, backend.DownstreamError(errEmptyURL)
 	}
 
 	if settings.AuthenticateWithToken {
