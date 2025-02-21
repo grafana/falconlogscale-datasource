@@ -30,7 +30,7 @@ func TestLoadSettings(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("should return error when JSONData cannot be unmarshaled", func(t *testing.T) {
+	t.Run("should return error when invalid JSONData provided", func(t *testing.T) {
 		config := backend.DataSourceInstanceSettings{
 			URL:      "http://localhost:8080",
 			JSONData: []byte(`{invalid json}`),
