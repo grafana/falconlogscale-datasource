@@ -1,7 +1,9 @@
 package humio_test
 
 import (
+	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -91,6 +93,34 @@ func TestClient(t *testing.T) {
 		})
 		_, err := testClient.ListRepos()
 		require.Nil(t, err)
+	})
+
+	t.Run("it streams results", func(t *testing.T) {
+		setupClientTest()
+		defer teardownClientTest()
+		testMux.HandleFunc("/api/v1/repositories/repo/queryjobs/stream", func(w http.ResponseWriter, req *http.Request) {
+			testMethod(t, req, http.MethodPost)
+			w.Header().Set("Content-Type", "application/json")
+			fmt.Fprint(w, `{"events": [{"message": "test event"}]}`)
+		})
+
+		ch := make(chan humio.StreamingResults)
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		go func() {
+			err := testClient.Stream(ctx, http.MethodPost, "api/v1/repositories/repo/queryjobs/stream", humio.Query{LSQL: "test query"}, ch)
+			require.ErrorIs(t, err, io.EOF)
+		}()
+
+		select {
+		case result := <-ch:
+			require.Len(t, result, 1)
+			expected := []any{map[string]any{"message": "test event"}}
+			require.EqualValues(t, expected, result["events"])
+		case <-ctx.Done():
+			t.Fatal("context cancelled before receiving result")
+		}
 	})
 }
 

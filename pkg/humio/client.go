@@ -261,7 +261,7 @@ func (c *Client) Stream(ctx context.Context, method string, path string, query Q
 		}
 		var result StreamingResults
 		if err := d.Decode(&result); err != nil {
-			return fmt.Errorf("error decoding stream result: %s", err)
+			return fmt.Errorf("error decoding stream result: %w", err)
 		}
 		if result != nil {
 			ch <- result

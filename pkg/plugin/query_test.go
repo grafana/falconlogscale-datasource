@@ -38,6 +38,7 @@ func setup(opts ...plugin.HandlerOption) (*plugin.Handler, testContext) {
 			AuthenticateWithToken: true,
 		},
 	}
+	tc.queryRunner.ctx, tc.queryRunner.cancel = context.WithCancel(context.Background())
 
 	handler := plugin.NewHandler(
 		tc.falconClient,
@@ -246,6 +247,8 @@ type fakeQueryRunner struct {
 	errs     chan error
 	views    []string
 	viewsErr error
+	ctx      context.Context
+	cancel   context.CancelFunc
 }
 
 func (qr *fakeQueryRunner) Run(req humio.Query) ([]humio.QueryResult, error) {
@@ -260,7 +263,11 @@ func (qr *fakeQueryRunner) Run(req humio.Query) ([]humio.QueryResult, error) {
 	}
 }
 
-func (qr *fakeQueryRunner) RunChannel(context.Context, humio.Query, chan humio.StreamingResults) {
+func (qr *fakeQueryRunner) RunChannel(ctx context.Context, _ humio.Query, c chan humio.StreamingResults) {
+	go func() {
+		c <- humio.StreamingResults{"@rawstring": "test", "@timestamp": "1633132800000"}
+		qr.cancel()
+	}()
 }
 
 func (qr *fakeQueryRunner) GetAllRepoNames() ([]string, error) {
