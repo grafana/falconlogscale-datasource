@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.8.2
+
+- Set user error in LoadSettings to downstream [#504](https://github.com/grafana/falconlogscale-datasource/pull/504)
+- Dependency updates.
+
 ## 1.8.1
 
 - Any field can be used for query template variables [#488](https://github.com/grafana/falconlogscale-datasource/pull/488)
