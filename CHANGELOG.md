@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.8.3
+
+- Bump dependencies
+- Add publish Github Action workflow for releases (#564)
+- Secure GHA Workflows (#548)
+- Remove `dependabot-reviewer` action (#566)
+- Remove PR image flow (#554)
+- GHA: Harden workflows (#538)
+
 ## 1.8.2
 
 - Set user error in LoadSettings to downstream [#504](https://github.com/grafana/falconlogscale-datasource/pull/504)
