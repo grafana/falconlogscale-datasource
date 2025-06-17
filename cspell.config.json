@@ -42,6 +42,7 @@
     "Millis",
     "nanos",
     "nolint",
+    "errcheck",
     "OIDC",
     "queryjobs",
     "rawstring",

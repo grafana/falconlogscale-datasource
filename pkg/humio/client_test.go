@@ -21,7 +21,7 @@ func TestClient(t *testing.T) {
 		defer teardownClientTest()
 		testMux.HandleFunc("/api/v1/repositories/repo/queryjobs", func(w http.ResponseWriter, req *http.Request) {
 			testMethod(t, req, http.MethodPost)
-			fmt.Fprint(w, `{"id":"testid"}`)
+			fmt.Fprint(w, `{"id":"testid"}`) //nolint:errcheck
 		})
 
 		id, err := testClient.CreateJob("repo", humio.Query{})
@@ -34,7 +34,7 @@ func TestClient(t *testing.T) {
 		defer teardownClientTest()
 		testMux.HandleFunc("/api/v1/repositories/repo/queryjobs/testid", func(w http.ResponseWriter, req *http.Request) {
 			testMethod(t, req, http.MethodDelete)
-			fmt.Fprint(w, "{}")
+			fmt.Fprint(w, "{}") //nolint:errcheck
 		})
 
 		err := testClient.DeleteJob("repo", "testid")
@@ -46,13 +46,14 @@ func TestClient(t *testing.T) {
 		defer teardownClientTest()
 		testMux.HandleFunc("/api/v1/repositories/repo/queryjobs/testid", func(w http.ResponseWriter, req *http.Request) {
 			testMethod(t, req, http.MethodGet)
-			fmt.Fprint(w, `{
+			cancelledRes := `{
 				"cancelled": false,
 				"done": false,
 				"events": [],
 				"metaData": {
 				}
-			}`)
+			}`
+			fmt.Fprint(w, cancelledRes) //nolint:errcheck
 		})
 
 		r, err := testClient.PollJob("repo", "testid")
@@ -67,14 +68,15 @@ func TestClient(t *testing.T) {
 		defer teardownClientTest()
 		testMux.HandleFunc("/graphql", func(w http.ResponseWriter, req *http.Request) {
 			testMethod(t, req, http.MethodPost)
-			fmt.Fprint(w, `{
+			listRes := `{
 				  "data": {
 				    "searchDomains": [
 							{ "name": "repo1" },
 							{ "name": "repo2" }
 						]
 				  }
-			}`)
+			}`
+			fmt.Fprint(w, listRes) //nolint:errcheck
 		})
 
 		r, err := testClient.ListRepos()
@@ -89,7 +91,7 @@ func TestClient(t *testing.T) {
 			tokenHeader := "Bearer testToken"
 			reqTokenHeader := req.Header.Get(backend.OAuthIdentityTokenHeaderName)
 			require.Equal(t, tokenHeader, reqTokenHeader)
-			fmt.Fprint(w, "{}")
+			fmt.Fprint(w, "{}") //nolint:errcheck
 		})
 		_, err := testClient.ListRepos()
 		require.Nil(t, err)
@@ -101,7 +103,7 @@ func TestClient(t *testing.T) {
 		testMux.HandleFunc("/api/v1/repositories/repo/queryjobs/stream", func(w http.ResponseWriter, req *http.Request) {
 			testMethod(t, req, http.MethodPost)
 			w.Header().Set("Content-Type", "application/json")
-			fmt.Fprint(w, `{"events": [{"message": "test event"}]}`)
+			fmt.Fprint(w, `{"events": [{"message": "test event"}]}`) //nolint:errcheck
 		})
 
 		ch := make(chan humio.StreamingResults)
