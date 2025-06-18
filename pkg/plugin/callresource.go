@@ -27,9 +27,16 @@ func ResourceHandler(c *humio.Client) http.Handler {
 
 func handleRepositories(c *humio.Client, repositories func() ([]string, error)) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
+		idTokenHeader := req.Header.Get(backend.OAuthIdentityIDTokenHeaderName)
+
+		// We don't lint the next line as the headers are expected to be canonical but this is not the case
+		//nolint:all
+		if len(req.Header["X-ID-Token"]) > 0 {
+			idTokenHeader = req.Header["X-ID-Token"][0]
+		}
 		authHeaders := map[string]string{
 			backend.OAuthIdentityTokenHeaderName:   req.Header.Get(backend.OAuthIdentityTokenHeaderName),
-			backend.OAuthIdentityIDTokenHeaderName: req.Header.Get(backend.OAuthIdentityIDTokenHeaderName),
+			backend.OAuthIdentityIDTokenHeaderName: idTokenHeader,
 		}
 		c.SetAuthHeaders(authHeaders)
 		resp, err := repositories()
