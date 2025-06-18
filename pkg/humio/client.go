@@ -164,8 +164,8 @@ type ErrorResponse struct {
 }
 
 func (c *Client) addAuthHeaders(req *http.Request) *http.Request {
-	authHeader := c.Auth.AuthHeaders[backend.OAuthIdentityTokenHeaderName]
-	idTokenHeader := c.Auth.AuthHeaders[backend.OAuthIdentityIDTokenHeaderName]
+	authHeader := c.AuthHeaders[backend.OAuthIdentityTokenHeaderName]
+	idTokenHeader := c.AuthHeaders[backend.OAuthIdentityIDTokenHeaderName]
 	if c.OAuthPassThru && authHeader != "" && idTokenHeader != "" {
 		req.Header.Set(backend.OAuthIdentityTokenHeaderName, authHeader)
 		req.Header.Set(backend.OAuthIdentityIDTokenHeaderName, idTokenHeader)
@@ -177,7 +177,7 @@ func (c *Client) addAuthHeaders(req *http.Request) *http.Request {
 }
 
 func (c *Client) SetAuthHeaders(headers map[string]string) {
-	c.Auth.AuthHeaders = headers
+	c.AuthHeaders = headers
 }
 
 func (c *Client) Fetch(method string, path string, body *bytes.Buffer, out interface{}) error {
@@ -200,7 +200,12 @@ func (c *Client) Fetch(method string, path string, body *bytes.Buffer, out inter
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
+	defer func() {
+		err := res.Body.Close()
+		if err != nil {
+			backend.Logger.Warn("failed to close response body: %s", err.Error())
+		}
+	}()
 	if res.StatusCode == http.StatusOK {
 		return json.NewDecoder(res.Body).Decode(&out)
 	}
