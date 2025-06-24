@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.8.4
+
+- Bump eslint-plugin-react from 7.37.4 to 7.37.5 (#572)
+- Remove @types/testing-library__jest-dom, add CI GHA (#571)
+- Bump terser-webpack-plugin from 5.3.11 to 5.3.14 (#522)
+- Bump cspell from 8.17.3 to 9.1.1 (#565)
+- Bump @playwright/test from 1.49.1 to 1.53.0 (#563)
+
 ## 1.8.3
 
 - Bump dependencies
