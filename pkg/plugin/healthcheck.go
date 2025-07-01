@@ -8,10 +8,12 @@ import (
 
 func (h *Handler) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
 	authHeaders := map[string]string{
-		backend.OAuthIdentityTokenHeaderName: req.GetHTTPHeader(backend.OAuthIdentityTokenHeaderName),
-		backend.OAuthIdentityIDTokenHeaderName:    req.GetHTTPHeader(backend.OAuthIdentityIDTokenHeaderName),
+		backend.OAuthIdentityTokenHeaderName:   req.GetHTTPHeader(backend.OAuthIdentityTokenHeaderName),
+		backend.OAuthIdentityIDTokenHeaderName: req.GetHTTPHeader(backend.OAuthIdentityIDTokenHeaderName),
 	}
 	h.QueryRunner.SetAuthHeaders(authHeaders)
+
+	backend.Logger.Info("checkHealth", "authHeaders", authHeaders)
 	// Check if we can view our humio repos
 	_, err := h.QueryRunner.GetAllRepoNames()
 

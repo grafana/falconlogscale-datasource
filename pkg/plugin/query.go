@@ -34,6 +34,7 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 			backend.OAuthIdentityIDTokenHeaderName: req.GetHTTPHeader(backend.OAuthIdentityIDTokenHeaderName),
 		}
 		h.QueryRunner.SetAuthHeaders(authHeaders)
+		backend.Logger.Info("query", "authHeaders", authHeaders)
 
 		var frames []*data.Frame
 		if qr.QueryType == humio.QueryTypeRepositories {

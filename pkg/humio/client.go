@@ -169,6 +169,10 @@ func (c *Client) addAuthHeaders(req *http.Request) *http.Request {
 	if c.OAuthPassThru && authHeader != "" && idTokenHeader != "" {
 		req.Header.Set(backend.OAuthIdentityTokenHeaderName, authHeader)
 		req.Header.Set(backend.OAuthIdentityIDTokenHeaderName, idTokenHeader)
+		reqAuthHeader := req.Header.Get(backend.OAuthIdentityTokenHeaderName)
+		reqIDHeader := req.Header.Get(backend.OAuthIdentityIDTokenHeaderName)
+		backend.Logger.Info("addAuthHeaders authHeaders", "authHeader", authHeader, "idTokenHeader", idTokenHeader)
+		backend.Logger.Info("addAuthHeaders reqAuthHeaders", "authHeaderName", backend.OAuthIdentityTokenHeaderName, "authHeader", reqAuthHeader, "idHeaderName", backend.OAuthIdentityIDTokenHeaderName, "idTokenHeader", reqIDHeader)
 	} else {
 		req.Header.Set(backend.OAuthIdentityTokenHeaderName, fmt.Sprintf("Bearer %s", c.AccessToken))
 	}
