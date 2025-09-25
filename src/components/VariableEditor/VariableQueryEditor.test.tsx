@@ -67,4 +67,32 @@ describe('<VariableQueryEditor />', () => {
     expect(props.onChange).toHaveBeenCalledWith(expect.objectContaining({ queryType: LogScaleQueryType.Repositories }));
     expect(props.datasource.getRepositories).toHaveBeenCalled();
   });
+
+  it('will set format as correctly', async () => {
+    const props = getDefaultProps();
+    const query = { ...props.query, queryType: undefined };
+    render(<VariableQueryEditor {...props} query={query as any} />);
+
+    expect(props.onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        formatAs: FormatAs.Variable,
+      })
+    );
+  });
+
+  it('will set query correctly for string queries', async () => {
+    const props = getDefaultProps();
+    render(<VariableQueryEditor {...props} query={'lql query' as any} />);
+
+    expect(props.onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        refId: 'A',
+        repository: props.datasource.defaultRepository ?? '',
+        formatAs: FormatAs.Variable,
+        lsql: 'lql query',
+        queryType: LogScaleQueryType.LQL,
+        version: '',
+      })
+    );
+  });
 });
