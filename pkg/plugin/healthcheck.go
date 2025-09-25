@@ -12,7 +12,6 @@ func (h *Handler) CheckHealth(ctx context.Context, req *backend.CheckHealthReque
 		backend.OAuthIdentityIDTokenHeaderName: req.GetHTTPHeader(backend.OAuthIdentityIDTokenHeaderName),
 	}
 	h.QueryRunner.SetAuthHeaders(authHeaders)
-
 	// Check if we can view our humio repos
 	_, err := h.QueryRunner.GetAllRepoNames()
 
