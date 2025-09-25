@@ -31,10 +31,14 @@ const VariableQueryEditor = (props: Props) => {
         formatAs: FormatAs.Variable,
         lsql: query,
         queryType: LogScaleQueryType.LQL,
-        version
+        version,
       });
     } else if (!query.queryType) {
-      onChange({ ...query, queryType: LogScaleQueryType.LQL });
+      onChange({
+        ...query,
+        queryType: LogScaleQueryType.LQL,
+        formatAs: FormatAs.Variable,
+      });
     }
   });
 
