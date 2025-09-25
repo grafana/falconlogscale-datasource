@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.8.5
+
+- Improve variable editor query handling [#621](https://github.com/grafana/falconlogscale-datasource/pull/621)
+- Bump dependencies
+
 ## 1.8.4
 
 - Bump eslint-plugin-react from 7.37.4 to 7.37.5 (#572)
