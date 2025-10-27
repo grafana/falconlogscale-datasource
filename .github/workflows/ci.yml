@@ -146,7 +146,7 @@ jobs:
 
       - name: Download build
         id: download-build
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: ${{ needs.build.outputs.plugin-id }}-${{ needs.build.outputs.plugin-version }}
 
@@ -201,7 +201,7 @@ jobs:
 
       - name: Download build
         id: download-build
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: ${{ needs.build.outputs.plugin-id }}-${{ needs.build.outputs.plugin-version }}
 
