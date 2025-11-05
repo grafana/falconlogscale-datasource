@@ -98,7 +98,7 @@ jobs:
           zip ${PLUGIN_ARCHIVE} ${PLUGIN_ID} -r
 
       - name: Archive Build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}
           path: ${{ steps.metadata.outputs.archive }}
