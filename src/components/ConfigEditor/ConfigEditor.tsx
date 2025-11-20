@@ -136,7 +136,9 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
     onChange: onOptionsChange,
   });
 
-  const [tokenAuthSelected, setTokenAuthSelected] = useState(true);
+  const [tokenAuthSelected, setTokenAuthSelected] = useState(
+    newAuthProps.selectedMethod !== AuthMethod.BasicAuth && newAuthProps.selectedMethod !== AuthMethod.OAuthForward
+  );
 
   return (
     <>
