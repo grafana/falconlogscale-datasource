@@ -116,4 +116,18 @@ describe('<ConfigEditor />', () => {
       ).toBeEnabled()
     );
   });
+
+  it('should preserve auth selection on refresh', async () => {
+    const props = getDefaultProps();
+    props.options.jsonData.oauthPassThru = true;
+    props.options.jsonData.authenticateWithToken = false;
+
+    const { rerender } = render(<ConfigEditor {...props} />);
+
+    await waitFor(() => expect(screen.getByText('Forward OAuth Identity')).toBeInTheDocument());
+
+    rerender(<ConfigEditor {...props} />);
+
+    await waitFor(() => expect(screen.getByText('Forward OAuth Identity')).toBeInTheDocument());
+  });
 });
