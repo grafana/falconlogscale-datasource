@@ -136,8 +136,8 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
     onChange: onOptionsChange,
   });
 
-  const [tokenAuthSelected, setTokenAuthSelected] = useState(
-    newAuthProps.selectedMethod !== AuthMethod.BasicAuth && newAuthProps.selectedMethod !== AuthMethod.OAuthForward
+  const [authSelected, setAuthSelected] = useState<AuthMethod | `custom-${string}`>(
+    newAuthProps.selectedMethod === AuthMethod.NoAuth ? 'custom-token' : newAuthProps.selectedMethod
   );
 
   return (
@@ -162,7 +162,7 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
         ]}
         onAuthMethodSelect={(method) => {
           newAuthProps.onAuthMethodSelect(method);
-          setTokenAuthSelected(method === 'custom-token');
+          setAuthSelected(method);
           if (method !== 'custom-token' && options.jsonData.authenticateWithToken) {
             onTokenReset();
           }
@@ -177,7 +177,7 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
             });
           }
         }}
-        selectedMethod={tokenAuthSelected ? 'custom-token' : newAuthProps.selectedMethod}
+        selectedMethod={authSelected}
         visibleMethods={['custom-token', AuthMethod.BasicAuth, AuthMethod.OAuthForward]}
       />
       <Divider />
