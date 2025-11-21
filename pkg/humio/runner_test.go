@@ -66,4 +66,4 @@ func (t TestJobQuerier) ListRepos() ([]string, error) {
 	return t.repos, nil
 }
 
-func (t TestJobQuerier) SetAuthHeaders(authHeaders map[string]string) {}
+func (t TestJobQuerier) SetAuthHeaders(authHeaders map[string]string) error { return nil }

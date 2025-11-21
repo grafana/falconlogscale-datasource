@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"sort"
@@ -176,8 +177,22 @@ func (c *Client) addAuthHeaders(req *http.Request) *http.Request {
 	return req
 }
 
-func (c *Client) SetAuthHeaders(headers map[string]string) {
+func (c *Client) SetAuthHeaders(headers map[string]string) error {
+	if c.OAuthPassThru {
+		authHeader := headers[backend.OAuthIdentityTokenHeaderName]
+		idTokenHeader := headers[backend.OAuthIdentityIDTokenHeaderName]
+		if authHeader != "" && idTokenHeader != "" {
+			authExpired := IsExpired(authHeader)
+			idTokenExpired := IsExpired(idTokenHeader)
+			if authExpired || idTokenExpired {
+				return fmt.Errorf("OAuth tokens are expired, please refresh")
+			}
+		}
+	}
+
 	c.AuthHeaders = headers
+
+	return nil
 }
 
 func (c *Client) Fetch(method string, path string, body *bytes.Buffer, out interface{}) error {
@@ -214,7 +229,12 @@ func (c *Client) Fetch(method string, path string, body *bytes.Buffer, out inter
 	}
 	var errResponse ErrorResponse
 	if err := json.NewDecoder(res.Body).Decode(&errResponse); err != nil {
-		return fmt.Errorf("%s %s", res.Status, err.Error())
+		log.DefaultLogger.Warn("failed to decode body as json", "error", err)
+		stringErr, err := io.ReadAll(res.Body)
+		if err != nil {
+			return fmt.Errorf("%s %s", res.Status, "failed to read response body")
+		}
+		return fmt.Errorf("%s %s", res.Status, string(stringErr))
 	}
 	return fmt.Errorf("%s %s", res.Status, strings.TrimSpace(errResponse.Detail))
 }

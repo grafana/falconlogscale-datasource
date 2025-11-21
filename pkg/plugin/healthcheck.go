@@ -11,9 +11,16 @@ func (h *Handler) CheckHealth(ctx context.Context, req *backend.CheckHealthReque
 		backend.OAuthIdentityTokenHeaderName:   req.GetHTTPHeader(backend.OAuthIdentityTokenHeaderName),
 		backend.OAuthIdentityIDTokenHeaderName: req.GetHTTPHeader(backend.OAuthIdentityIDTokenHeaderName),
 	}
-	h.QueryRunner.SetAuthHeaders(authHeaders)
+	err := h.QueryRunner.SetAuthHeaders(authHeaders)
+	if err != nil {
+		return &backend.CheckHealthResult{
+			Status:  backend.HealthStatusError,
+			Message: err.Error(),
+		}, nil
+	}
+
 	// Check if we can view our humio repos
-	_, err := h.QueryRunner.GetAllRepoNames()
+	_, err = h.QueryRunner.GetAllRepoNames()
 
 	if err != nil {
 		return &backend.CheckHealthResult{
