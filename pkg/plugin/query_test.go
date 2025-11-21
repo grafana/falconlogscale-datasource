@@ -283,7 +283,7 @@ func (qr *fakeQueryRunner) err() error {
 	}
 }
 
-func (qr *fakeQueryRunner) SetAuthHeaders(authHeaders map[string]string) {}
+func (qr *fakeQueryRunner) SetAuthHeaders(authHeaders map[string]string) error { return nil }
 
 type fakeFrameMarshaller struct {
 	req  interface{}
