@@ -24,6 +24,7 @@
     "import\\s*.*\".*?\""
   ],
   "words": [
+    "curr",
     "Dataframe",
     "datasource",
     "datasources",
@@ -37,6 +38,7 @@
     "humio",
     "ingesttimestamp",
     "instancemgmt",
+    "jwts",
     "logscale",
     "lsql",
     "Millis",
