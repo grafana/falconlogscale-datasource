@@ -182,9 +182,7 @@ func (c *Client) SetAuthHeaders(headers map[string]string) error {
 		authHeader := headers[backend.OAuthIdentityTokenHeaderName]
 		idTokenHeader := headers[backend.OAuthIdentityIDTokenHeaderName]
 		if authHeader != "" && idTokenHeader != "" {
-			authExpired := IsExpired(authHeader)
-			idTokenExpired := IsExpired(idTokenHeader)
-			if authExpired || idTokenExpired {
+			if IsExpired(authHeader) || IsExpired(idTokenHeader) {
 				return fmt.Errorf("OAuth tokens are expired, please refresh")
 			}
 		}

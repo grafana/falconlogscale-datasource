@@ -144,13 +144,13 @@ func TestClient(t *testing.T) {
 		}
 
 		err = testClient.SetAuthHeaders(map[string]string{
-			backend.OAuthIdentityTokenHeaderName:   "someAuthToken",
+			backend.OAuthIdentityTokenHeaderName:   "Bearer someAuthToken",
 			backend.OAuthIdentityIDTokenHeaderName: tokenString,
 		})
 		require.Error(t, err)
 
 		err = testClient.SetAuthHeaders(map[string]string{
-			backend.OAuthIdentityTokenHeaderName:   tokenString,
+			backend.OAuthIdentityTokenHeaderName:   "Bearer " + tokenString,
 			backend.OAuthIdentityIDTokenHeaderName: "someIdToken",
 		})
 		require.Error(t, err)
@@ -173,13 +173,13 @@ func TestClient(t *testing.T) {
 		}
 
 		err = testClient.SetAuthHeaders(map[string]string{
-			backend.OAuthIdentityTokenHeaderName:   "someAuthToken",
+			backend.OAuthIdentityTokenHeaderName:   "Bearer someAuthToken",
 			backend.OAuthIdentityIDTokenHeaderName: tokenString,
 		})
 		require.NoError(t, err)
 
 		err = testClient.SetAuthHeaders(map[string]string{
-			backend.OAuthIdentityTokenHeaderName:   tokenString,
+			backend.OAuthIdentityTokenHeaderName:   "Bearer " + tokenString,
 			backend.OAuthIdentityIDTokenHeaderName: "someIdToken",
 		})
 		require.NoError(t, err)
