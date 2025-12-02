@@ -6,6 +6,8 @@ export interface LogScaleOptions extends DataSourceJsonData {
   baseUrl?: string;
   oauthPassThru?: boolean;
   authenticateWithToken: boolean;
+  oauth2?: boolean;
+  oauth2ClientId?: string;
   dataLinks?: DataLinkConfig[];
   defaultRepository?: string;
   basicAuthUser?: string;
@@ -15,6 +17,7 @@ export interface LogScaleOptions extends DataSourceJsonData {
 export interface SecretLogScaleOptions extends DataSourceJsonData {
   accessToken?: string;
   basicAuthPassword?: string;
+  oauth2ClientSecret?: string;
 }
 
 export interface LogScaleQuery extends DataQuery {

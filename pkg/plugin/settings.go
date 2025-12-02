@@ -14,6 +14,9 @@ type Settings struct {
 	AuthenticateWithToken bool     `json:"authenticateWithToken,omitempty"`
 	KeepCookies           []string `json:"keepCookies,omitempty"`
 	OAuthPassThru         bool     `json:"oauthPassThru,omitempty"`
+	OAuth2                bool     `json:"oauth2,omitempty"`
+	OAuth2ClientID        string   `json:"oauth2ClientId,omitempty"`
+	OAuth2ClientSecret    string   `json:"oauth2ClientSecret,omitempty"`
 	//Timeout               uint     `json:"timeout,omitempty"`
 	GraphqlEndpoint string
 	RestEndpoint    string
@@ -50,6 +53,7 @@ func LoadSettings(config backend.DataSourceInstanceSettings) (Settings, error) {
 		secureSettings = make(map[string]string)
 	}
 	settings.AccessToken = secureSettings["accessToken"]
+	settings.OAuth2ClientSecret = secureSettings["oauth2ClientSecret"]
 
 	settings.BasicAuthUser = config.BasicAuthUser
 	settings.BasicAuthPass = secureSettings["basicAuthPassword"]

@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"sort"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
@@ -25,14 +27,29 @@ type Client struct {
 }
 
 type Config struct {
-	Address *url.URL
-	Token   string
+	Address            *url.URL
+	Token              string
+	OAuth2             bool
+	OAuth2ClientID     string
+	OAuth2ClientSecret string
 }
 
 type Auth struct {
-	OAuthPassThru bool
-	AccessToken   string
-	AuthHeaders   map[string]string
+	OAuthPassThru      bool
+	OAuth2             bool
+	OAuth2ClientID     string
+	OAuth2ClientSecret string
+	AccessToken        string
+	oauth2Token        string
+	oauth2TokenExpiry  time.Time
+	oauth2Mutex        sync.RWMutex
+	AuthHeaders        map[string]string
+}
+
+type OAuth2TokenResponse struct {
+	AccessToken string `json:"access_token"`
+	TokenType   string `json:"token_type"`
+	ExpiresIn   int    `json:"expires_in"`
 }
 
 func (c *Client) CreateJob(repo string, query Query) (string, error) {
@@ -131,8 +148,11 @@ func NewClient(config Config, httpOpts httpclient.Options, streamingOpts httpcli
 	client := &Client{
 		URL: config.Address,
 		Auth: Auth{
-			OAuthPassThru: httpOpts.ForwardHTTPHeaders,
-			AccessToken:   config.Token,
+			OAuthPassThru:      httpOpts.ForwardHTTPHeaders,
+			OAuth2:             config.OAuth2,
+			OAuth2ClientID:     config.OAuth2ClientID,
+			OAuth2ClientSecret: config.OAuth2ClientSecret,
+			AccessToken:        config.Token,
 		},
 	}
 
@@ -163,14 +183,100 @@ type ErrorResponse struct {
 	Detail string `json:"detail"`
 }
 
+func (c *Client) fetchOAuth2Token() error {
+	tokenURL, err := c.URL.Parse("oauth2/token")
+	if err != nil {
+		return fmt.Errorf("failed to parse oauth2 token URL: %w", err)
+	}
+
+	data := url.Values{}
+	data.Set("grant_type", "client_credentials")
+	data.Set("client_id", c.OAuth2ClientID)
+	data.Set("client_secret", c.OAuth2ClientSecret)
+
+	req, err := http.NewRequest(http.MethodPost, tokenURL.String(), strings.NewReader(data.Encode()))
+	if err != nil {
+		return fmt.Errorf("failed to create oauth2 token request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	// Create a new HTTP client without any custom middleware or authentication
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to fetch oauth2 token: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode/100 != 2 {
+		var errBody bytes.Buffer
+		errBody.ReadFrom(resp.Body)
+		backend.Logger.Error("OAuth2 token request failed", "status", resp.Status, "body", errBody.String())
+		return fmt.Errorf("oauth2 token request failed with status: %s - %s", resp.Status, errBody.String())
+	}
+
+	var tokenResp OAuth2TokenResponse
+	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
+		return fmt.Errorf("failed to decode oauth2 token response: %w", err)
+	}
+
+	c.oauth2Mutex.Lock()
+	c.oauth2Token = tokenResp.AccessToken
+	// Set expiry with a 5-minute buffer to refresh before actual expiry
+	expiryBuffer := 5 * time.Minute
+	expiryDuration := time.Duration(tokenResp.ExpiresIn) * time.Second
+	if expiryDuration > expiryBuffer {
+		expiryDuration -= expiryBuffer
+	}
+	c.oauth2TokenExpiry = time.Now().Add(expiryDuration)
+	c.oauth2Mutex.Unlock()
+
+	backend.Logger.Debug("OAuth2 token fetched successfully", "expires_in", tokenResp.ExpiresIn)
+	return nil
+}
+
+func (c *Client) getOAuth2Token() (string, error) {
+	c.oauth2Mutex.RLock()
+	token := c.oauth2Token
+	expiry := c.oauth2TokenExpiry
+	c.oauth2Mutex.RUnlock()
+
+	// Check if token is expired or about to expire
+	if token == "" || time.Now().After(expiry) {
+		// Need to fetch a new token
+		if err := c.fetchOAuth2Token(); err != nil {
+			return "", err
+		}
+
+		c.oauth2Mutex.RLock()
+		token = c.oauth2Token
+		c.oauth2Mutex.RUnlock()
+	}
+
+	return token, nil
+}
+
 func (c *Client) addAuthHeaders(req *http.Request) *http.Request {
-	authHeader := c.AuthHeaders[backend.OAuthIdentityTokenHeaderName]
-	idTokenHeader := c.AuthHeaders[backend.OAuthIdentityIDTokenHeaderName]
-	if c.OAuthPassThru && authHeader != "" && idTokenHeader != "" {
-		req.Header.Set(backend.OAuthIdentityTokenHeaderName, authHeader)
-		req.Header.Set(backend.OAuthIdentityIDTokenHeaderName, idTokenHeader)
+	if c.OAuth2 {
+		// OAuth2 client credentials flow
+		token, err := c.getOAuth2Token()
+		if err != nil {
+			backend.Logger.Error("Failed to get OAuth2 token", "error", err)
+			return req
+		}
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	} else {
-		req.Header.Set(backend.OAuthIdentityTokenHeaderName, fmt.Sprintf("Bearer %s", c.AccessToken))
+		authHeader := c.AuthHeaders[backend.OAuthIdentityTokenHeaderName]
+		idTokenHeader := c.AuthHeaders[backend.OAuthIdentityIDTokenHeaderName]
+		if c.OAuthPassThru && authHeader != "" && idTokenHeader != "" {
+			req.Header.Set(backend.OAuthIdentityTokenHeaderName, authHeader)
+			req.Header.Set(backend.OAuthIdentityIDTokenHeaderName, idTokenHeader)
+		} else {
+			req.Header.Set(backend.OAuthIdentityTokenHeaderName, fmt.Sprintf("Bearer %s", c.AccessToken))
+		}
 	}
 
 	return req

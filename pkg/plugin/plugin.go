@@ -55,8 +55,11 @@ func newClient(settings Settings, httpOpts httpclient.Options, streamingOpts htt
 		return nil, err
 	}
 	return humio.NewClient(humio.Config{
-		Address: address,
-		Token:   settings.AccessToken,
+		Address:            address,
+		Token:              settings.AccessToken,
+		OAuth2:             settings.OAuth2,
+		OAuth2ClientID:     settings.OAuth2ClientID,
+		OAuth2ClientSecret: settings.OAuth2ClientSecret,
 	}, httpOpts, streamingOpts)
 }
 
