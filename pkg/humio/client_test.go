@@ -8,7 +8,9 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
+	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/grafana/falconlogscale-datasource-backend/pkg/humio"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
@@ -17,7 +19,7 @@ import (
 
 func TestClient(t *testing.T) {
 	t.Run("it creates a job and returns an id", func(t *testing.T) {
-		setupClientTest()
+		setupClientTest(false)
 		defer teardownClientTest()
 		testMux.HandleFunc("/api/v1/repositories/repo/queryjobs", func(w http.ResponseWriter, req *http.Request) {
 			testMethod(t, req, http.MethodPost)
@@ -30,7 +32,7 @@ func TestClient(t *testing.T) {
 	})
 
 	t.Run("it deletes a job", func(t *testing.T) {
-		setupClientTest()
+		setupClientTest(false)
 		defer teardownClientTest()
 		testMux.HandleFunc("/api/v1/repositories/repo/queryjobs/testid", func(w http.ResponseWriter, req *http.Request) {
 			testMethod(t, req, http.MethodDelete)
@@ -42,7 +44,7 @@ func TestClient(t *testing.T) {
 	})
 
 	t.Run("it polls a job", func(t *testing.T) {
-		setupClientTest()
+		setupClientTest(false)
 		defer teardownClientTest()
 		testMux.HandleFunc("/api/v1/repositories/repo/queryjobs/testid", func(w http.ResponseWriter, req *http.Request) {
 			testMethod(t, req, http.MethodGet)
@@ -64,7 +66,7 @@ func TestClient(t *testing.T) {
 	})
 
 	t.Run("it lists all repos", func(t *testing.T) {
-		setupClientTest()
+		setupClientTest(false)
 		defer teardownClientTest()
 		testMux.HandleFunc("/graphql", func(w http.ResponseWriter, req *http.Request) {
 			testMethod(t, req, http.MethodPost)
@@ -85,7 +87,7 @@ func TestClient(t *testing.T) {
 	})
 
 	t.Run("it adds the token as the auth header if ForwardHTTPHeaders is false", func(t *testing.T) {
-		setupClientTest()
+		setupClientTest(false)
 		defer teardownClientTest()
 		testMux.HandleFunc("/graphql", func(w http.ResponseWriter, req *http.Request) {
 			tokenHeader := "Bearer testToken"
@@ -98,7 +100,7 @@ func TestClient(t *testing.T) {
 	})
 
 	t.Run("it streams results", func(t *testing.T) {
-		setupClientTest()
+		setupClientTest(false)
 		defer teardownClientTest()
 		testMux.HandleFunc("/api/v1/repositories/repo/queryjobs/stream", func(w http.ResponseWriter, req *http.Request) {
 			testMethod(t, req, http.MethodPost)
@@ -124,6 +126,64 @@ func TestClient(t *testing.T) {
 			t.Fatal("context cancelled before receiving result")
 		}
 	})
+
+	t.Run("will error if passed expired jwts", func(t *testing.T) {
+		setupClientTest(true)
+		defer teardownClientTest()
+
+		expiryTime := time.Now().Add(-100 * time.Second).Truncate(time.Second)
+		var secretKey = []byte("secret-key")
+		expiredToken := jwt.NewWithClaims(jwt.SigningMethodHS256,
+			jwt.MapClaims{
+				"test-claim": "test",
+				"exp":        expiryTime.Unix(),
+			})
+		tokenString, err := expiredToken.SignedString(secretKey)
+		if err != nil {
+			t.Error(err)
+		}
+
+		err = testClient.SetAuthHeaders(map[string]string{
+			backend.OAuthIdentityTokenHeaderName:   "Bearer someAuthToken",
+			backend.OAuthIdentityIDTokenHeaderName: tokenString,
+		})
+		require.Error(t, err)
+
+		err = testClient.SetAuthHeaders(map[string]string{
+			backend.OAuthIdentityTokenHeaderName:   "Bearer " + tokenString,
+			backend.OAuthIdentityIDTokenHeaderName: "someIdToken",
+		})
+		require.Error(t, err)
+	})
+
+	t.Run("will continue if jwts are not expired", func(t *testing.T) {
+		setupClientTest(true)
+		defer teardownClientTest()
+
+		expiryTime := time.Now().Add(100 * time.Second).Truncate(time.Second)
+		var secretKey = []byte("secret-key")
+		expiredToken := jwt.NewWithClaims(jwt.SigningMethodHS256,
+			jwt.MapClaims{
+				"test-claim": "test",
+				"exp":        expiryTime.Unix(),
+			})
+		tokenString, err := expiredToken.SignedString(secretKey)
+		if err != nil {
+			t.Error(err)
+		}
+
+		err = testClient.SetAuthHeaders(map[string]string{
+			backend.OAuthIdentityTokenHeaderName:   "Bearer someAuthToken",
+			backend.OAuthIdentityIDTokenHeaderName: tokenString,
+		})
+		require.NoError(t, err)
+
+		err = testClient.SetAuthHeaders(map[string]string{
+			backend.OAuthIdentityTokenHeaderName:   "Bearer " + tokenString,
+			backend.OAuthIdentityIDTokenHeaderName: "someIdToken",
+		})
+		require.NoError(t, err)
+	})
 }
 
 var (
@@ -132,7 +192,7 @@ var (
 	testServer *httptest.Server
 )
 
-func setupClientTest() {
+func setupClientTest(oAuthPassThru bool) {
 	testMux = http.NewServeMux()
 	testServer = httptest.NewServer(testMux)
 
@@ -140,6 +200,7 @@ func setupClientTest() {
 	token := "testToken"
 	config := humio.Config{Address: url, Token: token}
 	httpOpts := httpclient.Options{Header: http.Header{}}
+	httpOpts.ForwardHTTPHeaders = oAuthPassThru
 
 	var err error
 	testClient, err = humio.NewClient(config, httpOpts, httpOpts)
