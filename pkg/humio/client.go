@@ -14,7 +14,6 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-	"github.com/grafana/grafana-plugin-sdk-go/experimental/errorsource"
 	"github.com/hasura/go-graphql-client"
 )
 
@@ -55,7 +54,7 @@ func (c *Client) CreateJob(repo string, query Query) (string, error) {
 	if err != nil {
 		// This is technically a plugin error so we set it here
 		// to avoid it being overwritten by a higher level errorsource call
-		return "", errorsource.PluginError(err, false)
+		return "", backend.PluginError(err)
 	}
 
 	err = c.Fetch(http.MethodPost, "api/v1/repositories/"+url.QueryEscape(repo)+"/queryjobs", &buf, &jsonResponse)
@@ -102,7 +101,7 @@ func (c *Client) ListRepos() ([]string, error) {
 	}
 
 	if err != nil {
-		return f, errorsource.DownstreamError(err, false)
+		return f, backend.DownstreamError(err)
 	}
 
 	return f, nil
@@ -123,7 +122,7 @@ func (c *Client) newGraphQLClient() (*graphql.Client, error) {
 func (c *Client) GraphQLQuery(query interface{}, variables map[string]interface{}) error {
 	client, err := c.newGraphQLClient()
 	if err != nil {
-		return errorsource.PluginError(err, false)
+		return backend.PluginError(err)
 	}
 	return client.Query(context.Background(), query, variables)
 }

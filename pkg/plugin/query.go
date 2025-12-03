@@ -13,7 +13,6 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/grafana/grafana-plugin-sdk-go/data/framestruct"
-	"github.com/grafana/grafana-plugin-sdk-go/experimental/errorsource"
 )
 
 // QueryData handles multiple queries and returns multiple responses.
@@ -25,7 +24,7 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 	for _, q := range req.Queries {
 		qr, err := h.queryRequest(q)
 		if err != nil {
-			errorsource.AddErrorToResponse(q.RefID, response, err)
+			response.Responses[q.RefID] = backend.ErrorResponseWithErrorSource(err)
 			continue
 		}
 
@@ -35,7 +34,7 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 		}
 		err = h.QueryRunner.SetAuthHeaders(authHeaders)
 		if err != nil {
-			errorsource.AddErrorToResponse(q.RefID, response, err)
+			response.Responses[q.RefID] = backend.ErrorResponseWithErrorSource(err)
 			continue
 		}
 
@@ -57,13 +56,13 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 		if qr.QueryType == humio.QueryTypeLQL {
 			err = ValidateQuery(qr)
 			if err != nil {
-				errorsource.AddErrorToResponse(q.RefID, response, err)
+				response.Responses[q.RefID] = backend.ErrorResponseWithErrorSource(err)
 				continue
 			}
 
 			res, err := h.QueryRunner.Run(qr)
 			if err != nil {
-				errorsource.AddErrorToResponse(q.RefID, response, err)
+				response.Responses[q.RefID] = backend.ErrorResponseWithErrorSource(err)
 				continue
 			}
 
@@ -74,7 +73,7 @@ func (h *Handler) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 
 				f, err := BuildDataFrame(qr.FormatAs, h.FrameMarshaller, r)
 				if err != nil {
-					errorsource.AddErrorToResponse(q.RefID, response, err)
+					response.Responses[q.RefID] = backend.ErrorResponseWithErrorSource(err)
 					continue
 				}
 
@@ -151,7 +150,7 @@ func OrderFrameFieldsByMetaData(fieldOrder []string, f *data.Frame) {
 }
 
 func PrependTimestampField(f *data.Frame) {
-	timestampIndex := slices.IndexFunc[[]*data.Field, *data.Field](f.Fields, func(f *data.Field) bool {
+	timestampIndex := slices.IndexFunc(f.Fields, func(f *data.Field) bool {
 		if f != nil && f.Name == "@timestamp" {
 			return true
 		}
@@ -159,7 +158,7 @@ func PrependTimestampField(f *data.Frame) {
 	})
 	if timestampIndex > -1 {
 		timestampField := f.Fields[timestampIndex]
-		removedTimestamp := slices.Delete[[]*data.Field, *data.Field](f.Fields, timestampIndex, timestampIndex+1)
+		removedTimestamp := slices.Delete(f.Fields, timestampIndex, timestampIndex+1)
 		f.Fields = append([]*data.Field{timestampField}, removedTimestamp...)
 	}
 }
@@ -255,7 +254,7 @@ func (h *Handler) queryRequest(q backend.DataQuery) (humio.Query, error) {
 
 func ValidateQuery(q humio.Query) error {
 	if q.Repository == "" {
-		return errorsource.DownstreamError(errors.New("select a repository"), false)
+		return backend.DownstreamError(errors.New("select a repository"))
 	}
 	return nil
 }
