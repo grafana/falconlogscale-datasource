@@ -9,8 +9,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-	"github.com/grafana/grafana-plugin-sdk-go/experimental/errorsource"
 )
 
 type JobQuerier interface {
@@ -82,7 +82,7 @@ func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
 
 	if err != nil {
 		log.DefaultLogger.Error("Humio query string error: %s\n", err.Error())
-		return nil, errorsource.DownstreamError(err, false)
+		return nil, backend.DownstreamError(err)
 	}
 
 	r := humioToDatasourceResult(*result)
