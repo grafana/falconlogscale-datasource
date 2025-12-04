@@ -41,7 +41,6 @@ type Auth struct {
 	OAuth2ClientSecret string
 	AccessToken        string
 	oauth2Token        string
-	oauth2TokenExpiry  time.Time
 	oauth2Mutex        sync.RWMutex
 	AuthHeaders        map[string]string
 }
@@ -231,42 +230,21 @@ func (c *Client) fetchOAuth2Token() error {
 	if expiryDuration > expiryBuffer {
 		expiryDuration -= expiryBuffer
 	}
-	c.oauth2TokenExpiry = time.Now().Add(expiryDuration)
 	c.oauth2Mutex.Unlock()
 
 	backend.Logger.Debug("OAuth2 token fetched successfully", "expires_in", tokenResp.ExpiresIn)
 	return nil
 }
 
-func (c *Client) getOAuth2Token() (string, error) {
-	c.oauth2Mutex.RLock()
-	token := c.oauth2Token
-	expiry := c.oauth2TokenExpiry
-	c.oauth2Mutex.RUnlock()
-
-	// Check if token is expired or about to expire
-	if token == "" || time.Now().After(expiry) {
-		// Need to fetch a new token
-		if err := c.fetchOAuth2Token(); err != nil {
-			return "", err
-		}
-
-		c.oauth2Mutex.RLock()
-		token = c.oauth2Token
-		c.oauth2Mutex.RUnlock()
-	}
-
-	return token, nil
-}
-
 func (c *Client) addAuthHeaders(req *http.Request) *http.Request {
 	if c.OAuth2 {
-		// OAuth2 client credentials flow
-		token, err := c.getOAuth2Token()
-		if err != nil {
-			backend.Logger.Error("Failed to get OAuth2 token", "error", err)
-			return req
+		if c.oauth2Token == "" {
+			c.fetchOAuth2Token()
 		}
+		// OAuth2 client credentials flow
+		c.oauth2Mutex.RLock()
+		token := c.oauth2Token
+		c.oauth2Mutex.RUnlock()
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	} else {
 		authHeader := c.AuthHeaders[backend.OAuthIdentityTokenHeaderName]

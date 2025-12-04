@@ -6,7 +6,7 @@ import {
   SelectableValue,
   updateDatasourcePluginOption,
 } from '@grafana/data';
-import { Field, SecretInput, Switch, useTheme2 } from '@grafana/ui';
+import { Field, SecretInput, Select, Switch, useTheme2 } from '@grafana/ui';
 import { DataLinks } from '../DataLinks';
 import { config, getBackendSrv } from '@grafana/runtime';
 import {
@@ -19,7 +19,7 @@ import {
   convertLegacyAuthProps,
 } from '@grafana/plugin-ui';
 
-import { LogScaleOptions, SecretLogScaleOptions } from '../../types';
+import { LogScaleOptions, SecretLogScaleOptions, DataSourceMode } from '../../types';
 import { lastValueFrom } from 'rxjs';
 import { parseRepositoriesResponse } from 'utils/utils';
 import { DefaultRepository } from './DefaultRepository';
@@ -216,6 +216,14 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
     return newAuthProps.selectedMethod === AuthMethod.NoAuth ? 'custom-token' : newAuthProps.selectedMethod;
   });
 
+  const modeOptions: Array<SelectableValue<DataSourceMode>> = [
+    { label: 'LogScale', value: DataSourceMode.LogScale },
+    { label: 'NGSIEM', value: DataSourceMode.NGSIEM },
+  ];
+
+  const selectedMode = options.jsonData.mode || DataSourceMode.LogScale;
+  const isNGSIEMMode = selectedMode === DataSourceMode.NGSIEM;
+
   return (
     <>
       <DataSourceDescription
@@ -225,6 +233,32 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
       />
       <Divider />
       <ConnectionSettings config={options} onChange={onOptionsChange} />
+      <Divider />
+      <Field
+        label="Mode"
+        description="Select the data source mode. NGSIEM mode only supports OAuth2 client credentials authentication."
+      >
+        <Select
+          width={40}
+          options={modeOptions}
+          value={selectedMode}
+          onChange={(selection) => {
+            const newMode = selection.value;
+            onOptionsChange({
+              ...options,
+              jsonData: {
+                ...options.jsonData,
+                mode: newMode,
+              },
+            });
+
+            // When switching to NGSIEM mode, automatically select OAuth2 if not already selected
+            if (newMode === DataSourceMode.NGSIEM && authSelected !== 'custom-oauth2') {
+              setAuthSelected('custom-oauth2');
+            }
+          }}
+        />
+      </Field>
       <Divider />
       <Auth
         {...newAuthProps}
@@ -270,7 +304,11 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
           }
         }}
         selectedMethod={authSelected}
-        visibleMethods={['custom-token', 'custom-oauth2', AuthMethod.BasicAuth, AuthMethod.OAuthForward]}
+        visibleMethods={
+          isNGSIEMMode
+            ? ['custom-oauth2']
+            : ['custom-token', 'custom-oauth2', AuthMethod.BasicAuth, AuthMethod.OAuthForward]
+        }
       />
       <Divider />
       <ConfigSection

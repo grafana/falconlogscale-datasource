@@ -17,6 +17,7 @@ type Settings struct {
 	OAuth2                bool     `json:"oauth2,omitempty"`
 	OAuth2ClientID        string   `json:"oauth2ClientId,omitempty"`
 	OAuth2ClientSecret    string   `json:"oauth2ClientSecret,omitempty"`
+	Mode                  string   `json:"mode,omitempty"`
 	//Timeout               uint     `json:"timeout,omitempty"`
 	GraphqlEndpoint string
 	RestEndpoint    string

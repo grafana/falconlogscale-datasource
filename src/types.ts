@@ -2,6 +2,11 @@ import { DataSourceJsonData } from '@grafana/data';
 import { DataLinkConfig } from './components/DataLinks';
 import { DataQuery } from '@grafana/schema';
 
+export enum DataSourceMode {
+  LogScale = 'LogScale',
+  NGSIEM = 'NGSIEM',
+}
+
 export interface LogScaleOptions extends DataSourceJsonData {
   baseUrl?: string;
   oauthPassThru?: boolean;
@@ -12,6 +17,7 @@ export interface LogScaleOptions extends DataSourceJsonData {
   defaultRepository?: string;
   basicAuthUser?: string;
   enableSecureSocksProxy?: boolean;
+  mode?: DataSourceMode;
 }
 
 export interface SecretLogScaleOptions extends DataSourceJsonData {
