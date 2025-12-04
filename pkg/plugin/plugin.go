@@ -38,7 +38,7 @@ func NewDataSourceInstance(ctx context.Context, settings backend.DataSourceInsta
 	if err != nil {
 		return nil, err
 	}
-	resourceHandler := ResourceHandler(client)
+	resourceHandler := ResourceHandler(client, s)
 
 	return NewHandler(
 		client,
@@ -50,7 +50,11 @@ func NewDataSourceInstance(ctx context.Context, settings backend.DataSourceInsta
 }
 
 func newClient(settings Settings, httpOpts httpclient.Options, streamingOpts httpclient.Options) (*humio.Client, error) {
-	address, err := url.Parse(settings.BaseURL)
+	baseURL := settings.BaseURL
+	if settings.Mode == "NGSIEM" {
+		baseURL += "/humio"
+	}
+	address, err := url.Parse(baseURL)
 	if err != nil {
 		return nil, err
 	}
