@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"sort"
@@ -15,7 +16,6 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-	"github.com/grafana/grafana-plugin-sdk-go/experimental/errorsource"
 	"github.com/hasura/go-graphql-client"
 )
 
@@ -70,7 +70,7 @@ func (c *Client) CreateJob(repo string, query Query) (string, error) {
 	if err != nil {
 		// This is technically a plugin error so we set it here
 		// to avoid it being overwritten by a higher level errorsource call
-		return "", errorsource.PluginError(err, false)
+		return "", backend.PluginError(err)
 	}
 
 	err = c.Fetch(http.MethodPost, "api/v1/repositories/"+url.QueryEscape(repo)+"/queryjobs", &buf, &jsonResponse)
@@ -117,7 +117,7 @@ func (c *Client) ListRepos() ([]string, error) {
 	}
 
 	if err != nil {
-		return f, errorsource.DownstreamError(err, false)
+		return f, backend.DownstreamError(err)
 	}
 
 	return f, nil
@@ -138,7 +138,7 @@ func (c *Client) newGraphQLClient() (*graphql.Client, error) {
 func (c *Client) GraphQLQuery(query interface{}, variables map[string]interface{}) error {
 	client, err := c.newGraphQLClient()
 	if err != nil {
-		return errorsource.PluginError(err, false)
+		return backend.PluginError(err)
 	}
 	return client.Query(context.Background(), query, variables)
 }
@@ -260,8 +260,20 @@ func (c *Client) addAuthHeaders(req *http.Request) *http.Request {
 	return req
 }
 
-func (c *Client) SetAuthHeaders(headers map[string]string) {
+func (c *Client) SetAuthHeaders(headers map[string]string) error {
+	if c.OAuthPassThru {
+		authHeader := headers[backend.OAuthIdentityTokenHeaderName]
+		idTokenHeader := headers[backend.OAuthIdentityIDTokenHeaderName]
+		if authHeader != "" && idTokenHeader != "" {
+			if IsExpired(authHeader) || IsExpired(idTokenHeader) {
+				return fmt.Errorf("OAuth tokens are expired, please refresh")
+			}
+		}
+	}
+
 	c.AuthHeaders = headers
+
+	return nil
 }
 
 func (c *Client) Fetch(method string, path string, body *bytes.Buffer, out interface{}) error {
@@ -298,7 +310,12 @@ func (c *Client) Fetch(method string, path string, body *bytes.Buffer, out inter
 	}
 	var errResponse ErrorResponse
 	if err := json.NewDecoder(res.Body).Decode(&errResponse); err != nil {
-		return fmt.Errorf("%s %s", res.Status, err.Error())
+		log.DefaultLogger.Warn("failed to decode body as json", "error", err)
+		stringErr, err := io.ReadAll(res.Body)
+		if err != nil {
+			return fmt.Errorf("%s %s", res.Status, "failed to read response body")
+		}
+		return fmt.Errorf("%s %s", res.Status, string(stringErr))
 	}
 	return fmt.Errorf("%s %s", res.Status, strings.TrimSpace(errResponse.Detail))
 }

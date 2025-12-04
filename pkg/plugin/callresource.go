@@ -44,7 +44,11 @@ func handleRepositories(c *humio.Client, settings Settings, repositories func() 
 			backend.OAuthIdentityTokenHeaderName:   req.Header.Get(backend.OAuthIdentityTokenHeaderName),
 			backend.OAuthIdentityIDTokenHeaderName: req.Header.Get(backend.OAuthIdentityIDTokenHeaderName),
 		}
-		c.SetAuthHeaders(authHeaders)
+		err := c.SetAuthHeaders(authHeaders)
+		if err != nil {
+			writeResponse(nil, err, w)
+			return
+		}
 		resp, err := repositories()
 		writeResponse(resp, err, w)
 	}

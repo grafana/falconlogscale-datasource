@@ -15,12 +15,12 @@ jobs:
       plugin-version: ${{ steps.metadata.outputs.plugin-version }}
       archive: ${{ steps.metadata.outputs.archive }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version-file: '.nvmrc'
 
@@ -98,7 +98,7 @@ jobs:
           zip ${PLUGIN_ARCHIVE} ${PLUGIN_ID} -r
 
       - name: Archive Build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}
           path: ${{ steps.metadata.outputs.archive }}
@@ -113,7 +113,7 @@ jobs:
     steps:
       - name: Resolve Grafana E2E versions
         id: resolve-versions
-        uses: grafana/plugin-actions/e2e-version@bf335ac99375f0ba8828497abdf1a22897b5d888
+        uses: grafana/plugin-actions/e2e-version@244c3bc9c6eb94bc1dd6458ade2462499bbf0f5b
         with:
           version-resolver-type: version-support-policy
 
@@ -128,12 +128,12 @@ jobs:
     name: ${{ matrix.GRAFANA_IMAGE.name }}@${{ matrix.GRAFANA_IMAGE.VERSION }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -146,7 +146,7 @@ jobs:
 
       - name: Download build
         id: download-build
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: ${{ needs.build.outputs.plugin-id }}-${{ needs.build.outputs.plugin-version }}
 
@@ -183,12 +183,12 @@ jobs:
     name: ${{ matrix.GRAFANA_IMAGE.name }}@${{ matrix.GRAFANA_IMAGE.VERSION }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -201,7 +201,7 @@ jobs:
 
       - name: Download build
         id: download-build
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: ${{ needs.build.outputs.plugin-id }}-${{ needs.build.outputs.plugin-version }}
 

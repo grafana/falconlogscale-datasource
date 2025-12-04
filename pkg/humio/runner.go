@@ -9,8 +9,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-	"github.com/grafana/grafana-plugin-sdk-go/experimental/errorsource"
 )
 
 type JobQuerier interface {
@@ -18,7 +18,7 @@ type JobQuerier interface {
 	DeleteJob(repo string, id string) error
 	PollJob(repo string, id string) (QueryResult, error)
 	ListRepos() ([]string, error)
-	SetAuthHeaders(headers map[string]string)
+	SetAuthHeaders(headers map[string]string) error
 	Stream(ctx context.Context, method string, path string, query Query, ch chan StreamingResults) error
 }
 
@@ -82,7 +82,7 @@ func (qj *QueryRunner) Run(query Query) ([]QueryResult, error) {
 
 	if err != nil {
 		log.DefaultLogger.Error("Humio query string error: %s\n", err.Error())
-		return nil, errorsource.DownstreamError(err, false)
+		return nil, backend.DownstreamError(err)
 	}
 
 	r := humioToDatasourceResult(*result)
@@ -104,8 +104,8 @@ func (qr *QueryRunner) GetAllRepoNames() ([]string, error) {
 	return qr.JobQuerier.ListRepos()
 }
 
-func (qr *QueryRunner) SetAuthHeaders(authHeaders map[string]string) {
-	qr.JobQuerier.SetAuthHeaders(authHeaders)
+func (qr *QueryRunner) SetAuthHeaders(authHeaders map[string]string) error {
+	return qr.JobQuerier.SetAuthHeaders(authHeaders)
 }
 
 func humioToDatasourceResult(r QueryResult) QueryResult {

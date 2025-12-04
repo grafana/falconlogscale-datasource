@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.6
+
+- Fix authentication switch bug [#682](https://github.com/grafana/falconlogscale-datasource/pull/682)
+- Improve handling of expired tokens [#684](https://github.com/grafana/falconlogscale-datasource/pull/684)
+- Bump dependencies
+
 ## 1.8.5
 
 - Improve variable editor query handling [#621](https://github.com/grafana/falconlogscale-datasource/pull/621)
