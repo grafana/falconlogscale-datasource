@@ -11,7 +11,6 @@ import (
 	"sort"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
@@ -43,12 +42,6 @@ type Auth struct {
 	oauth2Token        string
 	oauth2Mutex        sync.RWMutex
 	AuthHeaders        map[string]string
-}
-
-type OAuth2TokenResponse struct {
-	AccessToken string `json:"access_token"`
-	TokenType   string `json:"token_type"`
-	ExpiresIn   int    `json:"expires_in"`
 }
 
 func (c *Client) CreateJob(repo string, query Query) (string, error) {
@@ -123,6 +116,17 @@ func (c *Client) ListRepos() ([]string, error) {
 	return f, nil
 }
 
+func (c *Client) OauthClientSecretHealthCheck() error {
+	// Check if we can auth with oauth2 client secret
+	if c.Auth.OAuth2ClientID != "" && c.Auth.OAuth2ClientSecret != "" {
+		err := c.fetchOAuth2Token()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (c *Client) setAuthHeaders() graphql.RequestModifier {
 	return func(req *http.Request) {
 		c.addAuthHeaders(req)
@@ -182,79 +186,47 @@ type ErrorResponse struct {
 	Detail string `json:"detail"`
 }
 
-func (c *Client) fetchOAuth2Token() error {
-	tokenURL, err := c.URL.Parse("oauth2/token")
-	if err != nil {
-		return fmt.Errorf("failed to parse oauth2 token URL: %w", err)
+func (c *Client) addOAuth2Headers(req *http.Request) {
+	// Check if token is expired or missing
+	if c.isOAuth2TokenExpired() {
+		backend.Logger.Debug("OAuth2 token expired or missing, fetching new token")
+		if err := c.fetchOAuth2Token(); err != nil {
+			backend.Logger.Error("Failed to fetch OAuth2 token", "error", err)
+			return
+		}
 	}
 
-	data := url.Values{}
-	data.Set("grant_type", "client_credentials")
-	data.Set("client_id", c.OAuth2ClientID)
-	data.Set("client_secret", c.OAuth2ClientSecret)
+	c.oauth2Mutex.RLock()
+	token := c.oauth2Token
+	c.oauth2Mutex.RUnlock()
 
-	req, err := http.NewRequest(http.MethodPost, tokenURL.String(), strings.NewReader(data.Encode()))
-	if err != nil {
-		return fmt.Errorf("failed to create oauth2 token request: %w", err)
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+}
+
+func (c *Client) addPassThruHeaders(req *http.Request) {
+	authHeader := c.AuthHeaders[backend.OAuthIdentityTokenHeaderName]
+	idTokenHeader := c.AuthHeaders[backend.OAuthIdentityIDTokenHeaderName]
+
+	if authHeader != "" && idTokenHeader != "" {
+		req.Header.Set(backend.OAuthIdentityTokenHeaderName, authHeader)
+		req.Header.Set(backend.OAuthIdentityIDTokenHeaderName, idTokenHeader)
+	} else {
+		c.addStaticTokenHeaders(req)
 	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+}
 
-	// Create a new HTTP client without any custom middleware or authentication
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("failed to fetch oauth2 token: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode/100 != 2 {
-		var errBody bytes.Buffer
-		errBody.ReadFrom(resp.Body)
-		backend.Logger.Error("OAuth2 token request failed", "status", resp.Status, "body", errBody.String())
-		return fmt.Errorf("oauth2 token request failed with status: %s - %s", resp.Status, errBody.String())
-	}
-
-	var tokenResp OAuth2TokenResponse
-	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
-		return fmt.Errorf("failed to decode oauth2 token response: %w", err)
-	}
-
-	c.oauth2Mutex.Lock()
-	c.oauth2Token = tokenResp.AccessToken
-	// Set expiry with a 5-minute buffer to refresh before actual expiry
-	expiryBuffer := 5 * time.Minute
-	expiryDuration := time.Duration(tokenResp.ExpiresIn) * time.Second
-	if expiryDuration > expiryBuffer {
-		expiryDuration -= expiryBuffer
-	}
-	c.oauth2Mutex.Unlock()
-
-	backend.Logger.Debug("OAuth2 token fetched successfully", "expires_in", tokenResp.ExpiresIn)
-	return nil
+func (c *Client) addStaticTokenHeaders(req *http.Request) {
+	req.Header.Set(backend.OAuthIdentityTokenHeaderName, fmt.Sprintf("Bearer %s", c.AccessToken))
 }
 
 func (c *Client) addAuthHeaders(req *http.Request) *http.Request {
-	if c.OAuth2 {
-		if c.oauth2Token == "" {
-			c.fetchOAuth2Token()
-		}
-		// OAuth2 client credentials flow
-		c.oauth2Mutex.RLock()
-		token := c.oauth2Token
-		c.oauth2Mutex.RUnlock()
-		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
-	} else {
-		authHeader := c.AuthHeaders[backend.OAuthIdentityTokenHeaderName]
-		idTokenHeader := c.AuthHeaders[backend.OAuthIdentityIDTokenHeaderName]
-		if c.OAuthPassThru && authHeader != "" && idTokenHeader != "" {
-			req.Header.Set(backend.OAuthIdentityTokenHeaderName, authHeader)
-			req.Header.Set(backend.OAuthIdentityIDTokenHeaderName, idTokenHeader)
-		} else {
-			req.Header.Set(backend.OAuthIdentityTokenHeaderName, fmt.Sprintf("Bearer %s", c.AccessToken))
-		}
+	switch {
+	case c.OAuth2:
+		c.addOAuth2Headers(req)
+	case c.OAuthPassThru:
+		c.addPassThruHeaders(req)
+	default:
+		c.addStaticTokenHeaders(req)
 	}
 
 	return req
@@ -277,16 +249,25 @@ func (c *Client) SetAuthHeaders(headers map[string]string) error {
 }
 
 func (c *Client) Fetch(method string, path string, body *bytes.Buffer, out interface{}) error {
+	return c.fetchWithRetry(method, path, body, out, false)
+}
+
+func (c *Client) fetchWithRetry(method string, path string, body *bytes.Buffer, out interface{}, isRetry bool) error {
 	url, err := url.JoinPath(c.URL.String(), path)
 	if err != nil {
 		return err
 	}
 
 	var req *http.Request
-	if body == nil {
-		req, err = http.NewRequest(method, url, bytes.NewReader(nil))
+	var bodyBytes []byte
+	if body != nil {
+		bodyBytes = body.Bytes()
+	}
+
+	if bodyBytes != nil {
+		req, err = http.NewRequest(method, url, bytes.NewReader(bodyBytes))
 	} else {
-		req, err = http.NewRequest(method, url, body)
+		req, err = http.NewRequest(method, url, bytes.NewReader(nil))
 	}
 	if err != nil {
 		return err
@@ -308,6 +289,13 @@ func (c *Client) Fetch(method string, path string, body *bytes.Buffer, out inter
 	if res.StatusCode == http.StatusNoContent {
 		return fmt.Errorf("%s %s", res.Status, "No content returned from request")
 	}
+
+	// Handle 401/403 errors with OAuth2 by refreshing token and retrying once
+	if c.handleOAuth2AuthError(isRetry, res.StatusCode) {
+		// Retry the request with the new token
+		return c.fetchWithRetry(method, path, bytes.NewBuffer(bodyBytes), out, true)
+	}
+
 	var errResponse ErrorResponse
 	if err := json.NewDecoder(res.Body).Decode(&errResponse); err != nil {
 		log.DefaultLogger.Warn("failed to decode body as json", "error", err)
@@ -321,6 +309,10 @@ func (c *Client) Fetch(method string, path string, body *bytes.Buffer, out inter
 }
 
 func (c *Client) Stream(ctx context.Context, method string, path string, query Query, ch chan StreamingResults) error {
+	return c.streamWithRetry(ctx, method, path, query, ch, false)
+}
+
+func (c *Client) streamWithRetry(ctx context.Context, method string, path string, query Query, ch chan StreamingResults, isRetry bool) error {
 	var humioQuery struct {
 		QueryString string `json:"queryString"`
 		Live        bool   `json:"isLive"`
@@ -354,6 +346,14 @@ func (c *Client) Stream(ctx context.Context, method string, path string, query Q
 		}
 	}()
 
+	if c.handleOAuth2AuthError(isRetry, res.StatusCode) {
+		return c.streamWithRetry(ctx, method, path, query, ch, true)
+	}
+
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("stream request failed with status: %s", res.Status)
+	}
+
 	d := json.NewDecoder(res.Body)
 
 	for {
@@ -369,7 +369,7 @@ func (c *Client) Stream(ctx context.Context, method string, path string, query Q
 		if err := d.Decode(&result); err != nil {
 			return fmt.Errorf("error decoding stream result: %w", err)
 		}
-		if result != nil {
+		if result != nil && ch != nil {
 			ch <- result
 		}
 	}

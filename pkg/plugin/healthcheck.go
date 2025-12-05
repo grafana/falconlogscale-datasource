@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 )
@@ -19,18 +20,35 @@ func (h *Handler) CheckHealth(ctx context.Context, req *backend.CheckHealthReque
 		}, nil
 	}
 
-	// Check if we can view our humio repos
-	_, err = h.QueryRunner.GetAllRepoNames()
+	// Verify authentication using mode-appropriate method
+	var message string
 
-	if err != nil {
-		return &backend.CheckHealthResult{
-			Status:  backend.HealthStatusError,
-			Message: err.Error(),
-		}, nil
+	switch h.Settings.Mode {
+	case "NGSIEM":
+		// NGSIEM mode doesn't support GraphQL, use REST healthcheck
+		err = h.QueryRunner.OauthClientSecretHealthCheck()
+		if err != nil {
+			return &backend.CheckHealthResult{
+				Status:  backend.HealthStatusError,
+				Message: "Authentication failed: " + err.Error(),
+			}, nil
+		}
+		message = "Successfully authenticated"
+
+	default:
+		// LogScale mode supports GraphQL, list repositories
+		repos, err := h.QueryRunner.GetAllRepoNames()
+		if err != nil {
+			return &backend.CheckHealthResult{
+				Status:  backend.HealthStatusError,
+				Message: "Authentication failed: " + err.Error(),
+			}, nil
+		}
+		message = fmt.Sprintf("Successfully authenticated (%d repositories found)", len(repos))
 	}
 
 	return &backend.CheckHealthResult{
 		Status:  backend.HealthStatusOk,
-		Message: "Data source is working",
+		Message: message,
 	}, nil
 }

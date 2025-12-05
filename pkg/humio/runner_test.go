@@ -67,3 +67,5 @@ func (t TestJobQuerier) ListRepos() ([]string, error) {
 }
 
 func (t TestJobQuerier) SetAuthHeaders(authHeaders map[string]string) error { return nil }
+
+func (t TestJobQuerier) OauthClientSecretHealthCheck() error { return nil }

@@ -33,8 +33,6 @@ func handleRepositories(c *humio.Client, settings Settings, repositories func() 
 				"search-all",
 				"investigate_view",
 				"third-party",
-				"falcon_for_it_view",
-				"forensics_view",
 			}
 			writeResponse(predefinedRepos, nil, w)
 			return
