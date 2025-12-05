@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
@@ -25,14 +26,22 @@ type Client struct {
 }
 
 type Config struct {
-	Address *url.URL
-	Token   string
+	Address            *url.URL
+	Token              string
+	OAuth2             bool
+	OAuth2ClientID     string
+	OAuth2ClientSecret string
 }
 
 type Auth struct {
-	OAuthPassThru bool
-	AccessToken   string
-	AuthHeaders   map[string]string
+	OAuthPassThru      bool
+	OAuth2             bool
+	OAuth2ClientID     string
+	OAuth2ClientSecret string
+	AccessToken        string
+	oauth2Token        string
+	oauth2Mutex        sync.RWMutex
+	AuthHeaders        map[string]string
 }
 
 func (c *Client) CreateJob(repo string, query Query) (string, error) {
@@ -107,6 +116,17 @@ func (c *Client) ListRepos() ([]string, error) {
 	return f, nil
 }
 
+func (c *Client) OauthClientSecretHealthCheck() error {
+	// Check if we can auth with oauth2 client secret
+	if c.Auth.OAuth2ClientID != "" && c.Auth.OAuth2ClientSecret != "" {
+		err := c.fetchOAuth2Token()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (c *Client) setAuthHeaders() graphql.RequestModifier {
 	return func(req *http.Request) {
 		c.addAuthHeaders(req)
@@ -131,8 +151,11 @@ func NewClient(config Config, httpOpts httpclient.Options, streamingOpts httpcli
 	client := &Client{
 		URL: config.Address,
 		Auth: Auth{
-			OAuthPassThru: httpOpts.ForwardHTTPHeaders,
-			AccessToken:   config.Token,
+			OAuthPassThru:      httpOpts.ForwardHTTPHeaders,
+			OAuth2:             config.OAuth2,
+			OAuth2ClientID:     config.OAuth2ClientID,
+			OAuth2ClientSecret: config.OAuth2ClientSecret,
+			AccessToken:        config.Token,
 		},
 	}
 
@@ -163,14 +186,47 @@ type ErrorResponse struct {
 	Detail string `json:"detail"`
 }
 
-func (c *Client) addAuthHeaders(req *http.Request) *http.Request {
+func (c *Client) addOAuth2Headers(req *http.Request) {
+	// Check if token is expired or missing
+	if c.isOAuth2TokenExpired() {
+		backend.Logger.Debug("OAuth2 token expired or missing, fetching new token")
+		if err := c.fetchOAuth2Token(); err != nil {
+			backend.Logger.Error("Failed to fetch OAuth2 token", "error", err)
+			return
+		}
+	}
+
+	c.oauth2Mutex.RLock()
+	token := c.oauth2Token
+	c.oauth2Mutex.RUnlock()
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+}
+
+func (c *Client) addPassThruHeaders(req *http.Request) {
 	authHeader := c.AuthHeaders[backend.OAuthIdentityTokenHeaderName]
 	idTokenHeader := c.AuthHeaders[backend.OAuthIdentityIDTokenHeaderName]
-	if c.OAuthPassThru && authHeader != "" && idTokenHeader != "" {
+
+	if authHeader != "" && idTokenHeader != "" {
 		req.Header.Set(backend.OAuthIdentityTokenHeaderName, authHeader)
 		req.Header.Set(backend.OAuthIdentityIDTokenHeaderName, idTokenHeader)
 	} else {
-		req.Header.Set(backend.OAuthIdentityTokenHeaderName, fmt.Sprintf("Bearer %s", c.AccessToken))
+		c.addStaticTokenHeaders(req)
+	}
+}
+
+func (c *Client) addStaticTokenHeaders(req *http.Request) {
+	req.Header.Set(backend.OAuthIdentityTokenHeaderName, fmt.Sprintf("Bearer %s", c.AccessToken))
+}
+
+func (c *Client) addAuthHeaders(req *http.Request) *http.Request {
+	switch {
+	case c.OAuth2:
+		c.addOAuth2Headers(req)
+	case c.OAuthPassThru:
+		c.addPassThruHeaders(req)
+	default:
+		c.addStaticTokenHeaders(req)
 	}
 
 	return req
@@ -193,16 +249,25 @@ func (c *Client) SetAuthHeaders(headers map[string]string) error {
 }
 
 func (c *Client) Fetch(method string, path string, body *bytes.Buffer, out interface{}) error {
+	return c.fetchWithRetry(method, path, body, out, false)
+}
+
+func (c *Client) fetchWithRetry(method string, path string, body *bytes.Buffer, out interface{}, isRetry bool) error {
 	url, err := url.JoinPath(c.URL.String(), path)
 	if err != nil {
 		return err
 	}
 
 	var req *http.Request
-	if body == nil {
-		req, err = http.NewRequest(method, url, bytes.NewReader(nil))
+	var bodyBytes []byte
+	if body != nil {
+		bodyBytes = body.Bytes()
+	}
+
+	if bodyBytes != nil {
+		req, err = http.NewRequest(method, url, bytes.NewReader(bodyBytes))
 	} else {
-		req, err = http.NewRequest(method, url, body)
+		req, err = http.NewRequest(method, url, bytes.NewReader(nil))
 	}
 	if err != nil {
 		return err
@@ -224,6 +289,13 @@ func (c *Client) Fetch(method string, path string, body *bytes.Buffer, out inter
 	if res.StatusCode == http.StatusNoContent {
 		return fmt.Errorf("%s %s", res.Status, "No content returned from request")
 	}
+
+	// Handle 401/403 errors with OAuth2 by refreshing token and retrying once
+	if c.handleOAuth2AuthError(isRetry, res.StatusCode) {
+		// Retry the request with the new token
+		return c.fetchWithRetry(method, path, bytes.NewBuffer(bodyBytes), out, true)
+	}
+
 	var errResponse ErrorResponse
 	if err := json.NewDecoder(res.Body).Decode(&errResponse); err != nil {
 		log.DefaultLogger.Warn("failed to decode body as json", "error", err)
@@ -237,6 +309,10 @@ func (c *Client) Fetch(method string, path string, body *bytes.Buffer, out inter
 }
 
 func (c *Client) Stream(ctx context.Context, method string, path string, query Query, ch chan StreamingResults) error {
+	return c.streamWithRetry(ctx, method, path, query, ch, false)
+}
+
+func (c *Client) streamWithRetry(ctx context.Context, method string, path string, query Query, ch chan StreamingResults, isRetry bool) error {
 	var humioQuery struct {
 		QueryString string `json:"queryString"`
 		Live        bool   `json:"isLive"`
@@ -270,6 +346,14 @@ func (c *Client) Stream(ctx context.Context, method string, path string, query Q
 		}
 	}()
 
+	if c.handleOAuth2AuthError(isRetry, res.StatusCode) {
+		return c.streamWithRetry(ctx, method, path, query, ch, true)
+	}
+
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("stream request failed with status: %s", res.Status)
+	}
+
 	d := json.NewDecoder(res.Body)
 
 	for {
@@ -285,7 +369,7 @@ func (c *Client) Stream(ctx context.Context, method string, path string, query Q
 		if err := d.Decode(&result); err != nil {
 			return fmt.Errorf("error decoding stream result: %w", err)
 		}
-		if result != nil {
+		if result != nil && ch != nil {
 			ch <- result
 		}
 	}

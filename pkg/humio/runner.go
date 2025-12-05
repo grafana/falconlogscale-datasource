@@ -20,6 +20,7 @@ type JobQuerier interface {
 	ListRepos() ([]string, error)
 	SetAuthHeaders(headers map[string]string) error
 	Stream(ctx context.Context, method string, path string, query Query, ch chan StreamingResults) error
+	OauthClientSecretHealthCheck() error
 }
 
 type QueryRunner struct {
@@ -106,6 +107,10 @@ func (qr *QueryRunner) GetAllRepoNames() ([]string, error) {
 
 func (qr *QueryRunner) SetAuthHeaders(authHeaders map[string]string) error {
 	return qr.JobQuerier.SetAuthHeaders(authHeaders)
+}
+
+func (qr *QueryRunner) OauthClientSecretHealthCheck() error {
+	return qr.JobQuerier.OauthClientSecretHealthCheck()
 }
 
 func humioToDatasourceResult(r QueryResult) QueryResult {

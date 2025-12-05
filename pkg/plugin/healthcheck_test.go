@@ -20,7 +20,7 @@ func TestCheckHealth(t *testing.T) {
 		)
 
 		require.Equal(t, backend.HealthStatusOk, res.Status)
-		require.Equal(t, "Data source is working", res.Message)
+		require.Equal(t, "Successfully authenticated (0 repositories found)", res.Message)
 	})
 
 	t.Run("HealthStatusError when settings are valid and API returns error", func(t *testing.T) {
@@ -33,6 +33,6 @@ func TestCheckHealth(t *testing.T) {
 		)
 
 		require.Equal(t, backend.HealthStatusError, res.Status)
-		require.Equal(t, "some error", res.Message)
+		require.Equal(t, "Authentication failed: some error", res.Message)
 	})
 }

@@ -19,6 +19,7 @@ type queryRunner interface {
 	RunChannel(context.Context, humio.Query, chan humio.StreamingResults)
 	GetAllRepoNames() ([]string, error)
 	SetAuthHeaders(authHeaders map[string]string) error
+	OauthClientSecretHealthCheck() error
 }
 
 // Handler encapsulates the lifecycle management of the handler components.

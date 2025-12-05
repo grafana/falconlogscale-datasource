@@ -18,7 +18,7 @@ func (h *Handler) CallResource(ctx context.Context, req *backend.CallResourceReq
 }
 
 // ResourceHandler handles http calls for resources from the api
-func ResourceHandler(c *humio.Client) http.Handler {
+func ResourceHandler(c *humio.Client, settings Settings) http.Handler {
 	r := mux.NewRouter()
 	r.HandleFunc("/repositories", handleRepositories(c, c.ListRepos))
 
