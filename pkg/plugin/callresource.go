@@ -20,24 +20,13 @@ func (h *Handler) CallResource(ctx context.Context, req *backend.CallResourceReq
 // ResourceHandler handles http calls for resources from the api
 func ResourceHandler(c *humio.Client, settings Settings) http.Handler {
 	r := mux.NewRouter()
-	r.HandleFunc("/repositories", handleRepositories(c, settings, c.ListRepos))
+	r.HandleFunc("/repositories", handleRepositories(c, c.ListRepos))
 
 	return r
 }
 
-func handleRepositories(c *humio.Client, settings Settings, repositories func() ([]string, error)) func(w http.ResponseWriter, req *http.Request) {
+func handleRepositories(c *humio.Client, repositories func() ([]string, error)) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
-		// If mode is NGSIEM, return predefined repositories
-		if settings.Mode == "NGSIEM" {
-			predefinedRepos := []string{
-				"search-all",
-				"investigate_view",
-				"third-party",
-			}
-			writeResponse(predefinedRepos, nil, w)
-			return
-		}
-
 		authHeaders := map[string]string{
 			backend.OAuthIdentityTokenHeaderName:   req.Header.Get(backend.OAuthIdentityTokenHeaderName),
 			backend.OAuthIdentityIDTokenHeaderName: req.Header.Get(backend.OAuthIdentityIDTokenHeaderName),
