@@ -187,7 +187,6 @@ type ErrorResponse struct {
 }
 
 func (c *Client) addOAuth2Headers(req *http.Request) {
-	// Check if token is expired or missing
 	if c.isOAuth2TokenExpired() {
 		backend.Logger.Debug("OAuth2 token expired or missing, fetching new token")
 		if err := c.fetchOAuth2Token(); err != nil {

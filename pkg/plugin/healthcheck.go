@@ -25,7 +25,7 @@ func (h *Handler) CheckHealth(ctx context.Context, req *backend.CheckHealthReque
 
 	switch h.Settings.Mode {
 	case "NGSIEM":
-		// NGSIEM mode doesn't support GraphQL, use REST healthcheck
+		// NGSIEM mode doesn't support GraphQL
 		err = h.QueryRunner.OauthClientSecretHealthCheck()
 		if err != nil {
 			return &backend.CheckHealthResult{

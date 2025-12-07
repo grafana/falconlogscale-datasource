@@ -24,6 +24,7 @@ import { lastValueFrom } from 'rxjs';
 import { parseRepositoriesResponse } from 'utils/utils';
 import { DefaultRepository } from './DefaultRepository';
 import { Divider } from './Divider';
+import { OAuth2Component } from './OAuth2Component';
 import { css } from '@emotion/css';
 
 const getStyles = (theme: GrafanaTheme2) => ({
@@ -97,7 +98,7 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
       options.jsonData.oauthPassThru ||
       (options.jsonData.oauth2 &&
         options.jsonData.oauth2ClientId &&
-        (options.secureJsonFields?.oauth2ClientSecret || options.secureJsonData?.oauth2ClientSecret))
+        options.secureJsonFields?.oauth2ClientSecret)
     ) {
       setDisabled(false);
     }
@@ -135,86 +136,15 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
     </Field>
   );
 
-  const oauth2Component = (
-    <>
-      <Field label={'Client ID'} description={'The OAuth2 client ID'}>
-        <input
-          className="gf-form-input width-40"
-          type="text"
-          placeholder={'Client ID'}
-          value={options.jsonData.oauth2ClientId || ''}
-          onChange={(event) => {
-            setUnsaved(true);
-            onOptionsChange({
-              ...options,
-              jsonData: {
-                ...options.jsonData,
-                oauth2: true,
-                authenticateWithToken: false,
-                oauthPassThru: false,
-                oauth2ClientId: event.currentTarget.value,
-              },
-            });
-          }}
-        />
-      </Field>
-      <Field label={'Client Secret'} description={'The OAuth2 client secret'}>
-        <SecretInput
-          name="oauth2-client-secret"
-          width={40}
-          label={'Client Secret'}
-          aria-label={'Client Secret'}
-          placeholder={'Client Secret'}
-          value={options.secureJsonData?.oauth2ClientSecret}
-          autoComplete="new-password"
-          onBlur={(event) => {
-            if (event.currentTarget.value) {
-              setUnsaved(true);
-              onOptionsChange({
-                ...options,
-                jsonData: {
-                  ...options.jsonData,
-                  oauth2: true,
-                  authenticateWithToken: false,
-                  oauthPassThru: false,
-                },
-                secureJsonData: {
-                  ...options.secureJsonData,
-                  oauth2ClientSecret: event.currentTarget.value,
-                },
-              });
-            }
-          }}
-          isConfigured={!!(options.jsonData.oauth2 && options.secureJsonFields?.oauth2ClientSecret)}
-          onReset={() => {
-            setUnsaved(true);
-            onOptionsChange({
-              ...options,
-              jsonData: { ...options.jsonData, oauth2: false, oauth2ClientId: undefined },
-              secureJsonData: { ...options.secureJsonData, oauth2ClientSecret: undefined },
-              secureJsonFields: { ...options.secureJsonFields, oauth2ClientSecret: false },
-            });
-          }}
-          required={false}
-        />
-      </Field>
-    </>
-  );
 
   const newAuthProps = convertLegacyAuthProps({
     config: props.options,
     onChange: onOptionsChange,
   });
 
-  const [authSelected, setAuthSelected] = useState<AuthMethod | `custom-${string}`>(() => {
-    if (options.jsonData.oauth2) {
-      return 'custom-oauth2';
-    }
-    if (options.jsonData.authenticateWithToken) {
-      return 'custom-token';
-    }
-    return newAuthProps.selectedMethod === AuthMethod.NoAuth ? 'custom-token' : newAuthProps.selectedMethod;
-  });
+  const [authSelected, setAuthSelected] = useState<AuthMethod | `custom-${string}`>(
+    newAuthProps.selectedMethod === AuthMethod.NoAuth ? 'custom-token' : newAuthProps.selectedMethod
+  );
 
   const modeOptions: Array<SelectableValue<DataSourceMode>> = [
     { label: 'LogScale', value: DataSourceMode.LogScale },
@@ -236,7 +166,7 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
       <Divider />
       <Field
         label="Mode"
-        description="Select the data source mode. NGSIEM mode only supports OAuth2 client credentials authentication."
+        description="Select the data source mode. NGSIEM mode only supports OAuth2 client secret authentication."
       >
         <Select
           width={40}
@@ -253,8 +183,8 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
             });
 
             // When switching to NGSIEM mode, automatically select OAuth2 if not already selected
-            if (newMode === DataSourceMode.NGSIEM && authSelected !== 'custom-oauth2') {
-              setAuthSelected('custom-oauth2');
+            if (newMode === DataSourceMode.NGSIEM && authSelected !== 'custom-oauth-client-secret') {
+              setAuthSelected('custom-oauth-client-secret');
             }
           }}
         />
@@ -270,10 +200,10 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
             component: logscaleTokenComponent,
           },
           {
-            id: 'custom-oauth2',
+            id: 'custom-oauth-client-secret',
             label: 'OAuth2 Client Credentials',
             description: 'Authenticate using OAuth2 client credentials flow. The plugin will automatically fetch and refresh access tokens.',
-            component: oauth2Component,
+            component: <OAuth2Component options={options} onOptionsChange={onOptionsChange} setUnsaved={setUnsaved} />,
           },
         ]}
         onAuthMethodSelect={(method) => {
@@ -282,7 +212,7 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
           if (method !== 'custom-token' && options.jsonData.authenticateWithToken) {
             onTokenReset();
           }
-          if (method !== 'custom-oauth2' && options.jsonData.oauth2) {
+          if (method !== 'custom-oauth-client-secret' && options.jsonData.oauth2) {
             setUnsaved(true);
             onOptionsChange({
               ...options,
@@ -306,8 +236,8 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
         selectedMethod={authSelected}
         visibleMethods={
           isNGSIEMMode
-            ? ['custom-oauth2']
-            : ['custom-token', 'custom-oauth2', AuthMethod.BasicAuth, AuthMethod.OAuthForward]
+            ? ['custom-oauth-client-secret']
+            : ['custom-token', AuthMethod.BasicAuth, AuthMethod.OAuthForward]
         }
       />
       <Divider />
