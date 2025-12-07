@@ -10,6 +10,49 @@ interface OAuth2ComponentProps {
 }
 
 export const OAuth2Component: React.FC<OAuth2ComponentProps> = ({ options, onOptionsChange, setUnsaved }) => {
+  const handleClientIdChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setUnsaved(true);
+    onOptionsChange({
+      ...options,
+      jsonData: {
+        ...options.jsonData,
+        oauth2: true,
+        authenticateWithToken: false,
+        oauthPassThru: false,
+        oauth2ClientId: event.currentTarget.value,
+      },
+    });
+  };
+
+  const handleClientSecretBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    if (event.currentTarget.value) {
+      setUnsaved(true);
+      onOptionsChange({
+        ...options,
+        jsonData: {
+          ...options.jsonData,
+          oauth2: true,
+          authenticateWithToken: false,
+          oauthPassThru: false,
+        },
+        secureJsonData: {
+          ...options.secureJsonData,
+          oauth2ClientSecret: event.currentTarget.value,
+        },
+      });
+    }
+  };
+
+  const handleClientSecretReset = () => {
+    setUnsaved(true);
+    onOptionsChange({
+      ...options,
+      jsonData: { ...options.jsonData, oauth2: false, oauth2ClientId: undefined },
+      secureJsonData: { ...options.secureJsonData, oauth2ClientSecret: undefined },
+      secureJsonFields: { ...options.secureJsonFields, oauth2ClientSecret: false },
+    });
+  };
+
   return (
     <>
       <Field label={'Client ID'} description={'The OAuth2 client ID'}>
@@ -18,19 +61,7 @@ export const OAuth2Component: React.FC<OAuth2ComponentProps> = ({ options, onOpt
           type="text"
           placeholder={'Client ID'}
           value={options.jsonData.oauth2ClientId || ''}
-          onChange={(event) => {
-            setUnsaved(true);
-            onOptionsChange({
-              ...options,
-              jsonData: {
-                ...options.jsonData,
-                oauth2: true,
-                authenticateWithToken: false,
-                oauthPassThru: false,
-                oauth2ClientId: event.currentTarget.value,
-              },
-            });
-          }}
+          onChange={handleClientIdChange}
         />
       </Field>
       <Field label={'Client Secret'} description={'The OAuth2 client secret'}>
@@ -42,34 +73,9 @@ export const OAuth2Component: React.FC<OAuth2ComponentProps> = ({ options, onOpt
           placeholder={'Client Secret'}
           value={options.secureJsonData?.oauth2ClientSecret}
           autoComplete="new-password"
-          onBlur={(event) => {
-            if (event.currentTarget.value) {
-              setUnsaved(true);
-              onOptionsChange({
-                ...options,
-                jsonData: {
-                  ...options.jsonData,
-                  oauth2: true,
-                  authenticateWithToken: false,
-                  oauthPassThru: false,
-                },
-                secureJsonData: {
-                  ...options.secureJsonData,
-                  oauth2ClientSecret: event.currentTarget.value,
-                },
-              });
-            }
-          }}
+          onBlur={handleClientSecretBlur}
           isConfigured={!!(options.jsonData.oauth2 && options.secureJsonFields?.oauth2ClientSecret)}
-          onReset={() => {
-            setUnsaved(true);
-            onOptionsChange({
-              ...options,
-              jsonData: { ...options.jsonData, oauth2: false, oauth2ClientId: undefined },
-              secureJsonData: { ...options.secureJsonData, oauth2ClientSecret: undefined },
-              secureJsonFields: { ...options.secureJsonFields, oauth2ClientSecret: false },
-            });
-          }}
+          onReset={handleClientSecretReset}
           required={false}
         />
       </Field>

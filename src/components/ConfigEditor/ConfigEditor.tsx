@@ -49,7 +49,7 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
     setUnsaved(true);
     onOptionsChange({
       ...options,
-      jsonData: { ...options.jsonData, authenticateWithToken: false, defaultRepository: undefined },
+      jsonData: { ...options.jsonData, authenticateWithToken: false, defaultRepository: undefined, oauth2: false, oauth2ClientId: undefined },
       secureJsonData: undefined,
       secureJsonFields: {},
     });
@@ -96,9 +96,7 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
       ((options.jsonData.baseUrl || options.url) &&
         (options.secureJsonFields?.accessToken || options.secureJsonData?.accessToken)) ||
       options.jsonData.oauthPassThru ||
-      (options.jsonData.oauth2 &&
-        options.jsonData.oauth2ClientId &&
-        options.secureJsonFields?.oauth2ClientSecret)
+      (options.jsonData.oauth2 && options.jsonData.oauth2ClientId && options.secureJsonFields?.oauth2ClientSecret)
     ) {
       setDisabled(false);
     }
@@ -136,7 +134,6 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
     </Field>
   );
 
-
   const newAuthProps = convertLegacyAuthProps({
     config: props.options,
     onChange: onOptionsChange,
@@ -154,6 +151,23 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
   const selectedMode = options.jsonData.mode || DataSourceMode.LogScale;
   const isNGSIEMMode = selectedMode === DataSourceMode.NGSIEM;
 
+  const onSelectedMode = (value: SelectableValue | undefined) => {
+    if (!value) {
+      return;
+    }
+    const newMode = value.value;
+    onOptionsChange({
+      ...options,
+      jsonData: {
+        ...options.jsonData,
+        mode: newMode,
+      },
+    });
+    if (newMode === DataSourceMode.NGSIEM && authSelected !== 'custom-oauth-client-secret') {
+      setAuthSelected('custom-oauth-client-secret');
+    }
+  };
+
   return (
     <>
       <DataSourceDescription
@@ -168,26 +182,7 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
         label="Mode"
         description="Select the data source mode. NGSIEM mode only supports OAuth2 client secret authentication."
       >
-        <Select
-          width={40}
-          options={modeOptions}
-          value={selectedMode}
-          onChange={(selection) => {
-            const newMode = selection.value;
-            onOptionsChange({
-              ...options,
-              jsonData: {
-                ...options.jsonData,
-                mode: newMode,
-              },
-            });
-
-            // When switching to NGSIEM mode, automatically select OAuth2 if not already selected
-            if (newMode === DataSourceMode.NGSIEM && authSelected !== 'custom-oauth-client-secret') {
-              setAuthSelected('custom-oauth-client-secret');
-            }
-          }}
-        />
+        <Select width={40} options={modeOptions} value={selectedMode} onChange={onSelectedMode} />
       </Field>
       <Divider />
       <Auth
@@ -202,7 +197,8 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
           {
             id: 'custom-oauth-client-secret',
             label: 'OAuth2 Client Credentials',
-            description: 'Authenticate using OAuth2 client credentials flow. The plugin will automatically fetch and refresh access tokens.',
+            description:
+              'Authenticate using OAuth2 client credentials flow. The plugin will automatically fetch and refresh access tokens.',
             component: <OAuth2Component options={options} onOptionsChange={onOptionsChange} setUnsaved={setUnsaved} />,
           },
         ]}
@@ -213,12 +209,17 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
             onTokenReset();
           }
           if (method !== 'custom-oauth-client-secret' && options.jsonData.oauth2) {
-            setUnsaved(true);
+            onTokenReset();
+          }
+          if (method === 'custom-oauth-client-secret') {
             onOptionsChange({
               ...options,
-              jsonData: { ...options.jsonData, oauth2: false, oauth2ClientId: undefined },
-              secureJsonData: undefined,
-              secureJsonFields: {},
+              jsonData: {
+                baseUrl: options.jsonData.baseUrl,
+                authenticateWithToken: false,
+                oauthPassThru: false,
+                oauth2: true,
+              },
             });
           }
           if (method === AuthMethod.OAuthForward) {
