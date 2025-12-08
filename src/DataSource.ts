@@ -109,8 +109,7 @@ export class DataSource
   }
 
   getRepositories(): Promise<string[]> {
-    const mode = this.instanceSettings.jsonData.mode;
-    if (mode === DataSourceMode.NGSIEM) {
+    if (this.instanceSettings.jsonData.mode === DataSourceMode.NGSIEM) {
       return Promise.resolve(['search-all', 'investigate_view', 'third-party']);
     }
 
