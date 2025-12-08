@@ -68,7 +68,7 @@ func (c *Client) fetchOAuth2Token() error {
 // handleOAuth2AuthError checks if a request should be retried due to OAuth2 authentication errors.
 // It returns true if the request should be retried with a refreshed token.
 func (c *Client) handleOAuth2AuthError(isRetry bool, statusCode int) bool {
-	if isRetry || !c.OAuth2 || (statusCode != http.StatusUnauthorized && statusCode != http.StatusForbidden) {
+	if !isRetry || !c.OAuth2 || (statusCode != http.StatusUnauthorized && statusCode != http.StatusForbidden) {
 		return false
 	}
 

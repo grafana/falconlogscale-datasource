@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
@@ -117,14 +118,26 @@ func (c *Client) ListRepos() ([]string, error) {
 }
 
 func (c *Client) OauthClientSecretHealthCheck() error {
-	// Check if we can auth with oauth2 client secret
-	if c.Auth.OAuth2ClientID != "" && c.Auth.OAuth2ClientSecret != "" {
+	// Check if we can auth with oauth2 client secret, if we can run a test query
+	if c.OAuth2ClientID != "" && c.OAuth2ClientSecret != "" {
 		err := c.fetchOAuth2Token()
 		if err != nil {
 			return err
 		}
+		q := Query{
+			Start:     time.Now().Add(time.Second).String(),
+			End:       time.Now().String(),
+			QueryType: QueryTypeLQL,
+		}
+		repo := "search-all"
+		id, err := c.CreateJob(repo, q)
+		// deleting job because we do not care able the results. We just want to make the query
+		c.DeleteJob(repo, id)
+		if err != nil {
+			return err
+		}
 	}
-	return nil
+	return fmt.Errorf("clientID and/or clientSecret are empty")
 }
 
 func (c *Client) setAuthHeaders() graphql.RequestModifier {
@@ -289,7 +302,6 @@ func (c *Client) fetchWithRetry(method string, path string, body *bytes.Buffer, 
 		return fmt.Errorf("%s %s", res.Status, "No content returned from request")
 	}
 
-	// Handle 401/403 errors with OAuth2 by refreshing token and retrying once
 	if c.handleOAuth2AuthError(isRetry, res.StatusCode) {
 		// Retry the request with the new token
 		return c.fetchWithRetry(method, path, bytes.NewBuffer(bodyBytes), out, true)
