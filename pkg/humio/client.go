@@ -134,7 +134,7 @@ func (c *Client) OauthClientSecretHealthCheck() error {
 		}
 		id, err := c.CreateJob(repo, q)
 		// deleting job because we do not care able the results. We just want to make the query
-		c.DeleteJob(repo, id)
+		_ = c.DeleteJob(repo, id)
 		if err != nil {
 			return err
 		}

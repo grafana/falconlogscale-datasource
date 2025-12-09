@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 )
 
 type OAuth2TokenResponse struct {
@@ -44,12 +45,19 @@ func (c *Client) fetchOAuth2Token() error {
 	if err != nil {
 		return fmt.Errorf("failed to fetch oauth2 token: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.DefaultLogger.Warn("Failed to close response body", "error", err)
+		}
+	}()
 
 	if resp.StatusCode/100 != 2 {
 		var errBody bytes.Buffer
-		errBody.ReadFrom(resp.Body)
-		backend.Logger.Error("OAuth2 token request failed", "status", resp.Status, "body", errBody.String())
+		_, err = errBody.ReadFrom(resp.Body)
+		if err != nil {
+			return err
+		}
+		log.DefaultLogger.Error("OAuth2 token request failed", "status", resp.Status, "body", errBody.String())
 		return fmt.Errorf("oauth2 token request failed with status: %s", resp.Status)
 	}
 
