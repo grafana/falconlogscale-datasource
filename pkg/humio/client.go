@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -124,18 +125,20 @@ func (c *Client) OauthClientSecretHealthCheck() error {
 		if err != nil {
 			return err
 		}
-		q := Query{
-			Start:     time.Now().Add(time.Second).String(),
-			End:       time.Now().String(),
-			QueryType: QueryTypeLQL,
-		}
 		repo := "search-all"
+		q := Query{
+			Start:      strconv.FormatInt(time.Now().Add(-time.Second).UnixMilli(), 10),
+			End:        strconv.FormatInt(time.Now().UnixMilli(), 10),
+			QueryType:  QueryTypeLQL,
+			Repository: repo,
+		}
 		id, err := c.CreateJob(repo, q)
 		// deleting job because we do not care able the results. We just want to make the query
 		c.DeleteJob(repo, id)
 		if err != nil {
 			return err
 		}
+		return nil
 	}
 	return fmt.Errorf("clientID and/or clientSecret are empty")
 }
