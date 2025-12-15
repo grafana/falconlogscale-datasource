@@ -285,6 +285,8 @@ func (qr *fakeQueryRunner) err() error {
 
 func (qr *fakeQueryRunner) SetAuthHeaders(authHeaders map[string]string) error { return nil }
 
+func (qr *fakeQueryRunner) OauthClientSecretHealthCheck() error { return qr.viewsErr }
+
 type fakeFrameMarshaller struct {
 	req  interface{}
 	ret  *data.Frame
