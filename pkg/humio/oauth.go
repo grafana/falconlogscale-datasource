@@ -22,7 +22,7 @@ type OAuth2TokenResponse struct {
 func (c *Client) fetchOAuth2Token() error {
 	tokenURL, err := c.URL.Parse("oauth2/token")
 	if err != nil {
-		return fmt.Errorf("failed to parse oauth2 token URL")
+		return fmt.Errorf("failed to parse oauth2 token URL: %w", err)
 	}
 
 	data := url.Values{}
