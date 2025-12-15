@@ -126,9 +126,10 @@ func (c *Client) OauthClientSecretHealthCheck() error {
 			return err
 		}
 		repo := "search-all"
+        now := time.Now()
 		q := Query{
-			Start:      strconv.FormatInt(time.Now().Add(-time.Second).UnixMilli(), 10),
-			End:        strconv.FormatInt(time.Now().UnixMilli(), 10),
+		    Start:      strconv.FormatInt(now.Add(-time.Second).UnixMilli(), 10),
+            End:        strconv.FormatInt(now.UnixMilli(), 10),
 			QueryType:  QueryTypeLQL,
 			Repository: repo,
 		}
