@@ -29,23 +29,25 @@ type Client struct {
 }
 
 type Config struct {
-	Address            *url.URL
-	Token              string
-	OAuth2             bool
-	OAuth2ClientID     string
-	OAuth2ClientSecret string
+	Address *url.URL
+	Token   string
+	OAuth2Config
 }
 
 type Auth struct {
-	OAuthPassThru      bool
+	OAuthPassThru bool
+	AccessToken   string
+	oauth2Token   string
+	oauth2Mutex   sync.RWMutex
+	oauth2Group   singleflight.Group
+	AuthHeaders   map[string]string
+	OAuth2Config
+}
+
+type OAuth2Config struct {
 	OAuth2             bool
 	OAuth2ClientID     string
 	OAuth2ClientSecret string
-	AccessToken        string
-	oauth2Token        string
-	oauth2Mutex        sync.RWMutex
-	oauth2Group        singleflight.Group
-	AuthHeaders        map[string]string
 }
 
 func (c *Client) CreateJob(repo string, query Query) (string, error) {
@@ -128,10 +130,10 @@ func (c *Client) OauthClientSecretHealthCheck() error {
 			return err
 		}
 		repo := "search-all"
-        now := time.Now()
+		now := time.Now()
 		q := Query{
-		    Start:      strconv.FormatInt(now.Add(-time.Second).UnixMilli(), 10),
-            End:        strconv.FormatInt(now.UnixMilli(), 10),
+			Start:      strconv.FormatInt(now.Add(-time.Second).UnixMilli(), 10),
+			End:        strconv.FormatInt(now.UnixMilli(), 10),
 			QueryType:  QueryTypeLQL,
 			Repository: repo,
 		}
@@ -170,11 +172,13 @@ func NewClient(config Config, httpOpts httpclient.Options, streamingOpts httpcli
 	client := &Client{
 		URL: config.Address,
 		Auth: Auth{
-			OAuthPassThru:      httpOpts.ForwardHTTPHeaders,
-			OAuth2:             config.OAuth2,
-			OAuth2ClientID:     config.OAuth2ClientID,
-			OAuth2ClientSecret: config.OAuth2ClientSecret,
-			AccessToken:        config.Token,
+			OAuthPassThru: httpOpts.ForwardHTTPHeaders,
+			OAuth2Config: OAuth2Config{
+				OAuth2:             config.OAuth2,
+				OAuth2ClientID:     config.OAuth2ClientID,
+				OAuth2ClientSecret: config.OAuth2ClientSecret,
+			},
+			AccessToken: config.Token,
 		},
 	}
 
