@@ -209,12 +209,11 @@ type ErrorResponse struct {
 	Detail string `json:"detail"`
 }
 
-func (c *Client) addOAuth2Headers(req *http.Request) {
+func (c *Client) addOAuth2Headers(req *http.Request) error {
 	if c.isOAuth2TokenExpired() {
 		backend.Logger.Debug("OAuth2 token expired or missing, fetching new token")
 		if err := c.fetchOAuth2Token(); err != nil {
-			backend.Logger.Error("Failed to fetch OAuth2 token", "error", err)
-			return
+			return err
 		}
 	}
 
@@ -222,7 +221,13 @@ func (c *Client) addOAuth2Headers(req *http.Request) {
 	token := c.oauth2Token
 	c.oauth2Mutex.RUnlock()
 
+	if token == "" {
+		return fmt.Errorf("OAuth2Token is empty")
+	}
+
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+
+	return nil
 }
 
 func (c *Client) addPassThruHeaders(req *http.Request) {
@@ -244,7 +249,10 @@ func (c *Client) addStaticTokenHeaders(req *http.Request) {
 func (c *Client) addAuthHeaders(req *http.Request) *http.Request {
 	switch {
 	case c.OAuth2:
-		c.addOAuth2Headers(req)
+		err := c.addOAuth2Headers(req)
+		if err != nil {
+			backend.Logger.Error("Failed to fetch OAuth2 token", "error", err)
+		}
 	case c.OAuthPassThru:
 		c.addPassThruHeaders(req)
 	default:
