@@ -20,57 +20,61 @@ type OAuth2TokenResponse struct {
 }
 
 func (c *Client) fetchOAuth2Token() error {
-	tokenURL, err := c.URL.Parse("oauth2/token")
-	if err != nil {
-		return fmt.Errorf("failed to parse oauth2 token URL: %w", err)
-	}
-
-	data := url.Values{}
-	data.Set("grant_type", "client_credentials")
-	data.Set("client_id", c.OAuth2ClientID)
-	data.Set("client_secret", c.OAuth2ClientSecret)
-
-	req, err := http.NewRequest(http.MethodPost, tokenURL.String(), strings.NewReader(data.Encode()))
-	if err != nil {
-		return fmt.Errorf("failed to create oauth2 token request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	// Create a new HTTP client without any custom middleware or authentication
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("failed to fetch oauth2 token: %w", err)
-	}
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.DefaultLogger.Warn("Failed to close response body", "error", err)
-		}
-	}()
-
-	if resp.StatusCode/100 != 2 {
-		var errBody bytes.Buffer
-		_, err = errBody.ReadFrom(resp.Body)
+	_, err, _ := c.oauth2Group.Do("oauth2-token", func() (any, error) {
+		tokenURL, err := c.URL.Parse("oauth2/token")
 		if err != nil {
-			return err
+			return nil, fmt.Errorf("failed to parse oauth2 token URL: %w", err)
 		}
-		log.DefaultLogger.Error("OAuth2 token request failed", "status", resp.Status, "body", errBody.String())
-		return fmt.Errorf("oauth2 token request failed with status: %s", resp.Status)
-	}
 
-	var tokenResp OAuth2TokenResponse
-	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
-		return fmt.Errorf("failed to decode oauth2 token response: %w", err)
-	}
+		data := url.Values{}
+		data.Set("grant_type", "client_credentials")
+		data.Set("client_id", c.OAuth2ClientID)
+		data.Set("client_secret", c.OAuth2ClientSecret)
 
-	c.oauth2Mutex.Lock()
-	c.oauth2Token = tokenResp.AccessToken
-	c.oauth2Mutex.Unlock()
+		req, err := http.NewRequest(http.MethodPost, tokenURL.String(), strings.NewReader(data.Encode()))
+		if err != nil {
+			return nil, fmt.Errorf("failed to create oauth2 token request: %w", err)
+		}
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	return nil
+		// Create a new HTTP client without any custom middleware or authentication
+		client := &http.Client{
+			Timeout: 30 * time.Second,
+		}
+
+		resp, err := client.Do(req)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch oauth2 token: %w", err)
+		}
+		defer func() {
+			if err := resp.Body.Close(); err != nil {
+				log.DefaultLogger.Warn("Failed to close response body", "error", err)
+			}
+		}()
+
+		if resp.StatusCode/100 != 2 {
+			var errBody bytes.Buffer
+			_, err = errBody.ReadFrom(resp.Body)
+			if err != nil {
+				return nil, err
+			}
+			log.DefaultLogger.Error("OAuth2 token request failed", "status", resp.Status, "body", errBody.String())
+			return nil, fmt.Errorf("oauth2 token request failed with status: %s", resp.Status)
+		}
+
+		var tokenResp OAuth2TokenResponse
+		if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
+			return nil, fmt.Errorf("failed to decode oauth2 token response: %w", err)
+		}
+
+		c.oauth2Mutex.Lock()
+		c.oauth2Token = tokenResp.AccessToken
+		c.oauth2Mutex.Unlock()
+
+		return nil, nil
+	})
+
+	return err
 }
 
 // handleOAuth2AuthError checks if a request should be retried due to OAuth2 authentication errors.

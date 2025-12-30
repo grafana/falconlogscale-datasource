@@ -18,6 +18,7 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/hasura/go-graphql-client"
+	"golang.org/x/sync/singleflight"
 )
 
 type Client struct {
@@ -43,6 +44,7 @@ type Auth struct {
 	AccessToken        string
 	oauth2Token        string
 	oauth2Mutex        sync.RWMutex
+	oauth2Group        singleflight.Group
 	AuthHeaders        map[string]string
 }
 
