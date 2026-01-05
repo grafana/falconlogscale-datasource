@@ -29,7 +29,7 @@ jobs:
         run: echo "::set-output name=dir::$(yarn cache dir)"
 
       - name: Cache yarn cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: cache-yarn-cache
         with:
           path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
@@ -39,7 +39,7 @@ jobs:
 
       - name: Cache node_modules
         id: cache-node-modules
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: node_modules
           key: ${{ runner.os }}-${{ matrix.node-version }}-nodemodules-${{ hashFiles('**/yarn.lock') }}
@@ -98,7 +98,7 @@ jobs:
           zip ${PLUGIN_ARCHIVE} ${PLUGIN_ID} -r
 
       - name: Archive Build
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}
           path: ${{ steps.metadata.outputs.archive }}
@@ -113,7 +113,7 @@ jobs:
     steps:
       - name: Resolve Grafana E2E versions
         id: resolve-versions
-        uses: grafana/plugin-actions/e2e-version@244c3bc9c6eb94bc1dd6458ade2462499bbf0f5b
+        uses: grafana/plugin-actions/e2e-version@b33da838ef709061a6b6f69308d54925520dd433
         with:
           version-resolver-type: version-support-policy
 
@@ -146,7 +146,7 @@ jobs:
 
       - name: Download build
         id: download-build
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: ${{ needs.build.outputs.plugin-id }}-${{ needs.build.outputs.plugin-version }}
 
@@ -201,7 +201,7 @@ jobs:
 
       - name: Download build
         id: download-build
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: ${{ needs.build.outputs.plugin-id }}-${{ needs.build.outputs.plugin-version }}
 
