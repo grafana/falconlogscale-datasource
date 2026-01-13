@@ -1782,15 +1782,14 @@
     tslib "2.8.1"
     typescript "5.7.3"
 
-"@grafana/e2e-selectors@^12.0.0-235294":
-  version "12.0.0-236245"
-  resolved "https://registry.yarnpkg.com/@grafana/e2e-selectors/-/e2e-selectors-12.0.0-236245.tgz#d211cbaeddd0d710b0453be0830f841e3dc2de0d"
-  integrity sha512-jmmNkrJopVH+IK7Lj0NOO9UjOi1hRacF/nc5kk8UN+vl3rjjauotnHFwi+wbvafm5I7qDjSZ4cFF4xcustiSVA==
+"@grafana/e2e-selectors@12.4.0-20165274911":
+  version "12.4.0-20165274911"
+  resolved "https://registry.yarnpkg.com/@grafana/e2e-selectors/-/e2e-selectors-12.4.0-20165274911.tgz#6ddd3016ccdb6d9950608709a81529576eb98622"
+  integrity sha512-XdVINEnfZFdzP6mXlTMNj2ivc+a7qiIi3psZ9GhzBlGEeFtqFrtJWCpn/9owPmGRe5lBs4NS9J9Ch3NoGAV8/w==
   dependencies:
-    "@grafana/tsconfig" "^2.0.0"
     semver "^7.7.0"
     tslib "2.8.1"
-    typescript "5.7.3"
+    typescript "5.9.2"
 
 "@grafana/e2e@11.0.4":
   version "11.0.4"
@@ -1845,14 +1844,14 @@
     ua-parser-js "^1.0.32"
     web-vitals "^4.0.1"
 
-"@grafana/plugin-e2e@^1.19.3":
-  version "1.19.3"
-  resolved "https://registry.yarnpkg.com/@grafana/plugin-e2e/-/plugin-e2e-1.19.3.tgz#05c0686581c6ac3c3a28ffe877a2586cf1bee117"
-  integrity sha512-xaA+/I5gXg2DIC1Cu5fyNX0M3nimPmkb4GvZ2vr1VD0aWYrmiWeZOAfTTQqRE7rc7JqvkmOOFs9wahAsqMA6OA==
+"@grafana/plugin-e2e@^3.0.0":
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/@grafana/plugin-e2e/-/plugin-e2e-3.1.0.tgz#58f75cfe07b4b78d8d08dd0f7b6d65349a70d80e"
+  integrity sha512-TE/KlFyemE+BU/80ovGmiXzkRbQER7wLs09O0lMQODi+wVdPaYOImKDTHIhiwutg9l6pZv0sV5PjPfLv182Jjw==
   dependencies:
-    "@grafana/e2e-selectors" "^12.0.0-235294"
+    "@grafana/e2e-selectors" "12.4.0-20165274911"
     semver "^7.5.4"
-    uuid "^11.0.2"
+    uuid "^13.0.0"
     yaml "^2.3.4"
 
 "@grafana/plugin-ui@^0.10.5":
@@ -3469,12 +3468,12 @@
     "@typescript-eslint/types" "8.50.0"
     "@typescript-eslint/visitor-keys" "8.50.0"
 
-"@typescript-eslint/tsconfig-utils@8.48.1", "@typescript-eslint/tsconfig-utils@^8.48.1":
+"@typescript-eslint/tsconfig-utils@8.48.1":
   version "8.48.1"
   resolved "https://registry.yarnpkg.com/@typescript-eslint/tsconfig-utils/-/tsconfig-utils-8.48.1.tgz#68139ce2d258f984e2b33a95389158f1212af646"
   integrity sha512-k0Jhs4CpEffIBm6wPaCXBAD7jxBtrHjrSgtfCjUvPp9AZ78lXKdTR8fxyZO5y4vWNlOvYXRtngSZNSn+H53Jkw==
 
-"@typescript-eslint/tsconfig-utils@8.50.0", "@typescript-eslint/tsconfig-utils@^8.50.0":
+"@typescript-eslint/tsconfig-utils@8.50.0", "@typescript-eslint/tsconfig-utils@^8.48.1", "@typescript-eslint/tsconfig-utils@^8.50.0":
   version "8.50.0"
   resolved "https://registry.yarnpkg.com/@typescript-eslint/tsconfig-utils/-/tsconfig-utils-8.50.0.tgz#5c17537ad4c8a13bf6d7393035edaf91a1e13191"
   integrity sha512-vxd3G/ybKTSlm31MOA96gqvrRGv9RJ7LGtZCn2Vrc5htA0zCDvcMqUkifcjrWNNKXHUU3WCkYOzzVSFBd0wa2w==
@@ -11010,6 +11009,11 @@ typescript@5.7.3:
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.7.3.tgz#919b44a7dbb8583a9b856d162be24a54bf80073e"
   integrity sha512-84MVSjMEHP+FQRPy3pX9sTVV/INIex71s9TL2Gm5FG/WG1SqXeKyZ0k7/blY/4FdOzI12CBy1vGc4og/eus0fw==
 
+typescript@5.9.2:
+  version "5.9.2"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.9.2.tgz#d93450cddec5154a2d5cabe3b8102b83316fb2a6"
+  integrity sha512-CWBzXQrc/qOkhidw1OzBTQuYRbfyxDXJMVJ1XNwUHGROVmuaeiEm3OslpZ1RV96d7SKKjZKrSJu3+t/xlw3R9A==
+
 typescript@5.9.3:
   version "5.9.3"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.9.3.tgz#5b4f59e15310ab17a216f5d6cf53ee476ede670f"
@@ -11146,10 +11150,15 @@ uuid@9.0.0:
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-9.0.0.tgz#592f550650024a38ceb0c562f2f6aa435761efb5"
   integrity sha512-MXcSTerfPa4uqyzStbRoTgt5XIe3x5+42+q1sDuy3R5MDk66URdLMOZe5aPX/SQd+kuYAh0FdP/pO28IkQyTeg==
 
-uuid@^11.0.0, uuid@^11.0.2:
+uuid@^11.0.0:
   version "11.1.0"
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-11.1.0.tgz#9549028be1753bb934fc96e2bca09bb4105ae912"
   integrity sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A==
+
+uuid@^13.0.0:
+  version "13.0.0"
+  resolved "https://registry.yarnpkg.com/uuid/-/uuid-13.0.0.tgz#263dc341b19b4d755eb8fe36b78d95a6b65707e8"
+  integrity sha512-XQegIaBTVUjSHliKqcnFqYypAd4S+WCYt5NIeRs6w/UAry7z8Y9j5ZwRRL4kzq9U3sD6v+85er9FvkEaBpji2w==
 
 uuid@^3.3.2:
   version "3.4.0"
