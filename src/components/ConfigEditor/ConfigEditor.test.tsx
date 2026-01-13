@@ -62,8 +62,10 @@ describe('<ConfigEditor />', () => {
       ...props.options,
       jsonData: {
         ...props.options.jsonData,
+        baseUrl: undefined,
         authenticateWithToken: true,
         oauthPassThru: false,
+        oauth2: false,
       },
       secureJsonData: {
         accessToken: 'TEST_TOKEN',
@@ -87,6 +89,9 @@ describe('<ConfigEditor />', () => {
       jsonData: {
         ...props.options.jsonData,
         authenticateWithToken: false,
+        defaultRepository: undefined,
+        oauth2: false,
+        oauth2ClientId: undefined,
       },
       secureJsonData: undefined,
       secureJsonFields: {},
