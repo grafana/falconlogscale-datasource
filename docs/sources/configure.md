@@ -62,7 +62,7 @@ OAuth2 authentication uses the OAuth2 client credentials grant flow to authentic
 To configure OAuth2 Client Credentials authentication:
 
 1. Select **NGSIEM** mode in the Mode dropdown (this will automatically enable OAuth2 authentication)
-2. Enter your client ID and client Secret in their respective fields.
+2. Enter your client ID and client secret in their respective fields.
 
 
 # Forward OAuth Identity
