@@ -23,6 +23,20 @@ version: 0.1
 | URL     | Where Falcon LogScale is hosted, for example, `https://cloud.community.humio.com`. |
 | Timeout | HTTP request timeout in seconds.                                                   |
 
+## Mode Selection
+
+The Falcon LogScale data source supports two modes of operation:
+
+- **LogScale** (default)
+  - Standard mode for Falcon LogScale.
+  - Supports token authentication, basic auth, and OAuth forward.
+  - Uses GraphQL API for repository listing and health checks
+  - Repositories are dynamically queried from the instance
+
+- **NGSIEM**
+  - Mode for Falcon NextGen SIEM. Requires OAuth2 client credentials authentication.
+  - Provides access to standard NGSIEM repositories: `search-all`, `investigate_view`, and `third-party`.
+
 ## Authentication fields
 
 | Field            | Description                                                                          |
@@ -38,6 +52,18 @@ Custom HTTP Header Data sources managed by provisioning within Grafana can be co
 ## LogScale Token Authentication
 
 You can authenticate using your personal LogScale token. To generate a personal access token, log into LogScale and navigate to User Menu > Manage Account > Personal API Token. Then, set or reset your token. Copy and paste the token into the token field.
+
+## OAuth2 Client Credentials Authentication
+
+**Required for NGSIEM mode**
+
+OAuth2 authentication uses the OAuth2 client credentials grant flow to authenticate with the data source. 
+
+To configure OAuth2 Client Credentials authentication:
+
+1. Select **NGSIEM** mode in the Mode dropdown (this will automatically enable OAuth2 authentication)
+2. Enter your client ID and client Secret in their respective fields.
+
 
 # Forward OAuth Identity
 
@@ -84,10 +110,27 @@ datasources:
     type: grafana-falconlogscale-datasource
     url: https://cloud.us.humio.com
     jsonData:
+      mode: LogScale
       defaultRepository: <defaultRepository or blank>
       authenticateWithToken: true
     secureJsonData:
       accessToken: <accessToken>
+```
+Provision the data source using NGSIEM:
+
+```yaml
+apiVersion: 1
+datasources:
+  - name: Falcon NGSIEM
+    type: grafana-falconlogscale-datasource
+    url: https://your-ngsiem-instance.crowdstrike.com
+    jsonData:
+      mode: NGSIEM
+      oauth2: true
+      oauth2ClientId: <your-client-id>
+      defaultRepository: search-all
+    secureJsonData:
+      oauth2ClientSecret: <your-client-secret>
 ```
 
 ## Import a dashboard for Falcon LogScale
