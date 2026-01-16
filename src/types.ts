@@ -45,3 +45,5 @@ export enum FormatAs {
   Metrics = 'metrics',
   Variable = 'variable',
 }
+
+export const NGSIEMRepos = ['search-all', 'investigate_view', 'third-party'];
