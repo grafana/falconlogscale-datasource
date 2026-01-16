@@ -10,6 +10,7 @@ export interface DefaultRepositoryProps {
   onRepositoryChange: (value: SelectableValue | undefined) => void;
   onRepositoriesChange: (repos: SelectableValue[]) => void;
   getRepositories: () => Promise<SelectableValue[]>;
+  hideLoadRepoButton?: boolean;
 }
 
 export const DefaultRepository = ({
@@ -19,6 +20,7 @@ export const DefaultRepository = ({
   onRepositoryChange,
   onRepositoriesChange,
   getRepositories,
+  hideLoadRepoButton = false,
 }: DefaultRepositoryProps) => {
   const [loadRepositoriesClicked, onLoadRepositories] = useReducer((val) => val + 1, 0);
 
@@ -64,15 +66,17 @@ export const DefaultRepository = ({
             disabled={disabled}
             inputId={'default-repository'}
           />
-          <Button
-            variant="secondary"
-            type="button"
-            onClick={onLoadRepositories}
-            disabled={disabled}
-            data-testid={selectors.components.configEditor.loadRepositories.button}
-          >
-            Load Repositories
-          </Button>
+          {!hideLoadRepoButton && (
+            <Button
+              variant="secondary"
+              type="button"
+              onClick={onLoadRepositories}
+              disabled={disabled}
+              data-testid={selectors.components.configEditor.loadRepositories.button}
+            >
+              Load Repositories
+            </Button>
+          )}
         </div>
       </Field>
     </>
