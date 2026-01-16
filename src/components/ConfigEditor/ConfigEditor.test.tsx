@@ -92,6 +92,7 @@ describe('<ConfigEditor />', () => {
         defaultRepository: undefined,
         oauth2: false,
         oauth2ClientId: undefined,
+        oauthPassThru: false,
       },
       secureJsonData: undefined,
       secureJsonFields: {},

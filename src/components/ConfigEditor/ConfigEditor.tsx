@@ -45,19 +45,33 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
   const styles = getStyles(theme);
 
   const { onOptionsChange, options } = props;
-  const onTokenReset = () => {
-    setUnsaved(true);
-    onOptionsChange({
-      ...options,
-      jsonData: { ...options.jsonData, authenticateWithToken: false, defaultRepository: undefined, oauth2: false, oauth2ClientId: undefined },
-      secureJsonData: undefined,
-      secureJsonFields: {},
-    });
-  };
 
   const [disabled, setDisabled] = useState<boolean>(true);
   const [repositories, setRepositories] = useState<SelectableValue[]>([]);
   const [unsaved, setUnsaved] = useState<boolean>(true);
+
+  const clearAuthSettings = () => {
+    return {
+      authenticateWithToken: false,
+      oauth2: false,
+      oauth2ClientId: undefined,
+      oauthPassThru: false,
+    };
+  };
+
+  const onTokenReset = () => {
+    setUnsaved(true);
+    onOptionsChange({
+      ...options,
+      jsonData: {
+        ...options.jsonData,
+        ...clearAuthSettings(),
+        defaultRepository: undefined,
+      },
+      secureJsonData: undefined,
+      secureJsonFields: {},
+    });
+  };
 
   const saveOptions = async (): Promise<void> => {
     if (unsaved) {
@@ -156,15 +170,23 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
       return;
     }
     const newMode = value.value;
+
     onOptionsChange({
       ...options,
       jsonData: {
         ...options.jsonData,
+        ...clearAuthSettings(),
         mode: newMode,
+        defaultRepository: newMode === DataSourceMode.NGSIEM ? 'search-all' : undefined,
       },
+      secureJsonData: undefined,
+      secureJsonFields: {},
     });
-    if (newMode === DataSourceMode.NGSIEM && authSelected !== 'custom-oauth-client-secret') {
+
+    if (newMode === DataSourceMode.NGSIEM) {
       setAuthSelected('custom-oauth-client-secret');
+    } else if (newMode === DataSourceMode.LogScale) {
+      setAuthSelected('custom-token');
     }
   };
 
@@ -205,34 +227,24 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
         onAuthMethodSelect={(method) => {
           newAuthProps.onAuthMethodSelect(method);
           setAuthSelected(method);
-          if (method !== 'custom-token' && options.jsonData.authenticateWithToken) {
-            onTokenReset();
-          }
-          if (method !== 'custom-oauth-client-secret' && options.jsonData.oauth2) {
-            onTokenReset();
-          }
+
+          const baseJsonData = {
+            ...options.jsonData,
+            ...clearAuthSettings(),
+          };
+          
           if (method === 'custom-oauth-client-secret') {
-            onOptionsChange({
-              ...options,
-              jsonData: {
-                baseUrl: options.jsonData.baseUrl,
-                authenticateWithToken: false,
-                oauthPassThru: false,
-                oauth2: true,
-              },
-            });
+            baseJsonData.oauth2 = true;
+          } else if (method === AuthMethod.OAuthForward) {
+            baseJsonData.oauthPassThru = true;
           }
-          if (method === AuthMethod.OAuthForward) {
-            onOptionsChange({
-              ...options,
-              jsonData: {
-                baseUrl: options.jsonData.baseUrl,
-                authenticateWithToken: false,
-                oauthPassThru: true,
-                oauth2: false,
-              },
-            });
-          }
+
+          onOptionsChange({
+            ...options,
+            jsonData: baseJsonData,
+            secureJsonData: undefined,
+            secureJsonFields: {},
+          });
         }}
         selectedMethod={authSelected}
         visibleMethods={
