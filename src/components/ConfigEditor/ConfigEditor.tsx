@@ -172,7 +172,7 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
       return;
     }
     const newMode = value.value;
-    const newJsonData: any = {
+    const newJsonData: LogScaleOptions = {
       ...options.jsonData,
       mode: newMode,
     };
