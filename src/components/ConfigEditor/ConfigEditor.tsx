@@ -76,7 +76,7 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
 
   const getRepositories = async () => {
     if (isNGSIEMMode) {
-      return Promise.resolve(parseRepositoriesResponse(NGSIEMRepos));
+      return parseRepositoriesResponse(NGSIEMRepos);
     }
     try {
       await saveOptions();
