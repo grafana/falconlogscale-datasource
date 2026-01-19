@@ -57,13 +57,12 @@ You can authenticate using your personal LogScale token. To generate a personal 
 
 **Required for NGSIEM mode**
 
-OAuth2 authentication uses the OAuth2 client credentials grant flow to authenticate with the data source. 
+OAuth2 authentication uses the OAuth2 client credentials grant flow to authenticate with the data source. To learn more about CrowdStrike's OAuth2 authentication, refer to [CrowdStrike OAuth2-Based APIs](https://falcon.us-2.crowdstrike.com/documentation/page/a2a7fc0e/crowdstrike-oauth2-based-apis).
 
 To configure OAuth2 Client Credentials authentication:
 
 1. Select **NGSIEM** mode in the Mode drop-down (this will automatically enable OAuth2 authentication)
 2. Enter your client ID and client secret in their respective fields.
-
 
 # Forward OAuth Identity
 
