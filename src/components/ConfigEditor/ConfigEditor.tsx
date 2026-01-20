@@ -189,7 +189,7 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
       ...options.jsonData,
       ...clearAuthSettings(),
       mode: newMode,
-        defaultRepository: newMode === DataSourceMode.NGSIEM ? 'search-all' : undefined,
+      defaultRepository: newMode === DataSourceMode.NGSIEM ? 'search-all' : undefined,
     };
 
     // When switching to NGSIEM mode, set default repository to 'search-all'
@@ -253,7 +253,7 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
             ...options.jsonData,
             ...clearAuthSettings(),
           };
-          
+
           if (method === 'custom-oauth-client-secret') {
             baseJsonData.oauth2 = true;
           } else if (method === AuthMethod.OAuthForward) {

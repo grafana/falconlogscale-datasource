@@ -108,9 +108,9 @@ export class DataSource
     }
   }
 
-  getRepositories(): Promise<string[]> {
+  async getRepositories(): Promise<string[]> {
     if (this.instanceSettings.jsonData.mode === DataSourceMode.NGSIEM) {
-      return Promise.resolve(NGSIEMRepos);
+      return NGSIEMRepos;
     }
 
     return this.getResource('/repositories');
