@@ -93,6 +93,7 @@ describe('<ConfigEditor />', () => {
         defaultRepository: undefined,
         oauth2: false,
         oauth2ClientId: undefined,
+        oauthPassThru: false,
       },
       secureJsonData: undefined,
       secureJsonFields: {},
@@ -198,5 +199,49 @@ describe('<ConfigEditor />', () => {
         })
       )
     );
+  });
+
+  describe('Mode switching', () => {
+    it('should clear auth settings and set defaultRepository when in NGSIEM mode', () => {
+      const props = getDefaultProps();
+      props.options.jsonData.mode = DataSourceMode.NGSIEM;
+      props.options.jsonData.authenticateWithToken = false;
+      props.options.jsonData.oauth2 = false;
+      props.options.jsonData.oauthPassThru = false;
+      props.options.jsonData.defaultRepository = 'search-all';
+
+      render(<ConfigEditor {...props} />);
+
+      // Verify NGSIEM mode is displayed
+      expect(screen.getByText('NGSIEM')).toBeInTheDocument();
+
+      // Verify the expected state for NGSIEM mode
+      expect(props.options.jsonData.mode).toBe(DataSourceMode.NGSIEM);
+      expect(props.options.jsonData.defaultRepository).toBe('search-all');
+      expect(props.options.jsonData.authenticateWithToken).toBe(false);
+      expect(props.options.jsonData.oauth2).toBe(false);
+      expect(props.options.jsonData.oauthPassThru).toBe(false);
+    });
+
+    it('should clear auth settings and defaultRepository when in LogScale mode', () => {
+      const props = getDefaultProps();
+      props.options.jsonData.mode = DataSourceMode.LogScale;
+      props.options.jsonData.authenticateWithToken = false;
+      props.options.jsonData.oauth2 = false;
+      props.options.jsonData.oauthPassThru = false;
+      props.options.jsonData.defaultRepository = undefined;
+
+      render(<ConfigEditor {...props} />);
+
+      // Verify LogScale mode is displayed
+      expect(screen.getByText('LogScale')).toBeInTheDocument();
+
+      // Verify the expected state for LogScale mode
+      expect(props.options.jsonData.mode).toBe(DataSourceMode.LogScale);
+      expect(props.options.jsonData.defaultRepository).toBeUndefined();
+      expect(props.options.jsonData.authenticateWithToken).toBe(false);
+      expect(props.options.jsonData.oauth2).toBe(false);
+      expect(props.options.jsonData.oauthPassThru).toBe(false);
+    });
   });
 });
