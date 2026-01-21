@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.0
+
+- Feature: NGSIEM support. Read more about enabling NGSIEM support in Grafana here: [Falcon LogScale query editor](/docs/plugins/grafana-falconlogscale-datasource/latest/configure/)
+- Bump dependencies
+
 ## 1.8.6
 
 - Fix authentication switch bug [#682](https://github.com/grafana/falconlogscale-datasource/pull/682)
@@ -41,7 +46,7 @@
 
 ## 1.8.0
 
-- Feature: Tail live logs (Live query). Read more about Live querying in [Falcon LogScale query editor](/docs/plugins/grafana-falconlogscale-datasource/<FALCON_LOGSCALE_PLUGIN_VERSION>/editor/)
+- Feature: Tail live logs (Live query). Read more about Live querying in [Falcon LogScale query editor](/docs/plugins/grafana-falconlogscale-datasource/latest/editor/)
 - Dependency updates.
 
 ## 1.7.6
