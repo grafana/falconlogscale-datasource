@@ -19,7 +19,7 @@ import {
   convertLegacyAuthProps,
 } from '@grafana/plugin-ui';
 
-import { LogScaleOptions, SecretLogScaleOptions, DataSourceMode } from '../../types';
+import { LogScaleOptions, SecretLogScaleOptions, DataSourceMode, NGSIEMRepos } from '../../types';
 import { lastValueFrom } from 'rxjs';
 import { parseRepositoriesResponse } from 'utils/utils';
 import { DefaultRepository } from './DefaultRepository';
@@ -50,6 +50,8 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
   const [repositories, setRepositories] = useState<SelectableValue[]>([]);
   const [unsaved, setUnsaved] = useState<boolean>(true);
 
+  const selectedMode = options.jsonData.mode || DataSourceMode.LogScale;
+  const isNGSIEMMode = selectedMode === DataSourceMode.NGSIEM;
   const clearAuthSettings = () => {
     return {
       authenticateWithToken: false,
@@ -86,6 +88,9 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
   };
 
   const getRepositories = async () => {
+    if (isNGSIEMMode) {
+      return parseRepositoriesResponse(NGSIEMRepos);
+    }
     try {
       await saveOptions();
       const res = await lastValueFrom(
@@ -115,6 +120,19 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
       setDisabled(false);
     }
   }, [options]);
+
+  // Ensure default repository is set to 'search-all' in NGSIEM mode
+  useEffect(() => {
+    if (isNGSIEMMode && !options.jsonData.defaultRepository) {
+      onOptionsChange({
+        ...options,
+        jsonData: {
+          ...options.jsonData,
+          defaultRepository: 'search-all',
+        },
+      });
+    }
+  }, [isNGSIEMMode, options, onOptionsChange]);
 
   const logscaleTokenComponent = (
     <Field label={'Token'}>
@@ -162,23 +180,26 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
     { label: 'NGSIEM', value: DataSourceMode.NGSIEM },
   ];
 
-  const selectedMode = options.jsonData.mode || DataSourceMode.LogScale;
-  const isNGSIEMMode = selectedMode === DataSourceMode.NGSIEM;
-
   const onSelectedMode = (value: SelectableValue | undefined) => {
     if (!value) {
       return;
     }
     const newMode = value.value;
+    const newJsonData: LogScaleOptions = {
+      ...options.jsonData,
+      ...clearAuthSettings(),
+      mode: newMode,
+      defaultRepository: newMode === DataSourceMode.NGSIEM ? 'search-all' : undefined,
+    };
+
+    // When switching to NGSIEM mode, set default repository to 'search-all'
+    if (newMode === DataSourceMode.NGSIEM) {
+      newJsonData.defaultRepository = 'search-all';
+    }
 
     onOptionsChange({
       ...options,
-      jsonData: {
-        ...options.jsonData,
-        ...clearAuthSettings(),
-        mode: newMode,
-        defaultRepository: newMode === DataSourceMode.NGSIEM ? 'search-all' : undefined,
-      },
+      jsonData: newJsonData,
       secureJsonData: undefined,
       secureJsonFields: {},
     });
@@ -232,7 +253,7 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
             ...options.jsonData,
             ...clearAuthSettings(),
           };
-          
+
           if (method === 'custom-oauth-client-secret') {
             baseJsonData.oauth2 = true;
           } else if (method === AuthMethod.OAuthForward) {
@@ -275,6 +296,7 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
           onRepositoriesChange={setRepositories}
           repositories={repositories}
           getRepositories={getRepositories}
+          hideLoadRepoButton={isNGSIEMMode}
         />
 
         <DataLinks

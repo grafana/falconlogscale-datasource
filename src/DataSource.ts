@@ -12,7 +12,7 @@ import {
 } from '@grafana/data';
 import { DataSourceWithBackend, getGrafanaLiveSrv, getTemplateSrv, TemplateSrv } from '@grafana/runtime';
 import { lastValueFrom, Observable, merge, defer, mergeMap } from 'rxjs';
-import { LogScaleQuery, LogScaleOptions, DataSourceMode } from './types';
+import { LogScaleQuery, LogScaleOptions, DataSourceMode, NGSIEMRepos } from './types';
 import { map } from 'rxjs/operators';
 import LanguageProvider from 'LanguageProvider';
 import { transformBackendResult } from './logs';
@@ -108,9 +108,9 @@ export class DataSource
     }
   }
 
-  getRepositories(): Promise<string[]> {
+  async getRepositories(): Promise<string[]> {
     if (this.instanceSettings.jsonData.mode === DataSourceMode.NGSIEM) {
-      return Promise.resolve(['search-all', 'investigate_view', 'third-party']);
+      return NGSIEMRepos;
     }
 
     return this.getResource('/repositories');

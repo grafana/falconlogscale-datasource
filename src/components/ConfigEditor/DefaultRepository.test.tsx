@@ -12,6 +12,7 @@ const getDefaultProps = (overrides?: Partial<DefaultRepositoryProps>): DefaultRe
     onRepositoryChange: jest.fn(),
     onRepositoriesChange: jest.fn(),
     getRepositories: jest.fn().mockResolvedValue([{ label: 'test_repository', value: 'test_repository' }]),
+    hideLoadRepoButton: false,
     ...overrides,
   };
 };
@@ -54,5 +55,49 @@ describe('<DefaultRepository/>', () => {
     rerender(<DefaultRepository {...{ ...props, repositories, defaultRepository: repositories[0].value }} />);
 
     expect(await screen.getByText('test_repository')).toBeInTheDocument();
+  });
+
+  it('should hide Load Repositories button when hideLoadRepoButton is true', async () => {
+    render(
+      <DefaultRepository
+        {...getDefaultProps({
+          disabled: false,
+          hideLoadRepoButton: true,
+        })}
+      />
+    );
+
+    await waitFor(() => expect(screen.getByText('Default Repository')).toBeInTheDocument());
+    expect(screen.queryByTestId(selectors.components.configEditor.loadRepositories.button)).not.toBeInTheDocument();
+  });
+
+  it('should show Load Repositories button when hideLoadRepoButton is false', async () => {
+    render(
+      <DefaultRepository
+        {...getDefaultProps({
+          disabled: false,
+          hideLoadRepoButton: false,
+        })}
+      />
+    );
+
+    await waitFor(() => expect(screen.getByText('Default Repository')).toBeInTheDocument());
+    expect(screen.getByTestId(selectors.components.configEditor.loadRepositories.button)).toBeInTheDocument();
+  });
+
+  it('should show Load Repositories button by default when hideLoadRepoButton is not provided', async () => {
+    const props = {
+      disabled: false,
+      defaultRepository: '',
+      repositories: [],
+      onRepositoryChange: jest.fn(),
+      onRepositoriesChange: jest.fn(),
+      getRepositories: jest.fn().mockResolvedValue([{ label: 'test_repository', value: 'test_repository' }]),
+    };
+
+    render(<DefaultRepository {...props} />);
+
+    await waitFor(() => expect(screen.getByText('Default Repository')).toBeInTheDocument());
+    expect(screen.getByTestId(selectors.components.configEditor.loadRepositories.button)).toBeInTheDocument();
   });
 });
