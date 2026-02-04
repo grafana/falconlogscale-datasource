@@ -4,6 +4,7 @@ import {
   DataSourceSettings,
   GrafanaTheme2,
   SelectableValue,
+  updateDatasourcePluginJsonDataOption,
   updateDatasourcePluginOption,
 } from '@grafana/data';
 import { Field, SecretInput, Select, Switch, useTheme2 } from '@grafana/ui';
@@ -103,10 +104,11 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
   };
 
   const onRepositoryChange = (value: SelectableValue | undefined) => {
-    onOptionsChange({
-      ...options,
-      jsonData: { ...options.jsonData, defaultRepository: value ? value.value : undefined },
-    });
+    updateDatasourcePluginJsonDataOption(
+      { options, onOptionsChange },
+      'defaultRepository',
+      value ? value.value : undefined
+    );
   };
 
   useEffect(() => {
@@ -302,13 +304,7 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
         <DataLinks
           value={options.jsonData.dataLinks}
           onChange={(newValue: any) => {
-            onOptionsChange({
-              ...options,
-              jsonData: {
-                ...options.jsonData,
-                dataLinks: newValue,
-              },
-            });
+            updateDatasourcePluginJsonDataOption({ options, onOptionsChange }, 'dataLinks', newValue);
           }}
         />
 
@@ -331,13 +327,11 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
                   <Switch
                     value={options.jsonData.enableSecureSocksProxy}
                     onChange={(e) => {
-                      onOptionsChange({
-                        ...options,
-                        jsonData: {
-                          ...options.jsonData,
-                          enableSecureSocksProxy: e.currentTarget.checked,
-                        },
-                      });
+                      updateDatasourcePluginJsonDataOption(
+                        { options, onOptionsChange },
+                        'enableSecureSocksProxy',
+                        e.currentTarget.checked
+                      );
                     }}
                   />
                 </div>
