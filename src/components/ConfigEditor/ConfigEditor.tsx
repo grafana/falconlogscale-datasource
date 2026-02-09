@@ -26,6 +26,7 @@ import { DefaultRepository } from './DefaultRepository';
 import { Divider } from './Divider';
 import { OAuth2Component } from './OAuth2Component';
 import { css } from '@emotion/css';
+import { trackConfigSetNGSIEMMode } from './tracking';
 
 const getStyles = (theme: GrafanaTheme2) => ({
   toggle: css`
@@ -205,6 +206,7 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
     });
 
     if (newMode === DataSourceMode.NGSIEM) {
+      trackConfigSetNGSIEMMode();
       setAuthSelected('custom-oauth-client-secret');
     } else if (newMode === DataSourceMode.LogScale) {
       setAuthSelected('custom-token');
