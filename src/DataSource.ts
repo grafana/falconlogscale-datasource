@@ -30,7 +30,7 @@ export class DataSource
   // This enables default annotation support for 7.2+
   annotations = {
     prepareAnnotation: (annotation: AnnotationQuery<LogScaleQuery>) => {
-      if (annotation.target.queryType !== LogScaleQueryType.LQL) {
+      if (annotation.target?.queryType !== LogScaleQueryType.LQL) {
         return {
           ...annotation,
           target: {
@@ -39,7 +39,7 @@ export class DataSource
             queryType: LogScaleQueryType.LQL,
             formatAs: FormatAs.Logs,
             version: pluginVersion,
-            refId: annotation.target.refId,
+            refId: annotation.target?.refId || 'LogscaleDS-Annotation',
           },
         };
       }
