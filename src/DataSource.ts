@@ -1,5 +1,6 @@
 import {
   AbstractQuery,
+  AnnotationQuery,
   DataFrame,
   DataQueryRequest,
   DataQueryResponse,
@@ -11,22 +12,41 @@ import {
   VariableSupportType,
 } from '@grafana/data';
 import { DataSourceWithBackend, getGrafanaLiveSrv, getTemplateSrv, TemplateSrv } from '@grafana/runtime';
-import { lastValueFrom, Observable, merge, defer, mergeMap } from 'rxjs';
-import { LogScaleQuery, LogScaleOptions, DataSourceMode, NGSIEMRepos } from './types';
-import { map } from 'rxjs/operators';
-import LanguageProvider from 'LanguageProvider';
-import { transformBackendResult } from './logs';
 import VariableQueryEditor from 'components/VariableEditor/VariableQueryEditor';
+import LanguageProvider from 'LanguageProvider';
 import { uniqueId } from 'lodash';
 import { migrateQuery } from 'migrations';
+import { defer, lastValueFrom, merge, mergeMap, Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { getLiveStreamKey } from 'streaming';
+import { pluginVersion } from 'utils/version';
+import { transformBackendResult } from './logs';
+import { DataSourceMode, FormatAs, LogScaleOptions, LogScaleQuery, LogScaleQueryType, NGSIEMRepos } from './types';
 
 export class DataSource
   extends DataSourceWithBackend<LogScaleQuery, LogScaleOptions>
   implements DataSourceWithQueryImportSupport<LogScaleQuery>
 {
   // This enables default annotation support for 7.2+
-  annotations = {};
+  annotations = {
+    prepareAnnotation: (annotation: AnnotationQuery<LogScaleQuery>) => {
+      if (annotation.target?.queryType !== LogScaleQueryType.LQL) {
+        return {
+          ...annotation,
+          target: {
+            repository: '',
+            lsql: '',
+            queryType: LogScaleQueryType.LQL,
+            formatAs: FormatAs.Logs,
+            version: pluginVersion,
+            refId: annotation.target?.refId || 'LogscaleDS-Annotation',
+          },
+        };
+      }
+
+      return annotation;
+    },
+  };
   defaultRepository: string | undefined = undefined;
 
   constructor(
@@ -51,7 +71,7 @@ export class DataSource
 
   query(request: DataQueryRequest<LogScaleQuery>): Observable<DataQueryResponse> {
     if (request.targets[0].live) {
-      request.liveStreaming = true
+      request.liveStreaming = true;
     }
     if (request.liveStreaming) {
       return this.runLiveQuery(request);
@@ -76,21 +96,20 @@ export class DataSource
 
   runLiveQuery(request: DataQueryRequest<LogScaleQuery>): Observable<DataQueryResponse> {
     const ds = this;
-    
+
     const observables = request.targets.map((query, index) => {
       return defer(() => getLiveStreamKey(query)).pipe(
         mergeMap((key) => {
-          return getGrafanaLiveSrv()
-            .getDataStream({
-              addr: {
-                scope: LiveChannelScope.DataSource,
-                namespace: ds.uid,
-                path: `tail/${key}`,
-                data: {
-                  ...query,
-                },
+          return getGrafanaLiveSrv().getDataStream({
+            addr: {
+              scope: LiveChannelScope.DataSource,
+              namespace: ds.uid,
+              path: `tail/${key}`,
+              data: {
+                ...query,
               },
-            })
+            },
+          });
         })
       );
     });
