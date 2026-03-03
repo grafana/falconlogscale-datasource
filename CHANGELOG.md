@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.9.0
+## 1.9.1
 
 - Fix: Ensure non-LogScale annotation queries are reset [#799](https://github.com/grafana/falconlogscale-datasource/pull/799)
 - Bump dependencies
