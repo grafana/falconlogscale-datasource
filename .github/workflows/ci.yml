@@ -113,7 +113,7 @@ jobs:
     steps:
       - name: Resolve Grafana E2E versions
         id: resolve-versions
-        uses: grafana/plugin-actions/e2e-version@b33da838ef709061a6b6f69308d54925520dd433
+        uses: grafana/plugin-actions/e2e-version@ad81bca30a8f98102741e1e6b0b6898a265ad691
         with:
           version-resolver-type: version-support-policy
 
