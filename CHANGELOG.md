@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.1
+
+- Fix: Ensure non-LogScale annotation queries are reset [#799](https://github.com/grafana/falconlogscale-datasource/pull/799)
+- Bump dependencies
+
 ## 1.9.0
 
 - Feature: NGSIEM support. Read more about enabling NGSIEM support in Grafana here: [Falcon LogScale query editor](/docs/plugins/grafana-falconlogscale-datasource/latest/configure/)
