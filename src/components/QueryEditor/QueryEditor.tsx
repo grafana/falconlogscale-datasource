@@ -61,6 +61,20 @@ export function QueryEditor(props: Props) {
             <EditorField label="Enable live querying">
               <Switch id="liveQuerying" value={query.live || false} onChange={onLiveQueryChange} />
             </EditorField>
+            {props.datasource.instanceSettings.jsonData.incrementalQuerying && (
+              <EditorField
+                label="Disable incremental querying"
+                tooltip="When incremental querying is enabled at the datasource level, use this to opt out for this specific query."
+              >
+                <Switch
+                  id="disableIncrementalQuerying"
+                  value={query.disableIncrementalQuerying ?? false}
+                  onChange={() =>
+                    onChange({ ...query, disableIncrementalQuerying: !query.disableIncrementalQuerying })
+                  }
+                />
+              </EditorField>
+            )}
           </EditorRow>
         </div>
       ) : (
