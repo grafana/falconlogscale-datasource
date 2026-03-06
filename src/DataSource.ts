@@ -130,6 +130,8 @@ export class DataSource
     type CacheHit = { target: LogScaleQuery; entry: CacheEntry; key: string };
     const cacheHits: CacheHit[] = [];
     const cacheMisses: LogScaleQuery[] = [];
+    // Pre-compute keys for eligible misses so we don't re-run isEligibleForIncremental/buildKey in the tap.
+    const eligibleMissKeys = new Map<string, string>(); // refId -> cache key
 
     for (const target of request.targets) {
       if (!isEligibleForIncremental(target)) {
@@ -143,6 +145,7 @@ export class DataSource
       } else {
         this.incrementalCache.delete(key);
         cacheMisses.push(target);
+        eligibleMissKeys.set(target.refId, key);
       }
     }
 
@@ -153,14 +156,15 @@ export class DataSource
         this.runQuery({ ...request, targets: cacheMisses }).pipe(
           tap((response) => {
             for (const target of cacheMisses) {
-              if (!isEligibleForIncremental(target)) {
+              const key = eligibleMissKeys.get(target.refId);
+              if (!key) {
                 continue;
               }
               const frames = response.data.filter(
                 (f) => (f as DataFrame).refId === target.refId
               ) as DataFrame[];
               if (frames.length > 0) {
-                this.incrementalCache.set(this.incrementalCache.buildKey(target), {
+                this.incrementalCache.set(key, {
                   frames,
                   cachedFrom: requestFromMs,
                   cachedTo: requestToMs,
@@ -176,18 +180,18 @@ export class DataSource
 
     if (cacheHits.length > 0) {
       const cutoffMs = Math.min(...cacheHits.map(({ entry }) => entry.cachedTo - overlapMs));
+      const hitByRefId = new Map(cacheHits.map((h) => [h.target.refId, h]));
       const adjustedRequest = {
         ...request,
         targets: cacheHits.map(({ target }) => target),
         range: { ...request.range, from: dateTime(cutoffMs) },
       };
 
-      console.log("from: " + adjustedRequest.range.from.toDate() + " to: " + adjustedRequest.range.to.toDate() + " range: " + adjustedRequest.range.to.diff(adjustedRequest.range.from, 's'));
       observables.push(
         this.runQuery(adjustedRequest).pipe(
           map((response) => {
             const mergedData = response.data.map((frame) => {
-              const hit = cacheHits.find((c) => c.target.refId === (frame as DataFrame).refId);
+              const hit = hitByRefId.get((frame as DataFrame).refId);
               if (!hit) {
                 return frame;
               }
@@ -197,8 +201,6 @@ export class DataSource
                 this.incrementalCache.delete(hit.key);
                 return frame;
               }
-              console.log("merged data length  fields: " + frame.fields.length + " values: " +  frame.fields[0].values.length)
-              console.log("merged data length  fields: " + hit.entry.frames[0].fields.length + " values: " +  hit.entry.frames[0].fields[0].values.length)
               const merged = mergeWithCache(hit.entry, [frame as DataFrame], cutoffMs, requestFromMs);
               return merged[0] ?? frame;
             });
@@ -214,7 +216,6 @@ export class DataSource
                 (f) => (f as DataFrame).refId === target.refId
               ) as DataFrame[];
               if (frames.length > 0) {
-                console.log("frames length fields: " + frames[0].fields.length + " values: " +  frames[0].fields[0].values.length);
                 this.incrementalCache.set(key, {
                   frames,
                   cachedFrom: entry.cachedFrom,

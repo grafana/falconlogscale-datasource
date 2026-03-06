@@ -87,13 +87,13 @@ export function lsqlContainsAggregation(lsql: string): boolean {
  * Used to detect schema changes that would produce malformed merged frames.
  */
 export function schemasMatch(cached: DataFrame, next: DataFrame): boolean {
-  const cachedNames = cached.fields.sort((a, b) => {
+  const cachedNames = [...cached.fields].sort((a, b) => {
     if (b.name > a.name) {return 1;}
     if (b.name < a.name) {return -1;}
     return 0;
   });
 
-  const nextNames = next.fields.sort((a, b) => {
+  const nextNames = [...next.fields].sort((a, b) => {
     if (b.name > a.name) {return 1;}
     if (b.name < a.name) {return -1;}
     return 0;
@@ -203,6 +203,8 @@ export function mergeWithCache(
       for (let i = 0; i < rowCount; i++) {
         if (getTimestampMs(cachedTsValues[i]) < requestFromMs) {
           fromIdx = i + 1;
+        } else {
+          break;
         }
       }
       keepStart = fromIdx;
@@ -211,6 +213,8 @@ export function mergeWithCache(
       for (let i = keepStart; i < rowCount; i++) {
         if (getTimestampMs(cachedTsValues[i]) < cutoffMs) {
           cutIdx = i + 1;
+        } else {
+          break;
         }
       }
       keepEnd = cutIdx;
@@ -218,8 +222,8 @@ export function mergeWithCache(
 
     const mergedFields = cachedFrame.fields.map((cachedField) => {
       const newField = newFrame.fields.find((f) => f.name === cachedField.name);
-      const cachedValues = Array.from(cachedField.values as unknown[]).slice(keepStart, keepEnd);
-      const newValues = newField ? Array.from(newField.values as unknown[]) : [];
+      const cachedValues = (cachedField.values as unknown[]).slice(keepStart, keepEnd);
+      const newValues = newField ? [...(newField.values as unknown[])] : [];
 
       if (isDescending) {
         return { ...cachedField, values: [...newValues, ...cachedValues] };
