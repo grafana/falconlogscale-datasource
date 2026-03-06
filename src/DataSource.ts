@@ -191,11 +191,15 @@ export class DataSource
         this.runQuery(adjustedRequest).pipe(
           map((response) => {
             const mergedData = response.data.map((frame) => {
-              const hit = hitByRefId.get((frame as DataFrame).refId);
+              const refId = (frame as DataFrame).refId;
+              if (!refId) {
+                return frame;
+              }
+              const hit = hitByRefId.get(refId);
               if (!hit) {
                 return frame;
               }
-              const cachedFrame = hit.entry.frames.find((f) => f.refId === (frame as DataFrame).refId);
+              const cachedFrame = hit.entry.frames.find((f) => f.refId === refId);
               if (cachedFrame && !schemasMatch(cachedFrame, frame as DataFrame)) {
                 // Schema changed: invalidate cache so next refresh is a full re-query.
                 this.incrementalCache.delete(hit.key);
