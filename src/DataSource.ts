@@ -6,21 +6,31 @@ import {
   DataQueryResponse,
   DataSourceInstanceSettings,
   DataSourceWithQueryImportSupport,
+  dateTime,
   LiveChannelScope,
   MetricFindValue,
   ScopedVars,
   VariableSupportType,
 } from '@grafana/data';
-import { DataSourceWithBackend, getGrafanaLiveSrv, getTemplateSrv, TemplateSrv } from '@grafana/runtime';
+import { config, DataSourceWithBackend, getGrafanaLiveSrv, getTemplateSrv, TemplateSrv } from '@grafana/runtime';
 import VariableQueryEditor from 'components/VariableEditor/VariableQueryEditor';
 import LanguageProvider from 'LanguageProvider';
 import { uniqueId } from 'lodash';
 import { migrateQuery } from 'migrations';
 import { defer, lastValueFrom, merge, mergeMap, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { getLiveStreamKey } from 'streaming';
 import { pluginVersion } from 'utils/version';
 import { transformBackendResult } from './logs';
+import {
+  CacheEntry,
+  IncrementalQueryCache,
+  isCacheValid,
+  isEligibleForIncremental,
+  mergeWithCache,
+  parseDuration,
+  schemasMatch,
+} from './incrementalQuery';
 import { DataSourceMode, FormatAs, LogScaleOptions, LogScaleQuery, LogScaleQueryType, NGSIEMRepos } from './types';
 
 export class DataSource
@@ -48,9 +58,10 @@ export class DataSource
     },
   };
   defaultRepository: string | undefined = undefined;
+  private incrementalCache = new IncrementalQueryCache();
 
   constructor(
-    private instanceSettings: DataSourceInstanceSettings<LogScaleOptions>,
+    readonly instanceSettings: DataSourceInstanceSettings<LogScaleOptions>,
     private readonly templateSrv: TemplateSrv = getTemplateSrv()
   ) {
     super(instanceSettings);
@@ -87,11 +98,143 @@ export class DataSource
       intervalMs: request.intervalMs,
     }));
 
+    const useIncremental =
+      this.instanceSettings.jsonData.incrementalQuerying &&
+      typeof request.rangeRaw?.from === 'string' &&
+      !config.publicDashboardAccessToken;
+
+    if (useIncremental) {
+      return this.runIncrementalQuery(request);
+    }
+
     return super
       .query(request)
       .pipe(
         map((response) => transformBackendResult(response, this.instanceSettings.jsonData.dataLinks ?? [], request))
       );
+  }
+
+  private runQuery(request: DataQueryRequest<LogScaleQuery>): Observable<DataQueryResponse> {
+    return super
+      .query(request)
+      .pipe(
+        map((response) => transformBackendResult(response, this.instanceSettings.jsonData.dataLinks ?? [], request))
+      );
+  }
+
+  private runIncrementalQuery(request: DataQueryRequest<LogScaleQuery>): Observable<DataQueryResponse> {
+    const overlapMs = parseDuration(this.instanceSettings.jsonData.incrementalQueryOverlapWindow ?? '10m');
+    const requestFromMs = request.range.from.valueOf();
+    const requestToMs = request.range.to.valueOf();
+
+    type CacheHit = { target: LogScaleQuery; entry: CacheEntry; key: string };
+    const cacheHits: CacheHit[] = [];
+    const cacheMisses: LogScaleQuery[] = [];
+    // Pre-compute keys for eligible misses so we don't re-run isEligibleForIncremental/buildKey in the tap.
+    const eligibleMissKeys = new Map<string, string>(); // refId -> cache key
+
+    for (const target of request.targets) {
+      if (!isEligibleForIncremental(target)) {
+        cacheMisses.push(target);
+        continue;
+      }
+      const key = this.incrementalCache.buildKey(target);
+      const entry = this.incrementalCache.get(key);
+      if (entry && isCacheValid(entry, target, requestFromMs)) {
+        cacheHits.push({ target, entry, key });
+      } else {
+        this.incrementalCache.delete(key);
+        cacheMisses.push(target);
+        eligibleMissKeys.set(target.refId, key);
+      }
+    }
+
+    const observables: Array<Observable<DataQueryResponse>> = [];
+
+    if (cacheMisses.length > 0) {
+      observables.push(
+        this.runQuery({ ...request, targets: cacheMisses }).pipe(
+          tap((response) => {
+            for (const target of cacheMisses) {
+              const key = eligibleMissKeys.get(target.refId);
+              if (!key) {
+                continue;
+              }
+              const frames = response.data.filter(
+                (f) => (f as DataFrame).refId === target.refId
+              ) as DataFrame[];
+              if (frames.length > 0) {
+                this.incrementalCache.set(key, {
+                  frames,
+                  cachedFrom: requestFromMs,
+                  cachedTo: requestToMs,
+                  lsql: target.lsql,
+                  repository: target.repository,
+                });
+              }
+            }
+          })
+        )
+      );
+    }
+
+    if (cacheHits.length > 0) {
+      const cutoffMs = Math.min(...cacheHits.map(({ entry }) => entry.cachedTo - overlapMs));
+      const hitByRefId = new Map(cacheHits.map((h) => [h.target.refId, h]));
+      const adjustedRequest = {
+        ...request,
+        targets: cacheHits.map(({ target }) => target),
+        range: { ...request.range, from: dateTime(cutoffMs) },
+      };
+
+      observables.push(
+        this.runQuery(adjustedRequest).pipe(
+          map((response) => {
+            const mergedData = response.data.map((frame) => {
+              const refId = (frame as DataFrame).refId;
+              if (!refId) {
+                return frame;
+              }
+              const hit = hitByRefId.get(refId);
+              if (!hit) {
+                return frame;
+              }
+              const cachedFrame = hit.entry.frames.find((f) => f.refId === refId);
+              if (cachedFrame && !schemasMatch(cachedFrame, frame as DataFrame)) {
+                // Schema changed: invalidate cache so next refresh is a full re-query.
+                this.incrementalCache.delete(hit.key);
+                return frame;
+              }
+              const merged = mergeWithCache(hit.entry, [frame as DataFrame], cutoffMs, requestFromMs);
+              return merged[0] ?? frame;
+            });
+            return { ...response, data: mergedData };
+          }),
+          tap((response) => {
+            for (const { target, entry, key } of cacheHits) {
+              if (!this.incrementalCache.get(key)) {
+                // Entry was deleted in map due to schema change; skip re-caching.
+                continue;
+              }
+              const frames = response.data.filter(
+                (f) => (f as DataFrame).refId === target.refId
+              ) as DataFrame[];
+              if (frames.length > 0) {
+                this.incrementalCache.set(key, {
+                  frames,
+                  cachedFrom: entry.cachedFrom,
+                  cachedTo: requestToMs,
+                  lsql: target.lsql,
+                  repository: target.repository,
+                });
+              }
+            }
+          })
+        )
+      );
+    }
+
+    return merge(...observables);
   }
 
   runLiveQuery(request: DataQueryRequest<LogScaleQuery>): Observable<DataQueryResponse> {

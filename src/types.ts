@@ -18,6 +18,8 @@ export interface LogScaleOptions extends DataSourceJsonData {
   basicAuthUser?: string;
   enableSecureSocksProxy?: boolean;
   mode?: DataSourceMode;
+  incrementalQuerying?: boolean;
+  incrementalQueryOverlapWindow?: string;
 }
 
 export interface SecretLogScaleOptions extends DataSourceJsonData {
@@ -33,6 +35,7 @@ export interface LogScaleQuery extends DataQuery {
   queryType: LogScaleQueryType;
   formatAs: FormatAs;
   version: string;
+  disableIncrementalQuerying?: boolean;
 }
 
 export enum LogScaleQueryType {
