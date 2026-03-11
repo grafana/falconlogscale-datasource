@@ -49,15 +49,16 @@ export class DataSource
     },
   };
   defaultRepository: string | undefined = undefined;
-  private incrementalCache = new QueryCache(
-    this.instanceSettings.jsonData.incrementalQueryOverlapWindow ?? DEFAULT_OVERLAP_WINDOW
-  );
+  private incrementalCache: QueryCache;
 
   constructor(
     readonly instanceSettings: DataSourceInstanceSettings<LogScaleOptions>,
     private readonly templateSrv: TemplateSrv = getTemplateSrv()
   ) {
     super(instanceSettings);
+    this.incrementalCache = new QueryCache(
+      instanceSettings.jsonData.incrementalQueryOverlapWindow ?? DEFAULT_OVERLAP_WINDOW
+    );
     this.defaultRepository = instanceSettings.jsonData.defaultRepository;
     this.languageProvider = new LanguageProvider(this);
     this.variables = {
