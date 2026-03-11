@@ -133,12 +133,7 @@ describe('DataSource', () => {
   describe('Incremental querying', () => {
     const NOW = 1_700_000_000_000;
 
-    beforeEach(() => {
-      // Simulate auto-refresh being active — required for incremental querying to engage
-      jest.spyOn(grafanaRuntime.locationService, 'getSearch').mockReturnValue(new URLSearchParams('refresh=5s'));
-    });
-
-    const makeRequest = (jsonDataOverrides = {}) => ({
+    const makeRequest = () => ({
       targets: [
         {
           ...mockQuery(),
@@ -196,19 +191,21 @@ describe('DataSource', () => {
       backendSpy.mockRestore();
     });
 
-    it('skips incremental path for absolute time ranges', () => {
+    it('does not cache results for absolute time ranges', (done) => {
       const ds = getIncrementalDs();
       const request = {
         ...makeRequest(),
         rangeRaw: { from: dateTime(NOW - 3_600_000), to: dateTime(NOW) }, // absolute
       };
-      const backendSpy = jest
-        .spyOn(DataSourceWithBackend.prototype, 'query')
-        .mockReturnValue(of(mockQueryResponse()));
-      const runIncrSpy = jest.spyOn(ds as any, 'runIncrementalQuery');
-      ds.query(request);
-      expect(runIncrSpy).not.toHaveBeenCalled();
-      backendSpy.mockRestore();
+      const runQuerySpy = jest.spyOn(ds as any, 'runQuery').mockReturnValue(of(mockQueryResponse()));
+
+      ds.query(request).subscribe(() => {
+        // shouldCache=false for absolute ranges → cache stays empty.
+        const cache: any = (ds as any).incrementalCache;
+        expect(cache.cache.size).toBe(0);
+        runQuerySpy.mockRestore();
+        done();
+      });
     });
 
     it('populates cache on first query (no cache hit)', (done) => {
@@ -218,9 +215,10 @@ describe('DataSource', () => {
 
       ds.query(request).subscribe(() => {
         const cache: any = (ds as any).incrementalCache;
-        const key = cache.buildKey(request.targets[0]);
-        expect(cache.get(key)).toBeDefined();
-        expect(cache.get(key).lsql).toBe('error');
+        // Identity: dashboardUID|panelId|refId — all undefined in test request.
+        const ident = '||A';
+        expect(cache.cache.get(ident)).toBeDefined();
+        expect(cache.cache.get(ident).signature).toBe('error|repo|logs');
         runQuerySpy.mockRestore();
         done();
       });
@@ -233,17 +231,16 @@ describe('DataSource', () => {
       const expectedCutoff = cachedTo - overlapMs;
 
       const cache: any = (ds as any).incrementalCache;
-      const request = makeRequest();
-      const key = cache.buildKey(request.targets[0]);
-      cache.set(key, {
+      // Identity: dashboardUID|panelId|refId — all undefined in test request.
+      const ident = '||A';
+      cache.cache.set(ident, {
+        signature: 'error|repo|logs',
+        prevTo: cachedTo,
         frames: [makeFrame('A')],
-        cachedFrom: NOW - 3_600_000,
-        cachedTo,
-        lsql: 'error',
-        repository: 'repo',
       });
 
       const runQuerySpy = jest.spyOn(ds as any, 'runQuery').mockReturnValue(of(mockQueryResponse()));
+      const request = makeRequest();
 
       ds.query(request).subscribe(() => {
         expect(runQuerySpy).toHaveBeenCalledTimes(1);
@@ -257,24 +254,21 @@ describe('DataSource', () => {
     it('invalidates stale cache when lsql changes', (done) => {
       const ds = getIncrementalDs();
       const cache: any = (ds as any).incrementalCache;
-      const request = makeRequest();
-      const target = request.targets[0];
-      const key = cache.buildKey(target);
+      const ident = '||A';
 
-      // Seed cache with a DIFFERENT lsql — should be invalidated
-      cache.set(key, {
+      // Seed cache with a DIFFERENT lsql signature — should be invalidated.
+      cache.cache.set(ident, {
+        signature: 'old query|repo|logs',
+        prevTo: NOW - 60_000,
         frames: [makeFrame('A')],
-        cachedFrom: NOW - 3_600_000,
-        cachedTo: NOW - 60_000,
-        lsql: 'old query',
-        repository: 'repo',
       });
 
       const runQuerySpy = jest.spyOn(ds as any, 'runQuery').mockReturnValue(of(mockQueryResponse()));
+      const request = makeRequest();
 
       ds.query(request).subscribe(() => {
         const calledRequest = runQuerySpy.mock.calls[0][0] as any;
-        // Must use the full original range since cache was stale
+        // Must use the full original range since cache was stale.
         expect(calledRequest.range.from.valueOf()).toBe(request.range.from.valueOf());
         runQuerySpy.mockRestore();
         done();

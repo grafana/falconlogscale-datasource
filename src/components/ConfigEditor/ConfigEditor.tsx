@@ -7,7 +7,7 @@ import {
   updateDatasourcePluginJsonDataOption,
   updateDatasourcePluginOption,
 } from '@grafana/data';
-import { Field, Input, SecretInput, Select, Switch, useTheme2 } from '@grafana/ui';
+import { Alert, Field, Input, SecretInput, Select, Switch, useTheme2 } from '@grafana/ui';
 import { DataLinks } from '../DataLinks';
 import { config, getBackendSrv } from '@grafana/runtime';
 import {
@@ -311,8 +311,8 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
         />
 
         <Field
-          label="Incremental querying"
-          description="On auto-refresh, only query new data and merge with the cached result. Only applies to relative time ranges."
+          label="Incremental querying (experimental)"
+          description="Results may be incomplete or incorrect in some cases. On auto-refresh, query new data and merge it with the cached result. This applies only to relative time ranges without aggregation functions."
         >
           <div className={styles.toggle}>
             <Switch

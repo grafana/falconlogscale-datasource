@@ -1,13 +1,9 @@
-import { FieldType } from '@grafana/data';
+import { dateTime, FieldType } from '@grafana/data';
 import {
-  CacheEntry,
-  IncrementalQueryCache,
-  isCacheValid,
+  CacheRequestInfo,
   isEligibleForIncremental,
   lsqlContainsAggregation,
-  mergeWithCache,
-  parseDuration,
-  schemasMatch,
+  QueryCache,
 } from './incrementalQuery';
 import { FormatAs, LogScaleQuery, LogScaleQueryType } from './types';
 import { pluginVersion } from 'utils/version';
@@ -31,12 +27,22 @@ const makeField = (name: string, type: FieldType, values: unknown[]) => ({
 
 const NOW = 1_700_000_000_000;
 
-const makeCacheEntry = (overrides: Partial<CacheEntry> = {}): CacheEntry => ({
-  frames: [],
-  cachedFrom: NOW - 3_600_000,
-  cachedTo: NOW - 60_000,
-  lsql: 'error',
-  repository: 'my-repo',
+// Build a minimal DataQueryRequest-like object for the cache.
+const makeRequest = (overrides: Record<string, unknown> = {}) => ({
+  dashboardUID: 'dash1',
+  panelId: 1,
+  requestId: 'req1',
+  timezone: 'browser',
+  app: 'panel-editor',
+  startTime: NOW,
+  intervalMs: 1000,
+  range: {
+    from: dateTime(NOW - 3_600_000),
+    to: dateTime(NOW),
+    raw: { from: 'now-1h', to: 'now' },
+  },
+  rangeRaw: { from: 'now-1h', to: 'now' },
+  targets: [makeQuery()],
   ...overrides,
 });
 
@@ -70,97 +76,6 @@ describe('lsqlContainsAggregation', () => {
     ['min_response', false],
   ])('lsql %j → %s', (lsql, expected) => {
     expect(lsqlContainsAggregation(lsql)).toBe(expected);
-  });
-});
-
-// ── schemasMatch ──────────────────────────────────────────────────────────────
-
-describe('schemasMatch', () => {
-  const frame = (names: string[]) => ({
-    refId: 'A',
-    fields: names.map((n) => makeField(n, FieldType.string, [])),
-    length: 0,
-  });
-
-  it('returns true when field names are identical', () => {
-    expect(schemasMatch(frame(['@timestamp', 'value']), frame(['@timestamp', 'value']))).toBe(true);
-  });
-
-  it('returns true regardless of field order', () => {
-    expect(schemasMatch(frame(['value', '@timestamp']), frame(['@timestamp', 'value']))).toBe(true);
-  });
-
-  it('returns false when new frame has an extra field', () => {
-    expect(schemasMatch(frame(['@timestamp']), frame(['@timestamp', 'newField']))).toBe(false);
-  });
-
-  it('returns false when new frame is missing a field', () => {
-    expect(schemasMatch(frame(['@timestamp', 'value']), frame(['@timestamp']))).toBe(false);
-  });
-
-  it('returns false when field names differ with same count', () => {
-    expect(schemasMatch(frame(['@timestamp', 'old']), frame(['@timestamp', 'new']))).toBe(false);
-  });
-});
-
-// ── parseDuration ─────────────────────────────────────────────────────────────
-
-describe('parseDuration', () => {
-  it.each([
-    ['0s', 0],
-    ['30s', 30_000],
-    ['1m', 60_000],
-    ['10m', 600_000],
-    ['1h', 3_600_000],
-    ['2h', 7_200_000],
-    ['1d', 86_400_000],
-    ['500ms', 500],
-  ])('parses "%s" to %i ms', (input, expected) => {
-    expect(parseDuration(input)).toBe(expected);
-  });
-
-  it('returns default 10m for invalid input', () => {
-    expect(parseDuration('foo')).toBe(600_000);
-    expect(parseDuration('')).toBe(600_000);
-    expect(parseDuration('10')).toBe(600_000);
-  });
-});
-
-// ── IncrementalQueryCache ─────────────────────────────────────────────────────
-
-describe('IncrementalQueryCache', () => {
-  it('builds a key from query fields', () => {
-    const cache = new IncrementalQueryCache();
-    const q = makeQuery();
-    const key = cache.buildKey(q);
-    expect(key).toBe(`${q.repository}::${q.formatAs}::${q.lsql}`);
-  });
-
-  it('stores and retrieves entries', () => {
-    const cache = new IncrementalQueryCache();
-    const q = makeQuery();
-    const key = cache.buildKey(q);
-    const entry = makeCacheEntry();
-    cache.set(key, entry);
-    expect(cache.get(key)).toBe(entry);
-  });
-
-  it('deletes entries', () => {
-    const cache = new IncrementalQueryCache();
-    const q = makeQuery();
-    const key = cache.buildKey(q);
-    cache.set(key, makeCacheEntry());
-    cache.delete(key);
-    expect(cache.get(key)).toBeUndefined();
-  });
-
-  it('clears all entries', () => {
-    const cache = new IncrementalQueryCache();
-    cache.set('a', makeCacheEntry());
-    cache.set('b', makeCacheEntry());
-    cache.clear();
-    expect(cache.get('a')).toBeUndefined();
-    expect(cache.get('b')).toBeUndefined();
   });
 });
 
@@ -201,241 +116,322 @@ describe('isEligibleForIncremental', () => {
   });
 });
 
-// ── isCacheValid ──────────────────────────────────────────────────────────────
+// ── QueryCache.requestInfo ────────────────────────────────────────────────────
 
-describe('isCacheValid', () => {
-  const entry = makeCacheEntry();
+describe('QueryCache.requestInfo', () => {
+  const ident = 'dash1|1|A';
+  const sig = 'error|my-repo|logs';
 
-  it('returns true for a normal sliding-window refresh', () => {
-    // requestFromMs is later than cachedFrom (window slid forward)
-    const requestFromMs = NOW - 3_500_000;
-    expect(isCacheValid(entry, makeQuery(), requestFromMs)).toBe(true);
+  it('returns shouldCache=false for absolute time ranges', () => {
+    const cache = new QueryCache();
+    const request = makeRequest({ rangeRaw: { from: dateTime(NOW - 3_600_000), to: dateTime(NOW) } });
+    const info = cache.requestInfo(request as any);
+    expect(info.shouldCache).toBe(false);
   });
 
-  it('returns true when requestFromMs equals cachedFrom', () => {
-    expect(isCacheValid(entry, makeQuery(), entry.cachedFrom)).toBe(true);
+  it('returns shouldCache=true for relative-to-now ranges', () => {
+    const cache = new QueryCache();
+    const info = cache.requestInfo(makeRequest() as any);
+    expect(info.shouldCache).toBe(true);
   });
 
-  it('returns false when lsql changed', () => {
-    expect(isCacheValid(entry, makeQuery({ lsql: 'new query' }), entry.cachedFrom)).toBe(false);
+  it('returns the original request unmodified on cache miss', () => {
+    const cache = new QueryCache();
+    const request = makeRequest() as any;
+    const info = cache.requestInfo(request);
+    expect(info.request.range.from.valueOf()).toBe(request.range.from.valueOf());
   });
 
-  it('returns false when repository changed', () => {
-    expect(isCacheValid(entry, makeQuery({ repository: 'other-repo' }), entry.cachedFrom)).toBe(false);
+  it('evicts stale cache entry on miss', () => {
+    const cache = new QueryCache();
+    cache.cache.set(ident, { signature: sig, prevTo: NOW - 60_000, frames: [] });
+    // Change lsql so signature differs → cache miss
+    const request = makeRequest({ targets: [makeQuery({ lsql: 'new query' })] }) as any;
+    cache.requestInfo(request);
+    expect(cache.cache.get(ident)).toBeUndefined();
   });
 
-  it('returns false when user expands time range backwards', () => {
-    // requestFromMs is much earlier than cachedFrom
-    const requestFromMs = entry.cachedFrom - 10_000;
-    expect(isCacheValid(entry, makeQuery(), requestFromMs)).toBe(false);
+  it('returns partial request on cache hit', () => {
+    const cache = new QueryCache('10m');
+    const prevTo = NOW - 60_000;
+    cache.cache.set(ident, { signature: sig, prevTo, frames: [] });
+
+    const request = makeRequest() as any;
+    const info = cache.requestInfo(request);
+    const expectedCutoff = prevTo - 10 * 60_000;
+    expect(info.request.range.from.valueOf()).toBe(expectedCutoff);
   });
 
-  it('allows small tolerance around cachedFrom', () => {
-    // within 5s is still valid
-    const requestFromMs = entry.cachedFrom - 4_999;
-    expect(isCacheValid(entry, makeQuery(), requestFromMs)).toBe(true);
+  it('does not go below original from when overlap window exceeds available range', () => {
+    const cache = new QueryCache('10m');
+    const prevTo = NOW - 60_000;
+    cache.cache.set(ident, { signature: sig, prevTo, frames: [] });
+
+    // Request from is only 2 minutes ago — overlap window is 10m but we clamp.
+    const from = dateTime(NOW - 2 * 60_000);
+    const request = makeRequest({ range: { from, to: dateTime(NOW), raw: {} } }) as any;
+    const info = cache.requestInfo(request);
+    expect(info.request.range.from.valueOf()).toBeGreaterThanOrEqual(from.valueOf());
+  });
+
+  it('does not do partial query when new from is after prevTo', () => {
+    const cache = new QueryCache('10m');
+    const prevTo = NOW - 3_600_000; // prevTo is 1h ago
+    cache.cache.set(ident, { signature: sig, prevTo, frames: [] });
+
+    // new from is after prevTo (user jumped forward in time)
+    const request = makeRequest({
+      range: { from: dateTime(NOW - 60_000), to: dateTime(NOW), raw: {} },
+    }) as any;
+    const info = cache.requestInfo(request);
+    // Should fall back to full re-query
+    expect(info.request.range.from.valueOf()).toBe(NOW - 60_000);
+  });
+
+  it('builds correct target signatures', () => {
+    const cache = new QueryCache();
+    const info = cache.requestInfo(makeRequest() as any);
+    expect(info.targetSignatures.get(ident)).toBe(sig);
+  });
+
+  it('skips ineligible targets in signatures', () => {
+    const cache = new QueryCache();
+    const request = makeRequest({
+      targets: [makeQuery({ formatAs: FormatAs.Variable })],
+    }) as any;
+    const info = cache.requestInfo(request);
+    expect(info.targetSignatures.size).toBe(0);
   });
 });
 
-// ── mergeWithCache ────────────────────────────────────────────────────────────
-
-describe('mergeWithCache', () => {
-  const T = NOW;
-  const cutoff = T - 10 * 60_000;      // 10 minutes ago
-  const requestFrom = T - 60 * 60_000; // 1 hour ago (well before any test data)
-
-  it('returns new frame unchanged when no matching cached frame exists', () => {
-    const entry = makeCacheEntry({ frames: [] });
-    const newFrame = {
-      refId: 'A',
-      name: 'events',
-      fields: [makeField('@timestamp', FieldType.time, [new Date(T)])],
-      length: 1,
-    };
-    const result = mergeWithCache(entry, [newFrame], cutoff, requestFrom);
-    expect(result[0]).toBe(newFrame);
+// ── QueryCache.procFrames ─────────────────────────────────────────────────────
+describe('QueryCache.procFrames', () => {
+  const makeCacheRequestInfo = (overrides: Partial<CacheRequestInfo> = {}): CacheRequestInfo => ({
+    request: makeRequest() as any,
+    targetSignatures: new Map([['dash1|1|A', 'error|my-repo|logs']]),
+    shouldCache: true,
+    ...overrides,
   });
 
-  it('returns new frame unchanged when @timestamp field is absent', () => {
-    const cachedFrame = {
-      refId: 'A',
-      name: 'events',
-      fields: [makeField('message', FieldType.string, ['old'])],
-      length: 1,
-    };
-    const entry = makeCacheEntry({ frames: [cachedFrame] });
-    const newFrame = {
-      refId: 'A',
-      name: 'events',
-      fields: [makeField('message', FieldType.string, ['new'])],
-      length: 1,
-    };
-    const result = mergeWithCache(entry, [newFrame], cutoff, requestFrom);
-    expect(result[0]).toBe(newFrame);
+  it('returns frames unchanged when shouldCache=false', () => {
+    const cache = new QueryCache();
+    const frame = { refId: 'A', fields: [], length: 0 };
+    const result = cache.procFrames(
+      makeRequest() as any,
+      makeCacheRequestInfo({ shouldCache: false }),
+      [frame as any]
+    );
+    expect(result[0]).toBe(frame);
   });
 
-  describe('ascending (metrics / time series)', () => {
-    // oldest → newest order
-    const t1 = new Date(T - 30 * 60_000); // 30 min ago — before cutoff
-    const t2 = new Date(T - 20 * 60_000); // 20 min ago — before cutoff
-    const t3 = new Date(T - 5 * 60_000);  // 5 min ago  — after cutoff (new)
-    const t4 = new Date(T);               // now         — after cutoff (new)
+  it('passes through frames for ineligible targets', () => {
+    const cache = new QueryCache();
+    const frame = { refId: 'A', fields: [], length: 0 };
+    // Empty targetSignatures → A is not eligible
+    const result = cache.procFrames(
+      makeRequest() as any,
+      makeCacheRequestInfo({ targetSignatures: new Map() }),
+      [frame as any]
+    );
+    expect(result[0]).toStrictEqual(frame);
+  });
 
-    const cachedFrame = {
+  it('caches a frame on first call (cache miss)', () => {
+    const cache = new QueryCache();
+    const frame = {
       refId: 'A',
-      name: 'events',
+      fields: [makeField('@timestamp', FieldType.time, [new Date(NOW - 60_000)])],
+      length: 1,
+    };
+    cache.procFrames(makeRequest() as any, makeCacheRequestInfo(), [frame as any]);
+    expect(cache.cache.get('dash1|1|A')).toBeDefined();
+    expect(cache.cache.get('dash1|1|A')!.signature).toBe('error|my-repo|logs');
+  });
+
+  describe('ascending (metrics) merge', () => {
+    const t1 = new Date(NOW - 30 * 60_000); // 30 min ago — before cutoff
+    const t2 = new Date(NOW - 20 * 60_000); // 20 min ago — before cutoff
+    const t3 = new Date(NOW - 5 * 60_000);  // 5 min ago  — new
+    const t4 = new Date(NOW);               // now         — new
+
+    const seedFrames = [{
+      refId: 'A',
       fields: [
         makeField('@timestamp', FieldType.time, [t1, t2]),
         makeField('value', FieldType.number, [1, 2]),
       ],
       length: 2,
-    };
-    const newFrame = {
+    }];
+
+    const newFrames = [{
       refId: 'A',
-      name: 'events',
       fields: [
         makeField('@timestamp', FieldType.time, [t3, t4]),
         makeField('value', FieldType.number, [3, 4]),
       ],
       length: 2,
-    };
+    }];
 
-    it('prepends cached rows that precede the cutoff', () => {
-      const entry = makeCacheEntry({ frames: [cachedFrame] });
-      const [result] = mergeWithCache(entry, [newFrame], cutoff, requestFrom);
-      const tsValues = result.fields.find((f) => f.name === '@timestamp')!.values;
-      expect(tsValues).toEqual([t1, t2, t3, t4]);
+    it('prepends cached rows and appends new rows', () => {
+      const cache = new QueryCache();
+      // Seed the cache via first call.
+      cache.procFrames(makeRequest() as any, makeCacheRequestInfo(), seedFrames as any);
+
+      // Second call with new data.
+      const [result] = cache.procFrames(makeRequest() as any, makeCacheRequestInfo(), newFrames as any);
+      const tsVals = result.fields.find((f) => f.name === '@timestamp')!.values as Date[];
+      expect(tsVals).toEqual([t1, t2, t3, t4]);
+    });
+
+    it('merges value column in parallel', () => {
+      const cache = new QueryCache();
+      cache.procFrames(makeRequest() as any, makeCacheRequestInfo(), seedFrames as any);
+      const [result] = cache.procFrames(makeRequest() as any, makeCacheRequestInfo(), newFrames as any);
+      const numVals = result.fields.find((f) => f.name === 'value')!.values;
+      expect(numVals).toEqual([1, 2, 3, 4]);
     });
 
     it('sets frame length to the merged row count', () => {
-      const entry = makeCacheEntry({ frames: [cachedFrame] });
-      const [result] = mergeWithCache(entry, [newFrame], cutoff, requestFrom);
+      const cache = new QueryCache();
+      cache.procFrames(makeRequest() as any, makeCacheRequestInfo(), seedFrames as any);
+      const [result] = cache.procFrames(makeRequest() as any, makeCacheRequestInfo(), newFrames as any);
       expect(result.length).toBe(4);
-    });
-
-    it('merges all field columns in parallel', () => {
-      const entry = makeCacheEntry({ frames: [cachedFrame] });
-      const [result] = mergeWithCache(entry, [newFrame], cutoff, requestFrom);
-      const numValues = result.fields.find((f) => f.name === 'value')!.values;
-      expect(numValues).toEqual([1, 2, 3, 4]);
-    });
-
-    it('drops cached rows that fall inside the overlap window', () => {
-      // Add a cached row inside the overlap window (after cutoff)
-      const tInOverlap = new Date(cutoff + 60_000);
-      const cachedWithOverlap = {
-        ...cachedFrame,
-        fields: [
-          makeField('@timestamp', FieldType.time, [t1, t2, tInOverlap]),
-          makeField('value', FieldType.number, [1, 2, 99]),
-        ],
-      };
-      const entry = makeCacheEntry({ frames: [cachedWithOverlap] });
-      const [result] = mergeWithCache(entry, [newFrame], cutoff, requestFrom);
-      const tsValues = result.fields.find((f) => f.name === '@timestamp')!.values;
-      // tInOverlap must NOT appear — it is replaced by new data
-      expect(tsValues).toContain(t1);
-      expect(tsValues).toContain(t2);
-      expect(tsValues).not.toContain(tInOverlap);
-    });
-
-    it('excludes cached rows older than requestFromMs', () => {
-      // t1 is before the narrowed requestFrom, t2 is within range
-      const narrowFrom = T - 25 * 60_000; // 25 min ago — between t1 (30m) and t2 (20m)
-      const entry = makeCacheEntry({ frames: [cachedFrame] });
-      const [result] = mergeWithCache(entry, [newFrame], cutoff, narrowFrom);
-      const tsValues = result.fields.find((f) => f.name === '@timestamp')!.values;
-      expect(tsValues).not.toContain(t1);
-      expect(tsValues).toContain(t2);
-      expect(tsValues).toContain(t3);
-      expect(tsValues).toContain(t4);
     });
   });
 
-  describe('descending (log events)', () => {
-    // newest → oldest order
-    const tOld1 = new Date(T - 40 * 60_000); // 40 min ago — before cutoff
-    const tOld2 = new Date(T - 30 * 60_000); // 30 min ago — before cutoff
-    const tNew1 = new Date(T - 2 * 60_000);  // 2 min ago  — after cutoff
-    const tNew2 = new Date(T);               // now         — after cutoff
+  describe('descending (log events) merge', () => {
+    const tOld1 = new Date(NOW - 40 * 60_000); // 40 min ago
+    const tOld2 = new Date(NOW - 30 * 60_000); // 30 min ago
+    const tNew1 = new Date(NOW - 2 * 60_000);  // 2 min ago
+    const tNew2 = new Date(NOW);               // now
 
-    const cachedFrame = {
+    const seedFrames = [{
       refId: 'A',
-      name: 'events',
       fields: [
-        makeField('@timestamp', FieldType.time, [tOld2, tOld1]),  // newest-first
+        makeField('@timestamp', FieldType.time, [tOld2, tOld1]), // newest-first
         makeField('@rawstring', FieldType.string, ['msg2', 'msg1']),
       ],
       length: 2,
-    };
-    const newFrame = {
+    }];
+
+    const newFrames = [{
       refId: 'A',
-      name: 'events',
       fields: [
         makeField('@timestamp', FieldType.time, [tNew2, tNew1]),
         makeField('@rawstring', FieldType.string, ['msg4', 'msg3']),
       ],
       length: 2,
-    };
+    }];
 
     it('produces newest-first ordering after merge', () => {
-      const entry = makeCacheEntry({ frames: [cachedFrame] });
-      const [result] = mergeWithCache(entry, [newFrame], cutoff, requestFrom);
-      const tsValues = result.fields.find((f) => f.name === '@timestamp')!.values;
-      expect(tsValues).toEqual([tNew2, tNew1, tOld2, tOld1]);
+      const cache = new QueryCache();
+      cache.procFrames(makeRequest() as any, makeCacheRequestInfo(), seedFrames as any);
+      const [result] = cache.procFrames(makeRequest() as any, makeCacheRequestInfo(), newFrames as any);
+      const tsVals = result.fields.find((f) => f.name === '@timestamp')!.values as Date[];
+      expect(tsVals[0].getTime()).toBeGreaterThanOrEqual(tsVals[1].getTime());
+      expect(tsVals).toContain(tNew2);
+      expect(tsVals).toContain(tNew1);
+      expect(tsVals).toContain(tOld2);
+      expect(tsVals).toContain(tOld1);
     });
 
     it('sets frame length to the merged row count', () => {
-      const entry = makeCacheEntry({ frames: [cachedFrame] });
-      const [result] = mergeWithCache(entry, [newFrame], cutoff, requestFrom);
+      const cache = new QueryCache();
+      cache.procFrames(makeRequest() as any, makeCacheRequestInfo(), seedFrames as any);
+      const [result] = cache.procFrames(makeRequest() as any, makeCacheRequestInfo(), newFrames as any);
       expect(result.length).toBe(4);
-    });
-
-    it('merges @rawstring in the same order', () => {
-      const entry = makeCacheEntry({ frames: [cachedFrame] });
-      const [result] = mergeWithCache(entry, [newFrame], cutoff, requestFrom);
-      const rawValues = result.fields.find((f) => f.name === '@rawstring')!.values;
-      expect(rawValues).toEqual(['msg4', 'msg3', 'msg2', 'msg1']);
-    });
-
-    it('excludes cached rows older than requestFromMs', () => {
-      // tOld1 is before the narrowed requestFrom, tOld2 is within range
-      const narrowFrom = T - 35 * 60_000; // 35 min ago — between tOld1 (40m) and tOld2 (30m)
-      const entry = makeCacheEntry({ frames: [cachedFrame] });
-      const [result] = mergeWithCache(entry, [newFrame], cutoff, narrowFrom);
-      const tsValues = result.fields.find((f) => f.name === '@timestamp')!.values;
-      expect(tsValues).not.toContain(tOld1);
-      expect(tsValues).toContain(tOld2);
-      expect(tsValues).toContain(tNew1);
-      expect(tsValues).toContain(tNew2);
     });
   });
 
-  describe('schema evolution', () => {
-    it('appends fields present in new frame but absent from cache', () => {
-      const cachedFrame = {
+  describe('empty response', () => {
+    it('serves cached frames when the partial query returns no frames', () => {
+      const cache = new QueryCache();
+      const t1 = new Date(NOW - 30 * 60_000);
+      const frame = {
         refId: 'A',
-        name: 'events',
         fields: [
-          makeField('@timestamp', FieldType.time, [new Date(T - 20 * 60_000)]),
+          makeField('@timestamp', FieldType.time, [t1]),
           makeField('value', FieldType.number, [1]),
         ],
         length: 1,
       };
-      const newFrame = {
+      // Seed the cache.
+      cache.procFrames(makeRequest() as any, makeCacheRequestInfo(), [frame as any]);
+
+      // Partial query returns nothing — cached data must still be served.
+      const result = cache.procFrames(makeRequest() as any, makeCacheRequestInfo(), []);
+      expect(result).toHaveLength(1);
+      expect(result[0].fields.find((f) => f.name === 'value')!.values).toEqual([1]);
+    });
+
+    it('advances prevTo when the partial query returns no frames', () => {
+      const cache = new QueryCache();
+      const frame = {
         refId: 'A',
-        name: 'events',
-        fields: [
-          makeField('@timestamp', FieldType.time, [new Date(T)]),
-          makeField('value', FieldType.number, [2]),
-          makeField('newField', FieldType.string, ['extra']),
-        ],
+        fields: [makeField('@timestamp', FieldType.time, [new Date(NOW - 60_000)])],
         length: 1,
       };
-      const entry = makeCacheEntry({ frames: [cachedFrame] });
-      const [result] = mergeWithCache(entry, [newFrame], cutoff, requestFrom);
-      const fieldNames = result.fields.map((f) => f.name);
-      expect(fieldNames).toContain('newField');
+      cache.procFrames(makeRequest() as any, makeCacheRequestInfo(), [frame as any]);
+
+      cache.procFrames(makeRequest() as any, makeCacheRequestInfo(), []);
+      expect(cache.cache.get('dash1|1|A')!.prevTo).toBe(NOW);
+    });
+  });
+
+  describe('trimming to request range', () => {
+    it('excludes cached rows outside the request range', () => {
+      const cache = new QueryCache();
+
+      // Seed with a frame that covers the request window.
+      const t1 = new Date(NOW - 30 * 60_000);
+      const t2 = new Date(NOW - 20 * 60_000);
+      const seedFrames = [{
+        refId: 'A',
+        fields: [
+          makeField('@timestamp', FieldType.time, [t1, t2]),
+          makeField('value', FieldType.number, [1, 2]),
+        ],
+        length: 2,
+      }];
+      cache.procFrames(makeRequest() as any, makeCacheRequestInfo(), seedFrames as any);
+
+      // Now request with a narrowed window that excludes t1.
+      const narrowFrom = dateTime(NOW - 25 * 60_000);
+      const narrowRequest = makeRequest({
+        range: { from: narrowFrom, to: dateTime(NOW), raw: {} },
+      });
+      const newFrames = [{
+        refId: 'A',
+        fields: [
+          makeField('@timestamp', FieldType.time, [new Date(NOW - 5 * 60_000)]),
+          makeField('value', FieldType.number, [3]),
+        ],
+        length: 1,
+      }];
+      const [result] = cache.procFrames(
+        narrowRequest as any,
+        makeCacheRequestInfo({ request: narrowRequest as any }),
+        newFrames as any
+      );
+      const tsVals = result.fields.find((f) => f.name === '@timestamp')!.values as Date[];
+      expect(tsVals).not.toContain(t1); // outside narrow window
+      expect(tsVals).toContain(t2);
+    });
+  });
+
+  describe('output cloning', () => {
+    it('returns cloned field values so callers cannot mutate the cache', () => {
+      const cache = new QueryCache();
+      const frame = {
+        refId: 'A',
+        fields: [makeField('@timestamp', FieldType.time, [new Date(NOW)])],
+        length: 1,
+      };
+      const [result] = cache.procFrames(makeRequest() as any, makeCacheRequestInfo(), [frame as any]);
+      const cached = cache.cache.get('dash1|1|A')!.frames[0];
+      // Mutating the returned values must not affect the cache.
+      (result.fields[0].values as unknown[]).push(new Date(NOW + 1));
+      expect((cached.fields[0].values as unknown[]).length).toBe(1);
     });
   });
 });
