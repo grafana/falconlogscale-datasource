@@ -40,6 +40,7 @@
     "ingesttimestamp",
     "instancemgmt",
     "jwts",
+    "loglevel",
     "logscale",
     "lsql",
     "Millis",
@@ -58,6 +59,7 @@
     "testid",
     "TIMECHART",
     "timerange",
+    "vals",
     "vectorator",
     "Zipkin"
   ]
