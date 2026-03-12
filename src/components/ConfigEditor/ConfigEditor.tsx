@@ -7,7 +7,7 @@ import {
   updateDatasourcePluginJsonDataOption,
   updateDatasourcePluginOption,
 } from '@grafana/data';
-import { Alert, Field, Input, SecretInput, Select, Switch, useTheme2 } from '@grafana/ui';
+import { Field, Input, SecretInput, Select, Switch, useTheme2 } from '@grafana/ui';
 import { DataLinks } from '../DataLinks';
 import { config, getBackendSrv } from '@grafana/runtime';
 import {
