@@ -9,7 +9,6 @@ import {
   incrRoundDn,
   isValidDuration,
   parseDuration,
-  QueryResultMetaNotice,
   Table,
 } from '@grafana/data';
 import { FormatAs, LogScaleQuery, LogScaleQueryType } from './types';
