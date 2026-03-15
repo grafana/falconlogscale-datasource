@@ -7,7 +7,7 @@ import {
   updateDatasourcePluginJsonDataOption,
   updateDatasourcePluginOption,
 } from '@grafana/data';
-import { Field, SecretInput, Select, Switch, useTheme2 } from '@grafana/ui';
+import { Field, Input, SecretInput, Select, Switch, useTheme2 } from '@grafana/ui';
 import { DataLinks } from '../DataLinks';
 import { config, getBackendSrv } from '@grafana/runtime';
 import {
@@ -309,6 +309,43 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
             updateDatasourcePluginJsonDataOption({ options, onOptionsChange }, 'dataLinks', newValue);
           }}
         />
+
+        <Field
+          label="Incremental querying (experimental)"
+          description="Results may be incomplete or incorrect in some cases. On auto-refresh, query new data and merge it with the cached result. This applies only to relative time ranges without aggregation functions."
+        >
+          <div className={styles.toggle}>
+            <Switch
+              value={options.jsonData.incrementalQuerying ?? false}
+              onChange={(e) => {
+                updateDatasourcePluginJsonDataOption(
+                  { options, onOptionsChange },
+                  'incrementalQuerying',
+                  e.currentTarget.checked
+                );
+              }}
+            />
+          </div>
+        </Field>
+
+        {options.jsonData.incrementalQuerying && (
+          <Field
+            label="Query overlap window"
+            description='Time window to re-fetch on each incremental query to catch late-arriving data (e.g. "10m", "30s", "1h").'
+          >
+            <Input
+              width={20}
+              value={options.jsonData.incrementalQueryOverlapWindow ?? '10m'}
+              onChange={(e) => {
+                updateDatasourcePluginJsonDataOption(
+                  { options, onOptionsChange },
+                  'incrementalQueryOverlapWindow',
+                  e.currentTarget.value
+                );
+              }}
+            />
+          </Field>
+        )}
 
         {config.secureSocksDSProxyEnabled && (
           <>

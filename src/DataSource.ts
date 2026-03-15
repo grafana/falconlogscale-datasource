@@ -11,7 +11,7 @@ import {
   ScopedVars,
   VariableSupportType,
 } from '@grafana/data';
-import { DataSourceWithBackend, getGrafanaLiveSrv, getTemplateSrv, TemplateSrv } from '@grafana/runtime';
+import { config, DataSourceWithBackend, getGrafanaLiveSrv, getTemplateSrv, TemplateSrv } from '@grafana/runtime';
 import VariableQueryEditor from 'components/VariableEditor/VariableQueryEditor';
 import LanguageProvider from 'LanguageProvider';
 import { uniqueId } from 'lodash';
@@ -21,6 +21,7 @@ import { map } from 'rxjs/operators';
 import { getLiveStreamKey } from 'streaming';
 import { pluginVersion } from 'utils/version';
 import { transformBackendResult } from './logs';
+import { DEFAULT_OVERLAP_WINDOW, QueryCache } from './incrementalQuery';
 import { DataSourceMode, FormatAs, LogScaleOptions, LogScaleQuery, LogScaleQueryType, NGSIEMRepos } from './types';
 
 export class DataSource
@@ -48,12 +49,16 @@ export class DataSource
     },
   };
   defaultRepository: string | undefined = undefined;
+  private incrementalCache: QueryCache;
 
   constructor(
-    private instanceSettings: DataSourceInstanceSettings<LogScaleOptions>,
+    readonly instanceSettings: DataSourceInstanceSettings<LogScaleOptions>,
     private readonly templateSrv: TemplateSrv = getTemplateSrv()
   ) {
     super(instanceSettings);
+    this.incrementalCache = new QueryCache(
+      instanceSettings.jsonData.incrementalQueryOverlapWindow ?? DEFAULT_OVERLAP_WINDOW
+    );
     this.defaultRepository = instanceSettings.jsonData.defaultRepository;
     this.languageProvider = new LanguageProvider(this);
     this.variables = {
@@ -87,11 +92,37 @@ export class DataSource
       intervalMs: request.intervalMs,
     }));
 
+    const useIncremental =
+      this.instanceSettings.jsonData.incrementalQuerying &&
+      !config.publicDashboardAccessToken;
+
+    if (useIncremental) {
+      return this.runIncrementalQuery(request);
+    }
+
     return super
       .query(request)
       .pipe(
         map((response) => transformBackendResult(response, this.instanceSettings.jsonData.dataLinks ?? [], request))
       );
+  }
+
+  private runQuery(request: DataQueryRequest<LogScaleQuery>): Observable<DataQueryResponse> {
+    return super
+      .query(request)
+      .pipe(
+        map((response) => transformBackendResult(response, this.instanceSettings.jsonData.dataLinks ?? [], request))
+      );
+  }
+
+  private runIncrementalQuery(request: DataQueryRequest<LogScaleQuery>): Observable<DataQueryResponse> {
+    const requestInfo = this.incrementalCache.requestInfo(request);
+    return this.runQuery(requestInfo.request).pipe(
+      map((response) => ({
+        ...response,
+        data: this.incrementalCache.procFrames(request, requestInfo, response.data),
+      }))
+    );
   }
 
   runLiveQuery(request: DataQueryRequest<LogScaleQuery>): Observable<DataQueryResponse> {
