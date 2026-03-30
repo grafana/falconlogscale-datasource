@@ -130,9 +130,14 @@ function mergeDescending(cachedFrame: DataFrame, respFrame: DataFrame): DataFram
   });
 
   // Append fields present only in the new frame (schema evolution).
-  const newOnlyFields = respFrame.fields.filter(
-    (rf) => !cachedFrame.fields.some((cf) => cf.name === rf.name)
-  );
+  // Pad with nulls for the kept cached rows so all fields stay the same length.
+  const oldRowCount = cachedFrame.length - keepFrom;
+  const newOnlyFields = respFrame.fields
+    .filter((rf) => !cachedFrame.fields.some((cf) => cf.name === rf.name))
+    .map((rf) => ({
+      ...rf,
+      values: [...rf.values, ...new Array(oldRowCount).fill(null)],
+    }));
 
   const allFields = [...mergedFields, ...newOnlyFields];
   return {
@@ -190,6 +195,9 @@ export class QueryCache {
   cache = new Map<TargetId, TargetCache>();
 
   constructor(overlapString: string = DEFAULT_OVERLAP_WINDOW) {
+    // overlapWindowMs is fixed at construction time. If the user changes the
+    // overlap window in the config editor, the new value takes effect only after
+    // Grafana reloads the datasource instance (i.e. after saving and reloading).
     this.overlapWindowMs = isValidDuration(overlapString)
       ? durationToMilliseconds(parseDuration(overlapString))
       : durationToMilliseconds(parseDuration(DEFAULT_OVERLAP_WINDOW));
@@ -215,15 +223,10 @@ export class QueryCache {
 
     let doPartialQuery = shouldCache && targetSignatures.size > 0;
     let prevTo: number | undefined;
-    const invalidatedIds = new Set<TargetId>();
 
     for (const [id, sig] of targetSignatures) {
       const cached = this.cache.get(id);
       if (cached?.signature !== sig) {
-        if (cached !== undefined) {
-          // Had a prior entry but the query changed — record for notice in procFrames.
-          invalidatedIds.add(id);
-        }
         doPartialQuery = false;
         break;
       }

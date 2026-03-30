@@ -21,7 +21,7 @@ import { map } from 'rxjs/operators';
 import { getLiveStreamKey } from 'streaming';
 import { pluginVersion } from 'utils/version';
 import { transformBackendResult } from './logs';
-import { DEFAULT_OVERLAP_WINDOW, QueryCache } from './incrementalQuery';
+import { DEFAULT_OVERLAP_WINDOW, isEligibleForIncremental, QueryCache } from './incrementalQuery';
 import { DataSourceMode, FormatAs, LogScaleOptions, LogScaleQuery, LogScaleQueryType, NGSIEMRepos } from './types';
 
 export class DataSource
@@ -52,7 +52,7 @@ export class DataSource
   private incrementalCache: QueryCache;
 
   constructor(
-    readonly instanceSettings: DataSourceInstanceSettings<LogScaleOptions>,
+    private readonly instanceSettings: DataSourceInstanceSettings<LogScaleOptions>,
     private readonly templateSrv: TemplateSrv = getTemplateSrv()
   ) {
     super(instanceSettings);
@@ -72,6 +72,10 @@ export class DataSource
         return this.query({ ...request, targets: queries });
       },
     };
+  }
+
+  isIncrementalQueryingEnabled(): boolean {
+    return this.instanceSettings.jsonData.incrementalQuerying ?? false;
   }
 
   query(request: DataQueryRequest<LogScaleQuery>): Observable<DataQueryResponse> {
@@ -116,13 +120,23 @@ export class DataSource
   }
 
   private runIncrementalQuery(request: DataQueryRequest<LogScaleQuery>): Observable<DataQueryResponse> {
-    const requestInfo = this.incrementalCache.requestInfo(request);
-    return this.runQuery(requestInfo.request).pipe(
+    const ineligible = request.targets.filter((t) => !isEligibleForIncremental(t));
+    const eligible = request.targets.filter((t) => isEligibleForIncremental(t));
+
+    const requestInfo = this.incrementalCache.requestInfo({ ...request, targets: eligible });
+    const incrementalResponse = this.runQuery({ ...requestInfo.request, targets: eligible }).pipe(
       map((response) => ({
         ...response,
         data: this.incrementalCache.procFrames(request, requestInfo, response.data),
       }))
     );
+
+    if (ineligible.length === 0) {
+      return incrementalResponse;
+    }
+
+    const fullRangeResponse = this.runQuery({ ...request, targets: ineligible });
+    return merge(incrementalResponse, fullRangeResponse);
   }
 
   runLiveQuery(request: DataQueryRequest<LogScaleQuery>): Observable<DataQueryResponse> {

@@ -3,6 +3,8 @@ import {
   DataSourcePluginOptionsEditorProps,
   DataSourceSettings,
   GrafanaTheme2,
+  isValidDuration,
+  onUpdateDatasourceJsonDataOptionChecked,
   SelectableValue,
   updateDatasourcePluginJsonDataOption,
   updateDatasourcePluginOption,
@@ -51,6 +53,9 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
   const [disabled, setDisabled] = useState<boolean>(true);
   const [repositories, setRepositories] = useState<SelectableValue[]>([]);
   const [unsaved, setUnsaved] = useState<boolean>(true);
+  const [overlapWindowValue, setOverlapWindowValue] = useState(
+    options.jsonData.incrementalQueryOverlapWindow ?? '10m'
+  );
 
   const selectedMode = options.jsonData.mode || DataSourceMode.LogScale;
   const isNGSIEMMode = selectedMode === DataSourceMode.NGSIEM;
@@ -317,13 +322,7 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
           <div className={styles.toggle}>
             <Switch
               value={options.jsonData.incrementalQuerying ?? false}
-              onChange={(e) => {
-                updateDatasourcePluginJsonDataOption(
-                  { options, onOptionsChange },
-                  'incrementalQuerying',
-                  e.currentTarget.checked
-                );
-              }}
+              onChange={onUpdateDatasourceJsonDataOptionChecked(props, 'incrementalQuerying')}
             />
           </div>
         </Field>
@@ -331,17 +330,22 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
         {options.jsonData.incrementalQuerying && (
           <Field
             label="Query overlap window"
-            description='Time window to re-fetch on each incremental query to catch late-arriving data (e.g. "10m", "30s", "1h").'
+            description='Time window to re-fetch on each incremental query to catch late-arriving data (e.g. "10m", "30s", "1h"). Changes take effect after saving and reloading.'
+            invalid={!isValidDuration(overlapWindowValue)}
+            error='Must be a valid duration (e.g. "10m", "30s", "1h")'
           >
             <Input
               width={20}
-              value={options.jsonData.incrementalQueryOverlapWindow ?? '10m'}
-              onChange={(e) => {
-                updateDatasourcePluginJsonDataOption(
-                  { options, onOptionsChange },
-                  'incrementalQueryOverlapWindow',
-                  e.currentTarget.value
-                );
+              value={overlapWindowValue}
+              onChange={(e) => setOverlapWindowValue(e.currentTarget.value)}
+              onBlur={(e) => {
+                if (isValidDuration(e.currentTarget.value)) {
+                  updateDatasourcePluginJsonDataOption(
+                    { options, onOptionsChange },
+                    'incrementalQueryOverlapWindow',
+                    e.currentTarget.value
+                  );
+                }
               }}
             />
           </Field>
@@ -365,13 +369,7 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
                 <div className={styles.toggle}>
                   <Switch
                     value={options.jsonData.enableSecureSocksProxy}
-                    onChange={(e) => {
-                      updateDatasourcePluginJsonDataOption(
-                        { options, onOptionsChange },
-                        'enableSecureSocksProxy',
-                        e.currentTarget.checked
-                      );
-                    }}
+                    onChange={onUpdateDatasourceJsonDataOptionChecked(props, 'enableSecureSocksProxy')}
                   />
                 </div>
               </Field>
