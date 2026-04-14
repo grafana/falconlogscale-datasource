@@ -16,3 +16,5 @@ services:
     environment:
       LOGSCALE_URL: ${LOGSCALE_URL}
       ACCESS_TOKEN: ${ACCESS_TOKEN}
+      GF_FEATURE_TOGGLES_splashScreen: false
+      GF_FEATURE_TOGGLES_dashboardNewLayouts: false
