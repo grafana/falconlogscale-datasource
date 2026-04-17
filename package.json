@@ -5,15 +5,15 @@
   "scripts": {
     "build": "webpack -c ./.config/webpack/webpack.config.ts --env production",
     "dev": "webpack -w -c ./.config/webpack/webpack.config.ts --env development",
-    "e2e:playwright": "yarn playwright test",
-    "e2e:playwright:ui": "yarn playwright test --ui",
-    "e2e:playwright:report": "yarn playwright show-report",
+    "e2e:playwright": "npx playwright test",
+    "e2e:playwright:ui": "npx playwright test --ui",
+    "e2e:playwright:report": "npx playwright show-report",
     "lint": "eslint --cache --ignore-path ./.gitignore --ext .js,.jsx,.ts,.tsx .",
-    "lint:fix": "yarn run lint --fix",
+    "lint:fix": "npm run lint -- --fix",
     "server": "docker compose up --build",
     "sign": "npx --yes @grafana/sign-plugin@latest",
     "spellcheck": "cspell -c cspell.config.json \"**/*.{ts,tsx,js,go,md,mdx,yml,yaml,json,scss,css}\"",
-    "start": "yarn watch",
+    "start": "npm run dev",
     "test": "jest --watch --onlyChanged",
     "test:ci": "jest --passWithNoTests --maxWorkers 4",
     "typecheck": "tsc --noEmit",
@@ -25,10 +25,10 @@
     "@babel/core": "^7.29.0",
     "@grafana/e2e-selectors": "11.6.0",
     "@grafana/eslint-config": "^9.0.0",
-    "@grafana/plugin-e2e": "^3.5.0",
+    "@grafana/plugin-e2e": "^3.5.1",
     "@grafana/tsconfig": "^2.0.0",
     "@playwright/test": "^1.57.0",
-    "@stylistic/eslint-plugin-ts": "^4.0.0",
+    "@stylistic/eslint-plugin-ts": "^3.1.0",
     "@swc/core": "^1.15.3",
     "@swc/helpers": "^0.5.7",
     "@swc/jest": "^0.2.36",
@@ -37,6 +37,7 @@
     "@testing-library/react": "16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@types/jest": "^30.0.0",
+    "@types/react": "^19.0.0",
     "@types/lodash": "^4.17.23",
     "@types/node": "^20.11.30",
     "@types/react-router-dom": "^5.2.0",
@@ -50,7 +51,7 @@
     "eslint-plugin-deprecation": "^3.0.0",
     "eslint-plugin-jsdoc": "^62.8.0",
     "eslint-plugin-react": "^7.37.5",
-    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-hooks": "^7.0.0",
     "eslint-webpack-plugin": "^5.0.2",
     "fork-ts-checker-webpack-plugin": "^9.1.0",
     "glob": "^13.0.3",
@@ -83,7 +84,6 @@
     "@grafana/runtime": "^11.6.0",
     "@grafana/schema": "^11.3.2",
     "@grafana/ui": "^11.3.2",
-    "form-data": "4.0.5",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-router-dom": "5.3.4",
@@ -91,15 +91,13 @@
     "react-use": "^17.5.1",
     "tslib": "2.8.1"
   },
-  "resolutions": {
+  "overrides": {
     "rxjs": "7.8.2"
   },
   "engines": {
     "node": ">=20"
   },
-  "packageManager": "yarn@1.22.22",
   "volta": {
-    "node": "20.20.1",
-    "yarn": "1.22.22"
+    "node": "20.20.1"
   }
 }

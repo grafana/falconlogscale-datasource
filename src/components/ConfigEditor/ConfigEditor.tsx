@@ -50,7 +50,6 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
 
   const { onOptionsChange, options } = props;
 
-  const [disabled, setDisabled] = useState<boolean>(true);
   const [repositories, setRepositories] = useState<SelectableValue[]>([]);
   const [unsaved, setUnsaved] = useState<boolean>(true);
   const [overlapWindowValue, setOverlapWindowValue] = useState(
@@ -117,17 +116,12 @@ export const ConfigEditor: React.FC<Props> = (props: Props) => {
     );
   };
 
-  useEffect(() => {
-    setDisabled(true);
-    if (
-      ((options.jsonData.baseUrl || options.url) &&
-        (options.secureJsonFields?.accessToken || options.secureJsonData?.accessToken)) ||
-      options.jsonData.oauthPassThru ||
-      (options.jsonData.oauth2 && options.jsonData.oauth2ClientId && options.secureJsonFields?.oauth2ClientSecret)
-    ) {
-      setDisabled(false);
-    }
-  }, [options]);
+  const disabled = !(
+    ((options.jsonData.baseUrl || options.url) &&
+      (options.secureJsonFields?.accessToken || options.secureJsonData?.accessToken)) ||
+    options.jsonData.oauthPassThru ||
+    (options.jsonData.oauth2 && options.jsonData.oauth2ClientId && options.secureJsonFields?.oauth2ClientSecret)
+  );
 
   // Ensure default repository is set to 'search-all' in NGSIEM mode
   useEffect(() => {

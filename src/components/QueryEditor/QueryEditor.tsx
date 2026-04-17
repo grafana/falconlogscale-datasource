@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { QueryEditorProps } from '@grafana/data';
 import { EditorField, EditorRow } from '@grafana/plugin-ui';
 import { DataSource } from '../../DataSource';
@@ -11,13 +11,12 @@ export type Props = QueryEditorProps<DataSource, LogScaleQuery, LogScaleOptions>
 
 export function QueryEditor(props: Props) {
   const { query, onChange, onRunQuery } = props;
-  const [isLogFormat, setIsLogFormat] = useState<boolean>(query.formatAs === FormatAs.Logs);
+  const isLogFormat = query.formatAs === FormatAs.Logs;
 
   // This sets the query type to logs if the user is in Explore and the query type is not set
   useEffect(() => {
     if (props.app === 'explore' && !query.queryType) {
       onChange({ ...query, queryType: LogScaleQueryType.LQL, formatAs: FormatAs.Logs });
-      setIsLogFormat(true);
       onRunQuery();
     }
   }, [props.app, query, onChange, onRunQuery]);
@@ -29,13 +28,12 @@ export function QueryEditor(props: Props) {
   }, [query, onChange]);
 
   const onFormatAsChange = (val: boolean) => {
-    setIsLogFormat(val);
     onChange({ ...query, formatAs: val ? FormatAs.Logs : FormatAs.Metrics });
     onRunQuery();
   };
 
   const onLiveQueryChange = () => {
-    query.live = !query.live;
+    onChange({ ...query, live: !query.live });
     onRunQuery();
   };
 
