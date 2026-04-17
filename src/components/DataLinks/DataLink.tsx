@@ -1,10 +1,9 @@
-import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import React, { Dispatch, SetStateAction, useState } from 'react';
 import { css } from '@emotion/css';
 import { VariableSuggestion, DataSourceInstanceSettings, DataSourceJsonData } from '@grafana/data';
 import { Button, LegacyForms, DataLinkInput, useStyles2 } from '@grafana/ui';
 const { FormField, Switch } = LegacyForms;
 import { DataLinkConfig } from './types';
-import { usePrevious } from 'react-use';
 import { DataSourcePicker } from './DataSourcePicker';
 
 type Props = {
@@ -144,17 +143,17 @@ export const DataLink = (props: Props) => {
 
 function useInternalLink(datasourceUid?: string): [boolean, Dispatch<SetStateAction<boolean>>] {
   const [showInternalLink, setShowInternalLink] = useState<boolean>(!!datasourceUid);
-  const previousUid = usePrevious(datasourceUid);
+  const [prevDatasourceUid, setPrevDatasourceUid] = useState(datasourceUid);
 
   // Force internal link visibility change if uid changed outside of this component.
-  useEffect(() => {
-    if (!previousUid && datasourceUid && !showInternalLink) {
+  if (prevDatasourceUid !== datasourceUid) {
+    setPrevDatasourceUid(datasourceUid);
+    if (!prevDatasourceUid && datasourceUid) {
       setShowInternalLink(true);
-    }
-    if (previousUid && !datasourceUid && showInternalLink) {
+    } else if (prevDatasourceUid && !datasourceUid) {
       setShowInternalLink(false);
     }
-  }, [previousUid, datasourceUid, showInternalLink]);
+  }
 
   return [showInternalLink, setShowInternalLink];
 }

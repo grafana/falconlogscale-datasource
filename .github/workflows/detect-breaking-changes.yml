@@ -12,10 +12,11 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version-file: '.nvmrc'
+          cache: 'npm'
       - name: Install dependencies
-        run: yarn install
+        run: npm ci
       - name: Build plugin
-        run: yarn build
+        run: npm run build
       - name: Compatibility check
         uses: grafana/plugin-actions/is-compatible@4698961fa64137fcac207108397ebe8a738a33d1
         with:
