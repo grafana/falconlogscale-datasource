@@ -23,7 +23,7 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@babel/core": "^7.29.0",
-    "@grafana/e2e-selectors": "11.6.0",
+    "@grafana/e2e-selectors": "11.6.14",
     "@grafana/eslint-config": "^9.0.0",
     "@grafana/plugin-e2e": "^3.5.1",
     "@grafana/tsconfig": "^2.0.0",
@@ -98,6 +98,6 @@
     "node": ">=20"
   },
   "volta": {
-    "node": "20.20.1"
+    "node": "20.20.2"
   }
 }
