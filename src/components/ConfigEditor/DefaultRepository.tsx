@@ -24,24 +24,6 @@ export const DefaultRepository = ({
 }: DefaultRepositoryProps) => {
   const [loadRepositoriesClicked, onLoadRepositories] = useReducer((val) => val + 1, 0);
 
-  useEffect(() => {
-    if (!getRepositories || disabled) {
-      onRepositoriesChange([]);
-      return;
-    }
-    let canceled = false;
-    getRepositories().then((result) => {
-      if (!canceled) {
-        updateRepositories(result, loadRepositoriesClicked);
-      }
-    });
-    return () => {
-      canceled = true;
-    };
-    // This effect is intended to be called only once initially and when Load Repositories is clicked
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [disabled, loadRepositoriesClicked]);
-
   const updateRepositories = (received: Array<SelectableValue<string>>, autoSelect = false) => {
     onRepositoriesChange(received);
     if (autoSelect && !defaultRepository && received.length > 0) {
@@ -54,6 +36,25 @@ export const DefaultRepository = ({
       }
     }
   };
+
+  useEffect(() => {
+    if (!getRepositories || disabled) {
+      onRepositoriesChange([]);
+      return;
+    }
+    let canceled = false;
+    getRepositories().then((result) => {
+      if (!canceled) {
+        updateRepositories(result, loadRepositoriesClicked > 0);
+      }
+    });
+    return () => {
+      canceled = true;
+    };
+    // This effect is intended to be called only once initially and when Load Repositories is clicked
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [disabled, loadRepositoriesClicked]);
+
   return (
     <>
       <Field label="Default Repository" data-testid={selectors.components.configEditor.defaultRepository.input}>
