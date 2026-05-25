@@ -29,7 +29,7 @@ func (h *Handler) SubscribeStream(ctx context.Context, req *backend.SubscribeStr
 		}, fmt.Errorf("unable to determine orgId from request")
 	}
 
-	if orgId != pluginCfg.OrgID {
+	if orgId != pluginCfg.OrgID { //nolint:staticcheck // SA1019: pluginCfg.OrgID is deprecated: Use Namespace instead.
 		return &backend.SubscribeStreamResponse{
 			Status: backend.SubscribeStreamStatusPermissionDenied,
 		}, fmt.Errorf("invalid orgId supplied in request")

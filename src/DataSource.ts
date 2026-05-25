@@ -26,8 +26,7 @@ import { DataSourceMode, FormatAs, LogScaleOptions, LogScaleQuery, LogScaleQuery
 
 export class DataSource
   extends DataSourceWithBackend<LogScaleQuery, LogScaleOptions>
-  implements DataSourceWithQueryImportSupport<LogScaleQuery>
-{
+  implements DataSourceWithQueryImportSupport<LogScaleQuery> {
   // This enables default annotation support for 7.2+
   annotations = {
     prepareAnnotation: (annotation: AnnotationQuery<LogScaleQuery>) => {
@@ -148,6 +147,7 @@ export class DataSource
           return getGrafanaLiveSrv().getDataStream({
             addr: {
               scope: LiveChannelScope.DataSource,
+              // @ts-expect-error: 'namespace' does not exist in type 'LiveChannelAddress'.
               namespace: ds.uid,
               path: `tail/${key}`,
               data: {
