@@ -1,6 +1,7 @@
 module github.com/grafana/falconlogscale-datasource-backend
 
 go 1.26.3
+
 require (
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/golang-jwt/jwt/v5 v5.3.1
