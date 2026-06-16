@@ -1,0 +1,7 @@
+{
+  // Eslint configuration provided by @grafana/create-plugin
+  "extends": "./.config/.eslintrc",
+  "rules": {
+    "react/prop-types": "off"
+  }
+}

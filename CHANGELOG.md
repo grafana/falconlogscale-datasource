@@ -1,0 +1,155 @@
+# Changelog
+
+## 1.10.0
+
+- Feature: Incremental querying support [#814](https://github.com/grafana/falconlogscale-datasource/pull/814)
+- Bump dependencies
+
+## 1.9.1
+
+- Fix: Ensure non-LogScale annotation queries are reset [#799](https://github.com/grafana/falconlogscale-datasource/pull/799)
+- Bump dependencies
+
+## 1.9.0
+
+- Feature: NGSIEM support. Read more about enabling NGSIEM support in Grafana here: [Falcon LogScale query editor](/docs/plugins/grafana-falconlogscale-datasource/latest/configure/)
+- Bump dependencies
+
+## 1.8.6
+
+- Fix authentication switch bug [#682](https://github.com/grafana/falconlogscale-datasource/pull/682)
+- Improve handling of expired tokens [#684](https://github.com/grafana/falconlogscale-datasource/pull/684)
+- Bump dependencies
+
+## 1.8.5
+
+- Improve variable editor query handling [#621](https://github.com/grafana/falconlogscale-datasource/pull/621)
+- Bump dependencies
+
+## 1.8.4
+
+- Bump eslint-plugin-react from 7.37.4 to 7.37.5 (#572)
+- Remove @types/testing-library__jest-dom, add CI GHA (#571)
+- Bump terser-webpack-plugin from 5.3.11 to 5.3.14 (#522)
+- Bump cspell from 8.17.3 to 9.1.1 (#565)
+- Bump @playwright/test from 1.49.1 to 1.53.0 (#563)
+
+## 1.8.3
+
+- Bump dependencies
+- Add publish Github Action workflow for releases (#564)
+- Secure GHA Workflows (#548)
+- Remove `dependabot-reviewer` action (#566)
+- Remove PR image flow (#554)
+- GHA: Harden workflows (#538)
+
+## 1.8.2
+
+- Set user error in LoadSettings to downstream [#504](https://github.com/grafana/falconlogscale-datasource/pull/504)
+- Dependency updates.
+
+## 1.8.1
+
+- Any field can be used for query template variables [#488](https://github.com/grafana/falconlogscale-datasource/pull/488)
+- Bug: Correctly set format as logs flag in Explore by default. [#492](https://github.com/grafana/falconlogscale-datasource/pull/492)
+- Bug: Correct X-Id-Token when fetching repos. [#489](https://github.com/grafana/falconlogscale-datasource/pull/489)
+
+## 1.8.0
+
+- Feature: Tail live logs (Live query). Read more about Live querying in [Falcon LogScale query editor](/docs/plugins/grafana-falconlogscale-datasource/latest/editor/)
+- Dependency updates.
+
+## 1.7.6
+
+- Dependency updates.
+
+## 1.7.5
+
+- Dependency updates.
+  
+## 1.7.4
+
+- Dependency updates.
+- PDC support.
+  
+## 1.7.3
+
+- Dependency updates.
+
+## 1.7.2
+
+- Dependency updates.
+- Add `errorsource` [#380](https://github.com/grafana/falconlogscale-datasource/pull/380)
+  
+## 1.7.1
+
+- Dependency updates.
+  
+## 1.7.0
+
+- Feature: Upgrade `VariableEditor` to remove usage of deprecated APIs and add `repository` variable query type. [#303](https://github.com/grafana/falconlogscale-datasource/pull/303)
+- Dependency updates.
+  
+## 1.6.0
+
+- Fix: State bug in `VariableEditor`
+- Dependency updates.
+  
+## 1.5.0
+
+- Experimental: Support OAuth token forwarding for authentication. See [here](https://github.com/grafana/falconlogscale-datasource?tab=readme-ov-file#forward-oauth-identity) for further details.
+- Dependency updates.
+
+## 1.4.1
+
+- Prepend `@timestamp` field to ensure it is always used as the timestamp value in the logs visualization.
+- Dependency updates.
+  
+## 1.4.0
+
+- Add $defaultRepo option to Repository dropdown.
+- Other minor dependency updates
+
+## 1.3.1
+
+- Error message is more descriptive when a repository has not been selected.
+
+## 1.3.0
+
+- Bump github.com/grafana/grafana-plugin-sdk-go from 0.180.0 to 0.195.0
+- Other minor dependency updates
+
+## 1.2.0
+
+- Bug: Issue where users were unable to select default repository is fixed.
+
+## 1.1.0
+
+- Minimum Grafana required version is now **9.5.0**
+- Logs in explore view can be filtered by a value or filtered out by a value.
+- The settings UI has been overhauled to use the new Grafana form and authentication components.
+
+## 1.0.1
+
+- Bug: TLS option are now correctly passed to the LogScale client.
+
+## 1.0.0
+
+- Documentation
+- A default repository can be selected in the data source config.
+- Support added for abstract queries.
+- Fields are ordered according to meta-data response from LogScale. '@rawString' is always the first field.
+- Log view is the default option in Explore.
+- Grafana data frames are converted to wide format when using a LogScale group by function to support multiline time series.
+- Bug: Data links do not throw an error if there is not a matching log.
+
+## 0.1.0 (Unreleased)
+
+- Logs in explore view
+- Data links from LogScale logs to traces
+- Bug: Remove unused auth options
+- Bug: DataFrame types will be correctly converted when the first field is nil
+
+## 0.0.0 (Unreleased)
+
+Initial release.

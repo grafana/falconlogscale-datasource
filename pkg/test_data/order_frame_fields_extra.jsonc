@@ -1,0 +1,57 @@
+//  🌟 This was machine generated.  Do not edit. 🌟
+//  
+//  Frame[0] 
+//  Name: test
+//  Dimensions: 2 Fields by 3 Rows
+//  +----------------+----------------+
+//  | Name: a        | Name: b        |
+//  | Labels:        | Labels:        |
+//  | Type: []string | Type: []string |
+//  +----------------+----------------+
+//  | g              | a              |
+//  | h              | b              |
+//  | i              | c              |
+//  +----------------+----------------+
+//  
+//  
+//  🌟 This was machine generated.  Do not edit. 🌟
+{
+  "status": 200,
+  "frames": [
+    {
+      "schema": {
+        "name": "test",
+        "fields": [
+          {
+            "name": "a",
+            "type": "string",
+            "typeInfo": {
+              "frame": "string"
+            }
+          },
+          {
+            "name": "b",
+            "type": "string",
+            "typeInfo": {
+              "frame": "string"
+            }
+          }
+        ]
+      },
+      "data": {
+        "values": [
+          [
+            "g",
+            "h",
+            "i"
+          ],
+          [
+            "a",
+            "b",
+            "c"
+          ]
+        ]
+      }
+    }
+  ]
+}

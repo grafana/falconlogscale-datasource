@@ -1,0 +1,64 @@
+//  🌟 This was machine generated.  Do not edit. 🌟
+//  
+//  Frame[0] 
+//  Name: field
+//  Dimensions: 3 Fields by 1 Rows
+//  +-------------------------------+------------------+-------------------+
+//  | Name: @timestamp              | Name: _count     | Name: stringField |
+//  | Labels:                       | Labels:          | Labels:           |
+//  | Type: []*time.Time            | Type: []*float64 | Type: []*string   |
+//  +-------------------------------+------------------+-------------------+
+//  | 2020-01-01 00:00:00 +0000 UTC | 100              | hello             |
+//  +-------------------------------+------------------+-------------------+
+//  
+//  
+//  🌟 This was machine generated.  Do not edit. 🌟
+{
+  "status": 200,
+  "frames": [
+    {
+      "schema": {
+        "name": "field",
+        "fields": [
+          {
+            "name": "@timestamp",
+            "type": "time",
+            "typeInfo": {
+              "frame": "time.Time",
+              "nullable": true
+            }
+          },
+          {
+            "name": "_count",
+            "type": "number",
+            "typeInfo": {
+              "frame": "float64",
+              "nullable": true
+            }
+          },
+          {
+            "name": "stringField",
+            "type": "string",
+            "typeInfo": {
+              "frame": "string",
+              "nullable": true
+            }
+          }
+        ]
+      },
+      "data": {
+        "values": [
+          [
+            1577836800000
+          ],
+          [
+            100
+          ],
+          [
+            "hello"
+          ]
+        ]
+      }
+    }
+  ]
+}

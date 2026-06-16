@@ -1,0 +1,376 @@
+import React, { useEffect, useState } from 'react';
+import {
+  DataSourcePluginOptionsEditorProps,
+  DataSourceSettings,
+  GrafanaTheme2,
+  isValidDuration,
+  onUpdateDatasourceJsonDataOptionChecked,
+  SelectableValue,
+  updateDatasourcePluginJsonDataOption,
+  updateDatasourcePluginOption,
+} from '@grafana/data';
+import { Field, Input, SecretInput, Select, Switch, useTheme2 } from '@grafana/ui';
+import { DataLinks } from '../DataLinks';
+import { config, getBackendSrv } from '@grafana/runtime';
+import {
+  AdvancedHttpSettings,
+  Auth,
+  AuthMethod,
+  ConfigSection,
+  ConnectionSettings,
+  DataSourceDescription,
+  convertLegacyAuthProps,
+} from '@grafana/plugin-ui';
+
+import { LogScaleOptions, SecretLogScaleOptions, DataSourceMode, NGSIEMRepos } from '../../types';
+import { lastValueFrom } from 'rxjs';
+import { parseRepositoriesResponse } from 'utils/utils';
+import { DefaultRepository } from './DefaultRepository';
+import { Divider } from './Divider';
+import { OAuth2Component } from './OAuth2Component';
+import { css } from '@emotion/css';
+import { trackConfigSetNGSIEMMode } from './tracking';
+
+const getStyles = (theme: GrafanaTheme2) => ({
+  toggle: css`
+    margin-top: 7px;
+    margin-left: 5px;
+  `,
+  infoText: css`
+    padding-bottom: ${theme.v1.spacing.md};
+    color: ${theme.v1.colors.textWeak};
+  `,
+});
+
+export interface Props extends DataSourcePluginOptionsEditorProps<LogScaleOptions, SecretLogScaleOptions> {}
+
+export const ConfigEditor: React.FC<Props> = (props: Props) => {
+  const theme = useTheme2();
+  const styles = getStyles(theme);
+
+  const { onOptionsChange, options } = props;
+
+  const [repositories, setRepositories] = useState<SelectableValue[]>([]);
+  const [unsaved, setUnsaved] = useState<boolean>(true);
+  const [overlapWindowValue, setOverlapWindowValue] = useState(
+    options.jsonData.incrementalQueryOverlapWindow ?? '10m'
+  );
+
+  const selectedMode = options.jsonData.mode || DataSourceMode.LogScale;
+  const isNGSIEMMode = selectedMode === DataSourceMode.NGSIEM;
+  const clearAuthSettings = () => {
+    return {
+      authenticateWithToken: false,
+      oauth2: false,
+      oauth2ClientId: undefined,
+      oauthPassThru: false,
+    };
+  };
+
+  const onTokenReset = () => {
+    setUnsaved(true);
+    onOptionsChange({
+      ...options,
+      jsonData: {
+        ...options.jsonData,
+        ...clearAuthSettings(),
+        defaultRepository: undefined,
+      },
+      secureJsonData: undefined,
+      secureJsonFields: {},
+    });
+  };
+
+  const saveOptions = async (): Promise<void> => {
+    if (unsaved) {
+      await getBackendSrv()
+        .put(`/api/datasources/${options.id}`, options)
+        .then((result: { datasource: DataSourceSettings<LogScaleOptions> }) => {
+          updateDatasourcePluginOption(props, 'version', result.datasource.version);
+          return result.datasource.version;
+        });
+      setUnsaved(false);
+    }
+  };
+
+  const getRepositories = async () => {
+    if (isNGSIEMMode) {
+      return parseRepositoriesResponse(NGSIEMRepos);
+    }
+    try {
+      await saveOptions();
+      const res = await lastValueFrom(
+        getBackendSrv().fetch({ url: `/api/datasources/uid/${options.uid}/resources/repositories`, method: 'GET' })
+      );
+      return parseRepositoriesResponse(res);
+    } catch (err) {
+      return Promise.resolve([]);
+    }
+  };
+
+  const onRepositoryChange = (value: SelectableValue | undefined) => {
+    updateDatasourcePluginJsonDataOption(
+      { options, onOptionsChange },
+      'defaultRepository',
+      value ? value.value : undefined
+    );
+  };
+
+  const disabled = !(
+    ((options.jsonData.baseUrl || options.url) &&
+      (options.secureJsonFields?.accessToken || options.secureJsonData?.accessToken)) ||
+    options.jsonData.oauthPassThru ||
+    (options.jsonData.oauth2 && options.jsonData.oauth2ClientId && options.secureJsonFields?.oauth2ClientSecret)
+  );
+
+  // Ensure default repository is set to 'search-all' in NGSIEM mode
+  useEffect(() => {
+    if (isNGSIEMMode && !options.jsonData.defaultRepository) {
+      onOptionsChange({
+        ...options,
+        jsonData: {
+          ...options.jsonData,
+          defaultRepository: 'search-all',
+        },
+      });
+    }
+  }, [isNGSIEMMode, options, onOptionsChange]);
+
+  const logscaleTokenComponent = (
+    <Field label={'Token'}>
+      <SecretInput
+        name="pwd"
+        width={40}
+        label={'Token'}
+        aria-label={'Token'}
+        placeholder={'Token'}
+        value={options.secureJsonData?.accessToken}
+        autoComplete="new-password"
+        onBlur={(event) => {
+          if (event.currentTarget.value) {
+            setUnsaved(true);
+            onOptionsChange({
+              ...options,
+              jsonData: {
+                baseUrl: options.jsonData.baseUrl,
+                authenticateWithToken: true,
+                oauthPassThru: false,
+                oauth2: false,
+              },
+              secureJsonData: { accessToken: event.currentTarget.value },
+            });
+          }
+        }}
+        isConfigured={options.jsonData.authenticateWithToken}
+        onReset={onTokenReset}
+        required={false}
+      />
+    </Field>
+  );
+
+  const newAuthProps = convertLegacyAuthProps({
+    config: props.options,
+    onChange: onOptionsChange,
+  });
+
+  const [authSelected, setAuthSelected] = useState<AuthMethod | `custom-${string}`>(
+    newAuthProps.selectedMethod === AuthMethod.NoAuth ? 'custom-token' : newAuthProps.selectedMethod
+  );
+
+  const modeOptions: Array<SelectableValue<DataSourceMode>> = [
+    { label: 'LogScale', value: DataSourceMode.LogScale },
+    { label: 'NGSIEM', value: DataSourceMode.NGSIEM },
+  ];
+
+  const onSelectedMode = (value: SelectableValue | undefined) => {
+    if (!value) {
+      return;
+    }
+    const newMode = value.value;
+    const newJsonData: LogScaleOptions = {
+      ...options.jsonData,
+      ...clearAuthSettings(),
+      mode: newMode,
+      defaultRepository: newMode === DataSourceMode.NGSIEM ? 'search-all' : undefined,
+    };
+
+    // When switching to NGSIEM mode, set default repository to 'search-all'
+    if (newMode === DataSourceMode.NGSIEM) {
+      newJsonData.defaultRepository = 'search-all';
+    }
+
+    onOptionsChange({
+      ...options,
+      jsonData: newJsonData,
+      secureJsonData: undefined,
+      secureJsonFields: {},
+    });
+
+    if (newMode === DataSourceMode.NGSIEM) {
+      trackConfigSetNGSIEMMode();
+      setAuthSelected('custom-oauth-client-secret');
+    } else if (newMode === DataSourceMode.LogScale) {
+      setAuthSelected('custom-token');
+    }
+  };
+
+  return (
+    <>
+      <DataSourceDescription
+        dataSourceName="Falcon LogScale"
+        docsLink="https://grafana.com/grafana/plugins/grafana-falconlogscale-datasource/"
+        hasRequiredFields
+      />
+      <Divider />
+      <ConnectionSettings config={options} onChange={onOptionsChange} />
+      <Divider />
+      <Field
+        label="Mode"
+        description="Select the data source mode. NGSIEM mode only supports OAuth2 client secret authentication."
+      >
+        <Select width={40} options={modeOptions} value={selectedMode} onChange={onSelectedMode} />
+      </Field>
+      <Divider />
+      <Auth
+        {...newAuthProps}
+        customMethods={[
+          {
+            id: 'custom-token',
+            label: 'LogScale Token Authentication',
+            description: 'Authenticate to LogScale using a personal token.',
+            component: logscaleTokenComponent,
+          },
+          {
+            id: 'custom-oauth-client-secret',
+            label: 'OAuth2 Client Credentials',
+            description:
+              'Authenticate using OAuth2 client credentials flow. The plugin will automatically fetch and refresh access tokens.',
+            component: <OAuth2Component options={options} onOptionsChange={onOptionsChange} setUnsaved={setUnsaved} />,
+          },
+        ]}
+        onAuthMethodSelect={(method) => {
+          newAuthProps.onAuthMethodSelect(method);
+          setAuthSelected(method);
+
+          const baseJsonData = {
+            ...options.jsonData,
+            ...clearAuthSettings(),
+          };
+
+          if (method === 'custom-oauth-client-secret') {
+            baseJsonData.oauth2 = true;
+          } else if (method === AuthMethod.OAuthForward) {
+            baseJsonData.oauthPassThru = true;
+          }
+
+          onOptionsChange({
+            ...options,
+            jsonData: baseJsonData,
+            secureJsonData: undefined,
+            secureJsonFields: {},
+          });
+        }}
+        selectedMethod={authSelected}
+        visibleMethods={
+          isNGSIEMMode
+            ? ['custom-oauth-client-secret']
+            : ['custom-token', AuthMethod.BasicAuth, AuthMethod.OAuthForward]
+        }
+      />
+      <Divider />
+      <ConfigSection
+        title="Advanced settings"
+        isCollapsible
+        // isInitiallyOpen={/* if any of the advanced settings is enabled */}
+      >
+        <AdvancedHttpSettings config={props.options} onChange={props.onOptionsChange} />
+      </ConfigSection>
+      <Divider />
+      <ConfigSection
+        title="Additional settings"
+        description="Additional settings are optional settings that can be configured for more control over your data source. This includes the default repository or data links."
+        isCollapsible
+        isInitiallyOpen={true}
+      >
+        <DefaultRepository
+          disabled={disabled}
+          defaultRepository={options.jsonData.defaultRepository}
+          onRepositoryChange={onRepositoryChange}
+          onRepositoriesChange={setRepositories}
+          repositories={repositories}
+          getRepositories={getRepositories}
+          hideLoadRepoButton={isNGSIEMMode}
+        />
+
+        <DataLinks
+          value={options.jsonData.dataLinks}
+          onChange={(newValue: any) => {
+            updateDatasourcePluginJsonDataOption({ options, onOptionsChange }, 'dataLinks', newValue);
+          }}
+        />
+
+        <Field
+          label="Incremental querying (experimental)"
+          description="Results may be incomplete or incorrect in some cases. On auto-refresh, query new data and merge it with the cached result. This applies only to relative time ranges without aggregation functions."
+        >
+          <div className={styles.toggle}>
+            <Switch
+              value={options.jsonData.incrementalQuerying ?? false}
+              onChange={onUpdateDatasourceJsonDataOptionChecked(props, 'incrementalQuerying')}
+            />
+          </div>
+        </Field>
+
+        {options.jsonData.incrementalQuerying && (
+          <Field
+            label="Query overlap window"
+            description='Time window to re-fetch on each incremental query to catch late-arriving data (e.g. "10m", "30s", "1h"). Changes take effect after saving and reloading.'
+            invalid={!isValidDuration(overlapWindowValue)}
+            error='Must be a valid duration (e.g. "10m", "30s", "1h")'
+          >
+            <Input
+              width={20}
+              value={overlapWindowValue}
+              onChange={(e) => setOverlapWindowValue(e.currentTarget.value)}
+              onBlur={(e) => {
+                if (isValidDuration(e.currentTarget.value)) {
+                  updateDatasourcePluginJsonDataOption(
+                    { options, onOptionsChange },
+                    'incrementalQueryOverlapWindow',
+                    e.currentTarget.value
+                  );
+                }
+              }}
+            />
+          </Field>
+        )}
+
+        {config.secureSocksDSProxyEnabled && (
+          <>
+            <div className="gf-form-group">
+              <h3 className="page-heading">Secure Socks Proxy</h3>
+              <div className={styles.infoText}>
+                Enable proxying the datasource connection through the secure socks proxy to a different network. See{' '}
+                <a
+                  href="https://grafana.com/docs/grafana/next/setup-grafana/configure-grafana/proxy/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Configure a data source connection proxy.
+                </a>
+              </div>
+              <Field label="Enable">
+                <div className={styles.toggle}>
+                  <Switch
+                    value={options.jsonData.enableSecureSocksProxy}
+                    onChange={onUpdateDatasourceJsonDataOptionChecked(props, 'enableSecureSocksProxy')}
+                  />
+                </div>
+              </Field>
+            </div>
+          </>
+        )}
+      </ConfigSection>
+    </>
+  );
+};
