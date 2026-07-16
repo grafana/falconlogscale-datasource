@@ -24,7 +24,7 @@
   "devDependencies": {
     "@babel/core": "^7.29.0",
     "@grafana/e2e-selectors": "11.6.16",
-    "@grafana/eslint-config": "9.0.0",
+    "@grafana/eslint-config": "10.0.0",
     "@grafana/plugin-e2e": "3.5.1",
     "@grafana/tsconfig": "2.0.1",
     "@playwright/test": "1.59.1",
