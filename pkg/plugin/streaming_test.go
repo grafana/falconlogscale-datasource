@@ -27,7 +27,7 @@ func TestSubscribeStream(t *testing.T) {
 		handler, _ := setup()
 		ctx := context.Background()
 		ctx = backend.WithPluginContext(ctx, backend.PluginContext{
-			OrgID: 1,
+			Namespace: "1",
 		})
 		req := &backend.SubscribeStreamRequest{Path: "invalid/path/1"}
 		resp, err := handler.SubscribeStream(ctx, req)
@@ -40,7 +40,7 @@ func TestSubscribeStream(t *testing.T) {
 		handler, _ := setup()
 		ctx := context.Background()
 		ctx = backend.WithPluginContext(ctx, backend.PluginContext{
-			OrgID: 1,
+			Namespace: "1",
 		})
 		req := &backend.SubscribeStreamRequest{
 			Path: "tail/dsId/test-path/1",
@@ -56,7 +56,7 @@ func TestSubscribeStream(t *testing.T) {
 		handler, _ := setup()
 		ctx := context.Background()
 		ctx = backend.WithPluginContext(ctx, backend.PluginContext{
-			OrgID: 1,
+			Namespace: "1",
 		})
 		req := &backend.SubscribeStreamRequest{
 			Path: "tail/dsId/test-path/2",
