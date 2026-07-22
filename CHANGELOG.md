@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.10.1
+
+- Bump dependencies
+
 ## 1.10.0
 
 - Feature: Incremental querying support [#814](https://github.com/grafana/falconlogscale-datasource/pull/814)
