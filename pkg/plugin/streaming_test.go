@@ -27,9 +27,9 @@ func TestSubscribeStream(t *testing.T) {
 		handler, _ := setup()
 		ctx := context.Background()
 		ctx = backend.WithPluginContext(ctx, backend.PluginContext{
-			Namespace: "1",
+			Namespace: "stacks-1",
 		})
-		req := &backend.SubscribeStreamRequest{Path: "invalid/path/1"}
+		req := &backend.SubscribeStreamRequest{Path: "invalid/path/stacks-1"}
 		resp, err := handler.SubscribeStream(ctx, req)
 
 		require.Error(t, err)
@@ -40,10 +40,10 @@ func TestSubscribeStream(t *testing.T) {
 		handler, _ := setup()
 		ctx := context.Background()
 		ctx = backend.WithPluginContext(ctx, backend.PluginContext{
-			Namespace: "1",
+			Namespace: "stacks-1",
 		})
 		req := &backend.SubscribeStreamRequest{
-			Path: "tail/dsId/test-path/1",
+			Path: "tail/dsId/test-path/stacks-1",
 			Data: json.RawMessage(`{"repository":"test-repository"}`),
 		}
 		resp, err := handler.SubscribeStream(ctx, req)
@@ -52,14 +52,14 @@ func TestSubscribeStream(t *testing.T) {
 		require.Equal(t, backend.SubscribeStreamStatusOK, resp.Status)
 	})
 
-	t.Run("subscribe fails if org ID in path does not match plugin request", func(t *testing.T) {
+	t.Run("subscribe fails if namespace in path does not match plugin request", func(t *testing.T) {
 		handler, _ := setup()
 		ctx := context.Background()
 		ctx = backend.WithPluginContext(ctx, backend.PluginContext{
-			Namespace: "1",
+			Namespace: "stacks-1",
 		})
 		req := &backend.SubscribeStreamRequest{
-			Path: "tail/dsId/test-path/2",
+			Path: "tail/dsId/test-path/stacks-2",
 			Data: json.RawMessage(`{"repository":"test-repository"}`),
 		}
 		resp, err := handler.SubscribeStream(ctx, req)
