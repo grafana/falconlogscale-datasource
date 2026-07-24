@@ -15,14 +15,10 @@
     "package.json",
     "yarn.lock",
     "docker-compose*.yaml",
-    "docker-compose*.yml"
+    "docker-compose*.yml",
+    "jest.config.js"
   ],
-  "ignoreRegExpList": [
-    // ignore multiline imports
-    "import\\s*\\((.|[\r\n])*?\\)",
-    // ignore single line imports
-    "import\\s*.*\".*?\""
-  ],
+  "ignoreRegExpList": ["import\\s*\\((.|[\r\n])*?\\)", "import\\s*.*\".*?\""],
   "words": [
     "curr",
     "Dataframe",

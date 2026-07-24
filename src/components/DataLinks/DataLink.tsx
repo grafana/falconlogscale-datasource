@@ -1,10 +1,10 @@
-import React, { Dispatch, SetStateAction, useState } from 'react';
 import { css } from '@emotion/css';
-import { VariableSuggestion, DataSourceInstanceSettings, DataSourceJsonData } from '@grafana/data';
-import { Button, LegacyForms, DataLinkInput, useStyles2 } from '@grafana/ui';
-const { FormField, Switch } = LegacyForms;
-import { DataLinkConfig } from './types';
+import { DataSourceInstanceSettings, DataSourceJsonData, VariableSuggestion } from '@grafana/data';
+import { Button, DataLinkInput, LegacyForms, useStyles2 } from '@grafana/ui';
+import React, { Dispatch, SetStateAction, useState } from 'react';
 import { DataSourcePicker } from './DataSourcePicker';
+import { DataLinkConfig } from './types';
+const { FormField, Switch } = LegacyForms;
 
 type Props = {
   value: DataLinkConfig;
@@ -57,6 +57,7 @@ export const DataLink = (props: Props) => {
         <Button
           variant={'destructive'}
           title="Remove field"
+          aria-label="Remove field"
           icon="times"
           onClick={(event) => {
             event.preventDefault();
