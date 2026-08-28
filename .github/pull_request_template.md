@@ -69,7 +69,7 @@ Closes #
 
 _If there is no open issue, please specify the versions where the bug occurs._
 
-- **GitHub version**:
+- **Falcon LogScale version**:
 - **Grafana version**:
 - **Plugin version**:
 
