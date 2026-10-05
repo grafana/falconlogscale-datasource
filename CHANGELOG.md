@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.10.3
+
+- Security: Fix security vulnerabilities (CVE-2026-84445, CVE-2026-85730)
+
+## 1.10.2
+
+- Security: Bump vulnerable js and go dependencies [#886](https://github.com/grafana/falconlogscale-datasource/pull/886)
+- Bump dependencies
+
 ## 1.10.1
 
 - Bump dependencies
