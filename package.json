@@ -96,7 +96,6 @@
   },
   "packageManager": "npm@12.0.1",
   "overrides": {
-    "rxjs": "7.8.2",
     "basic-ftp": "6.2.2"
   },
   "engines": {
