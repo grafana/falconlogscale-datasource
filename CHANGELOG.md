@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.10.4
+
+- Security: Fix security vulnerabilities (CVE-2026-102278, CVE-2026-102276, CVE-2026-102990)
+
 ## 1.10.3
 
 - Security: Fix security vulnerabilities (CVE-2026-84445, CVE-2026-85730)
