@@ -57,6 +57,8 @@
     "timerange",
     "vals",
     "vectorator",
-    "Zipkin"
+    "Zipkin",
+    "dompurify",
+    "smol"
   ]
 }
