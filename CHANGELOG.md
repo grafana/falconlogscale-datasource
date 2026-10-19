@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.10.5
+
+- Security: Fix security vulnerabilities in dompurify, moment, source-map-js, postcss-selector-parser, smol-toml, fast-uri, ip-address, and golang.org/x/net
+
 ## 1.10.4
 
 - Security: Fix security vulnerabilities (CVE-2026-102278, CVE-2026-102276, CVE-2026-102990)
