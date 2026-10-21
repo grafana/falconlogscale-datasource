@@ -20,6 +20,8 @@
   ],
   "ignoreRegExpList": ["import\\s*\\((.|[\r\n])*?\\)", "import\\s*.*\".*?\""],
   "words": [
+    "golangci",
+    "GOPATH",
     "curr",
     "Dataframe",
     "datasource",
