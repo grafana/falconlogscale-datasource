@@ -36,6 +36,7 @@ jobs:
       attestations: write
       pull-requests: read
     with:
+      golangci-lint-version: '2.15.0'
       branch: ${{ github.event.inputs.branch }}
       environment: ${{ matrix.environment }}
       docs-only: ${{ fromJSON(github.event.inputs.docs-only) }}
