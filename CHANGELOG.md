@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.10.6
+
+- Chore: Pin golangci-lint to 2.15.0 in development dependencies and CI/CD pipelines
+
 ## 1.10.5
 
 - Security: Fix security vulnerabilities in dompurify, moment, source-map-js, postcss-selector-parser, smol-toml, fast-uri, ip-address, and golang.org/x/net
