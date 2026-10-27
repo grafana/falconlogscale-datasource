@@ -2,7 +2,7 @@ version: "3"
 
 services:
   humio:
-    image: humio/humio
+    image: humio/humio@sha256:2d23d1ac912f2521ea2f6df58d1eb71809a37aab906e4af1833ad6515d71aa39
     hostname: humio
     environment:
       env-file: ./humio.conf
