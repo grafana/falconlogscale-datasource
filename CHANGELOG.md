@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.10.7
+
+- Update backend dependencies
+
 ## 1.10.6
 
 - Chore: Pin golangci-lint to 2.15.0 in development dependencies and CI/CD pipelines
