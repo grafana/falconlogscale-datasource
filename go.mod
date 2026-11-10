@@ -9,7 +9,7 @@ require (
 	github.com/grafana/grafana-plugin-sdk-go v0.298.0
 	github.com/hasura/go-graphql-client v0.16.0
 	github.com/stretchr/testify v1.12.1
-	golang.org/x/sync v0.24.0
+	golang.org/x/sync v0.25.0
 )
 
 require (
