@@ -20,8 +20,8 @@ import { defer, lastValueFrom, merge, mergeMap, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { getLiveStreamKey } from 'streaming';
 import { pluginVersion } from 'utils/version';
-import { transformBackendResult } from './logs';
 import { DEFAULT_OVERLAP_WINDOW, isEligibleForIncremental, QueryCache } from './incrementalQuery';
+import { transformBackendResult } from './logs';
 import { DataSourceMode, FormatAs, LogScaleOptions, LogScaleQuery, LogScaleQueryType, NGSIEMRepos } from './types';
 
 export class DataSource
@@ -96,9 +96,7 @@ export class DataSource
       intervalMs: request.intervalMs,
     }));
 
-    const useIncremental =
-      this.instanceSettings.jsonData.incrementalQuerying &&
-      !config.publicDashboardAccessToken;
+    const useIncremental = this.instanceSettings.jsonData.incrementalQuerying && !config.publicDashboardAccessToken;
 
     if (useIncremental) {
       return this.runIncrementalQuery(request);
@@ -148,6 +146,7 @@ export class DataSource
           return getGrafanaLiveSrv().getDataStream({
             addr: {
               scope: LiveChannelScope.DataSource,
+              stream: key,
               namespace: ds.uid,
               path: `tail/${key}`,
               data: {

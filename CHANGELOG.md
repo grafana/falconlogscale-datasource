@@ -1,5 +1,35 @@
 # Changelog
 
+## 1.10.7
+
+- Update backend dependencies
+- Fix a connection freeze between Grafana and the plugin under heavy query load by updating google.golang.org/grpc to v1.85.0 ([grpc/grpc-go#9330](https://github.com/grpc/grpc-go/issues/9330))
+
+## 1.10.6
+
+- Chore: Pin golangci-lint to 2.15.0 in development dependencies and CI/CD pipelines
+
+## 1.10.5
+
+- Security: Fix security vulnerabilities in dompurify, moment, source-map-js, postcss-selector-parser, smol-toml, fast-uri, ip-address, and golang.org/x/net
+
+## 1.10.4
+
+- Security: Fix security vulnerabilities (CVE-2026-102278, CVE-2026-102276, CVE-2026-102990)
+
+## 1.10.3
+
+- Security: Fix security vulnerabilities (CVE-2026-84445, CVE-2026-85730)
+
+## 1.10.2
+
+- Security: Bump vulnerable js and go dependencies [#886](https://github.com/grafana/falconlogscale-datasource/pull/886)
+- Bump dependencies
+
+## 1.10.1
+
+- Bump dependencies
+
 ## 1.10.0
 
 - Feature: Incremental querying support [#814](https://github.com/grafana/falconlogscale-datasource/pull/814)
