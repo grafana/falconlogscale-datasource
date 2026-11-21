@@ -8,9 +8,9 @@
 # unchanged in every plugin repo that adopts bundled images. Keep it that way: anything that has to
 # differ per repo belongs in the shared workflow's defaults, not copied into three callers.
 #
-# Manual dispatch only: it builds, smokes and optionally pushes the image, and never triggers the
-# Argo rollout. Waves are bumped by hand in deployment_tools. Add the push and release triggers,
-# and the trigger-argo input, once the rollout is meant to be driven from this repository.
+# Manual dispatch only: it builds, smokes and optionally pushes the image. With trigger-argo it also
+# submits the full rollout, which is how a rebuild on a new Grafana base reaches every wave. Add
+# the push and release triggers once releases are meant to roll out from this repository too.
 #
 # Note on the app grant:
 # The shared workflow reads the Grafana base image from one line of a private infrastructure repo.
@@ -42,6 +42,11 @@ on:
         type: boolean
         required: false
         default: false
+      trigger-argo:
+        description: Submit the Argo rollout after a successful push.
+        type: boolean
+        required: false
+        default: false
       debug:
         description: >-
           Build a debug image. It is tagged with a -debug suffix and pushed under a separate
@@ -68,4 +73,5 @@ jobs:
       ref: ${{ inputs.ref }}
       grafana-image: ${{ inputs.grafana-image }}
       push-image: ${{ inputs.push-image }}
+      trigger-argo: ${{ inputs.trigger-argo }}
       debug: ${{ inputs.debug }}
