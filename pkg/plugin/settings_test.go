@@ -43,13 +43,27 @@ func TestLoadSettings(t *testing.T) {
 
 	t.Run("should load settings successfully with valid config", func(t *testing.T) {
 		config := backend.DataSourceInstanceSettings{
-			URL:      "http://localhost:8080",
-			JSONData: []byte(`{"authenticateWithToken": true}`),
+			URL:           "http://localhost:8080",
+			BasicAuthUser: "root-user",
+			JSONData: []byte(`{
+				"authenticateWithToken": true,
+				"baseUrl": "http://legacy.example.com",
+				"basicAuthUser": "json-user"
+			}`),
+			DecryptedSecureJSONData: map[string]string{
+				"accessToken":        "personal-token",
+				"basicAuthPassword":  "basic-password",
+				"oauth2ClientSecret": "client-secret",
+			},
 		}
 
 		settings, err := LoadSettings(config)
 		require.NoError(t, err)
 		require.Equal(t, "http://localhost:8080", settings.BaseURL)
+		require.Equal(t, "root-user", settings.BasicAuthUser)
+		require.Equal(t, "personal-token", settings.AccessToken)
+		require.Equal(t, "basic-password", settings.BasicAuthPass)
+		require.Equal(t, "client-secret", settings.OAuth2ClientSecret)
 		require.Equal(t, "http://localhost:8080/humio/graphql", settings.GraphqlEndpoint)
 		require.Equal(t, "http://localhost:8080/humio", settings.RestEndpoint)
 	})

@@ -1,0 +1,607 @@
+{
+  "$schema": "https://raw.githubusercontent.com/grafana/dsconfig/refs/tags/dsconfig/v0.0.13/dsconfig/schema.json",
+  "schemaVersion": "v1",
+  "pluginType": "grafana-falconlogscale-datasource",
+  "pluginName": "Falcon LogScale",
+  "docURL": "https://github.com/grafana/falconlogscale-datasource/blob/main/docs/sources/configure.md",
+  "baseFields": [
+    {
+      "from": "plugin_sdk_settings",
+      "exclude": ["plugin_sdk_settings.access", "plugin_sdk_settings.withCredentials", "plugin_sdk_settings.sigV4Auth"]
+    }
+  ],
+  "fields": [
+    {
+      "id": "jsonData.mode",
+      "key": "mode",
+      "label": "Mode",
+      "description": "Use LogScale for a LogScale instance or NGSIEM for Falcon Next-Gen SIEM.",
+      "valueType": "string",
+      "target": "jsonData",
+      "defaultValue": "LogScale",
+      "validations": [
+        {
+          "type": "allowedValues",
+          "values": ["LogScale", "NGSIEM"]
+        }
+      ],
+      "ui": {
+        "component": "select",
+        "options": [
+          {
+            "label": "LogScale",
+            "value": "LogScale"
+          },
+          {
+            "label": "NGSIEM",
+            "value": "NGSIEM"
+          }
+        ]
+      }
+    },
+    {
+      "id": "auth.method",
+      "key": "authMethod",
+      "label": "Authentication method",
+      "description": "Use a personal token, basic authentication, or OAuth identity forwarding with LogScale. NGSIEM requires OAuth2 client credentials.",
+      "valueType": "string",
+      "kind": "virtual",
+      "role": "auth.discriminator",
+      "defaultValue": "custom-token",
+      "validations": [
+        {
+          "type": "allowedValues",
+          "values": ["custom-token", "custom-oauth-client-secret", "BasicAuth", "OAuthForward"]
+        }
+      ],
+      "ui": {
+        "component": "select",
+        "options": [
+          {
+            "label": "LogScale Token Authentication",
+            "value": "custom-token"
+          },
+          {
+            "label": "Basic authentication",
+            "value": "BasicAuth"
+          },
+          {
+            "label": "Forward OAuth Identity",
+            "value": "OAuthForward"
+          }
+        ]
+      },
+      "storage": {
+        "type": "computed",
+        "read": "jsonData.oauth2 == true ? 'custom-oauth-client-secret' : (jsonData.mode == 'NGSIEM' ? 'custom-oauth-client-secret' : (plugin_sdk_settings.basicAuth == true ? 'BasicAuth' : (plugin_sdk_settings.oauthPassThru == true ? 'OAuthForward' : 'custom-token')))"
+      },
+      "overrides": [
+        {
+          "when": "jsonData.mode == 'NGSIEM'",
+          "defaultValue": "custom-oauth-client-secret",
+          "options": [
+            {
+              "label": "OAuth2 Client Credentials",
+              "value": "custom-oauth-client-secret"
+            }
+          ],
+          "validations": [
+            {
+              "type": "allowedValues",
+              "values": ["custom-oauth-client-secret"]
+            }
+          ]
+        },
+        {
+          "when": "jsonData.mode != 'NGSIEM'",
+          "validations": [
+            {
+              "type": "allowedValues",
+              "values": ["custom-token", "BasicAuth", "OAuthForward"]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "when": "value == 'custom-token'",
+          "set": {
+            "jsonData.authenticateWithToken": true,
+            "jsonData.oauth2": false,
+            "plugin_sdk_settings.oauthPassThru": false,
+            "plugin_sdk_settings.basicAuth": false
+          }
+        },
+        {
+          "when": "value == 'custom-oauth-client-secret'",
+          "set": {
+            "jsonData.authenticateWithToken": false,
+            "jsonData.oauth2": true,
+            "plugin_sdk_settings.oauthPassThru": false,
+            "plugin_sdk_settings.basicAuth": false
+          }
+        },
+        {
+          "when": "value == 'BasicAuth'",
+          "set": {
+            "jsonData.authenticateWithToken": false,
+            "jsonData.oauth2": false,
+            "plugin_sdk_settings.oauthPassThru": false,
+            "plugin_sdk_settings.basicAuth": true
+          }
+        },
+        {
+          "when": "value == 'OAuthForward'",
+          "set": {
+            "jsonData.authenticateWithToken": false,
+            "jsonData.oauth2": false,
+            "plugin_sdk_settings.oauthPassThru": true,
+            "plugin_sdk_settings.basicAuth": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "jsonData.authenticateWithToken",
+      "key": "authenticateWithToken",
+      "description": "Enable LogScale personal token authentication.",
+      "valueType": "boolean",
+      "target": "jsonData",
+      "defaultValue": false,
+      "tags": ["managed-by:auth.method"]
+    },
+    {
+      "id": "jsonData.oauth2",
+      "key": "oauth2",
+      "description": "Enable OAuth2 client credentials for NGSIEM.",
+      "valueType": "boolean",
+      "target": "jsonData",
+      "defaultValue": false,
+      "requiredWhen": "jsonData.mode == 'NGSIEM'",
+      "overrides": [
+        {
+          "when": "jsonData.mode == 'NGSIEM'",
+          "validations": [
+            {
+              "type": "allowedValues",
+              "values": [true]
+            }
+          ]
+        }
+      ],
+      "tags": ["managed-by:auth.method"]
+    },
+    {
+      "id": "plugin_sdk_settings.oauthPassThru",
+      "key": "oauthPassThru",
+      "description": "Forward the signed-in user's OAuth identity to LogScale.",
+      "valueType": "boolean",
+      "target": "jsonData",
+      "role": "auth.forwardOAuthToken.enabled",
+      "defaultValue": false,
+      "tags": ["managed-by:auth.method"]
+    },
+    {
+      "id": "plugin_sdk_settings.basicAuth",
+      "key": "basicAuth",
+      "description": "Enable HTTP basic authentication.",
+      "valueType": "boolean",
+      "target": "root",
+      "role": "auth.basic.enabled",
+      "defaultValue": false,
+      "tags": ["managed-by:auth.method"]
+    },
+    {
+      "id": "secureJsonData.accessToken",
+      "key": "accessToken",
+      "label": "Token",
+      "description": "Personal token for the LogScale instance.",
+      "valueType": "string",
+      "target": "secureJsonData",
+      "role": "auth.bearer.token",
+      "dependsOn": "auth.method == 'custom-token'",
+      "requiredWhen": "jsonData.authenticateWithToken == true",
+      "ui": {
+        "component": "input",
+        "placeholder": "Token"
+      }
+    },
+    {
+      "id": "plugin_sdk_settings.basicAuthUser",
+      "key": "basicAuthUser",
+      "label": "User",
+      "description": "Username for HTTP basic authentication.",
+      "valueType": "string",
+      "target": "root",
+      "role": "auth.basic.username",
+      "dependsOn": "auth.method == 'BasicAuth'",
+      "requiredWhen": "plugin_sdk_settings.basicAuth == true",
+      "ui": {
+        "component": "input",
+        "placeholder": "User"
+      }
+    },
+    {
+      "id": "plugin_sdk_settings.basicAuthPassword",
+      "key": "basicAuthPassword",
+      "label": "Password",
+      "description": "Password for HTTP basic authentication.",
+      "valueType": "string",
+      "target": "secureJsonData",
+      "role": "auth.basic.password",
+      "dependsOn": "auth.method == 'BasicAuth'",
+      "requiredWhen": "plugin_sdk_settings.basicAuth == true",
+      "ui": {
+        "component": "input",
+        "placeholder": "Password"
+      }
+    },
+    {
+      "id": "jsonData.oauth2ClientId",
+      "key": "oauth2ClientId",
+      "label": "Client ID",
+      "description": "Client ID for the CrowdStrike API.",
+      "valueType": "string",
+      "target": "jsonData",
+      "role": "auth.oauth2.clientId",
+      "dependsOn": "auth.method == 'custom-oauth-client-secret'",
+      "requiredWhen": "jsonData.mode == 'NGSIEM' || jsonData.oauth2 == true",
+      "ui": {
+        "component": "input",
+        "placeholder": "Client ID"
+      }
+    },
+    {
+      "id": "secureJsonData.oauth2ClientSecret",
+      "key": "oauth2ClientSecret",
+      "label": "Client Secret",
+      "description": "Client secret for the CrowdStrike API.",
+      "valueType": "string",
+      "target": "secureJsonData",
+      "role": "auth.oauth2.clientSecret",
+      "dependsOn": "auth.method == 'custom-oauth-client-secret'",
+      "requiredWhen": "jsonData.mode == 'NGSIEM' || jsonData.oauth2 == true",
+      "ui": {
+        "component": "input",
+        "placeholder": "Client Secret"
+      }
+    },
+    {
+      "id": "jsonData.baseUrl",
+      "key": "baseUrl",
+      "description": "Legacy editor value used to enable repository selection. Set the top-level URL for the connection.",
+      "valueType": "string",
+      "target": "jsonData",
+      "tags": ["frontend-only"]
+    },
+    {
+      "id": "plugin_sdk_settings.tlsAuthWithCACert",
+      "key": "tlsAuthWithCACert",
+      "label": "Add self-signed certificate",
+      "description": "Trust a self-signed certificate or a private certificate authority.",
+      "valueType": "boolean",
+      "target": "jsonData",
+      "defaultValue": false,
+      "ui": {
+        "component": "switch"
+      }
+    },
+    {
+      "id": "plugin_sdk_settings.tlsAuth",
+      "key": "tlsAuth",
+      "label": "TLS Client Authentication",
+      "description": "Send a client certificate and private key for mutual TLS.",
+      "valueType": "boolean",
+      "target": "jsonData",
+      "defaultValue": false,
+      "ui": {
+        "component": "switch"
+      }
+    },
+    {
+      "id": "plugin_sdk_settings.tlsSkipVerify",
+      "key": "tlsSkipVerify",
+      "label": "Skip TLS certificate validation",
+      "description": "Skip verification of the server certificate.",
+      "valueType": "boolean",
+      "target": "jsonData",
+      "role": "transport.tlsSkipVerify",
+      "defaultValue": false,
+      "ui": {
+        "component": "switch"
+      }
+    },
+    {
+      "id": "plugin_sdk_settings.keepCookies",
+      "key": "keepCookies",
+      "label": "Allowed cookies",
+      "description": "Cookies, by name, that the Grafana proxy should forward to the datasource. The Grafana proxy strips all cookies by default.",
+      "valueType": "array",
+      "target": "jsonData",
+      "ui": {
+        "component": "list",
+        "placeholder": "cookie-name"
+      },
+      "item": {
+        "valueType": "string"
+      }
+    },
+    {
+      "id": "plugin_sdk_settings.timeout",
+      "key": "timeout",
+      "label": "Timeout",
+      "description": "HTTP request timeout in seconds. The SDK defaults to 30 seconds. Streaming requests have no overall timeout.",
+      "valueType": "number",
+      "target": "jsonData",
+      "role": "transport.timeoutSeconds",
+      "defaultValue": 30,
+      "ui": {
+        "component": "input",
+        "placeholder": "Timeout in seconds"
+      }
+    },
+    {
+      "id": "plugin_sdk_settings.httpHeaders",
+      "key": "httpHeaders",
+      "label": "Custom HTTP Headers",
+      "description": "Additional headers for LogScale API requests. Store the first name in jsonData.httpHeaderName1 and its value in secureJsonData.httpHeaderValue1. Increment the index for each additional header.",
+      "valueType": "array",
+      "target": "jsonData",
+      "role": "http.header",
+      "item": {
+        "valueType": "object",
+        "fields": [
+          {
+            "id": "plugin_sdk_settings.httpHeaders.item.name",
+            "key": "name",
+            "label": "Header",
+            "valueType": "string",
+            "isItemField": true,
+            "role": "http.header.name",
+            "required": true,
+            "ui": {
+              "component": "input",
+              "placeholder": "X-Custom-Header"
+            }
+          },
+          {
+            "id": "plugin_sdk_settings.httpHeaders.item.value",
+            "key": "value",
+            "label": "Value",
+            "valueType": "string",
+            "isItemField": true,
+            "role": "http.header.value",
+            "ui": {
+              "component": "input",
+              "placeholder": "Header Value"
+            }
+          }
+        ]
+      },
+      "storage": {
+        "type": "indexedPair",
+        "key": {
+          "target": "jsonData",
+          "pattern": "httpHeaderName{index}"
+        },
+        "value": {
+          "target": "secureJsonData",
+          "pattern": "httpHeaderValue{index}"
+        },
+        "startIndex": 1
+      }
+    },
+    {
+      "id": "jsonData.defaultRepository",
+      "key": "defaultRepository",
+      "label": "Default Repository",
+      "description": "Repository to use when a query has no repository. In NGSIEM mode the editor selects search-all by default.",
+      "valueType": "string",
+      "target": "jsonData",
+      "ui": {
+        "component": "select"
+      },
+      "overrides": [
+        {
+          "when": "jsonData.mode == 'NGSIEM'",
+          "defaultValue": "search-all",
+          "options": [
+            {
+              "label": "search-all",
+              "value": "search-all"
+            },
+            {
+              "label": "investigate_view",
+              "value": "investigate_view"
+            },
+            {
+              "label": "third-party",
+              "value": "third-party"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jsonData.dataLinks",
+      "key": "dataLinks",
+      "label": "Data links",
+      "description": "Add links to string fields in log row details.",
+      "valueType": "array",
+      "target": "jsonData",
+      "defaultValue": [],
+      "item": {
+        "valueType": "object",
+        "fields": [
+          {
+            "id": "dataLinks.item.field",
+            "key": "field",
+            "label": "Field",
+            "description": "Exact name of a string field in the log result.",
+            "valueType": "string",
+            "isItemField": true,
+            "required": true,
+            "ui": {
+              "component": "input"
+            }
+          },
+          {
+            "id": "dataLinks.item.label",
+            "key": "label",
+            "label": "Label",
+            "description": "Label for the linked field.",
+            "valueType": "string",
+            "isItemField": true,
+            "ui": {
+              "component": "input"
+            },
+            "required": true
+          },
+          {
+            "id": "dataLinks.item.matcherRegex",
+            "key": "matcherRegex",
+            "label": "Regex",
+            "description": "Regular expression applied to the field value. The first capture group supplies the link value.",
+            "valueType": "string",
+            "isItemField": true,
+            "required": true,
+            "ui": {
+              "component": "input"
+            }
+          },
+          {
+            "id": "dataLinks.item.url",
+            "key": "url",
+            "label": "URL",
+            "valueType": "string",
+            "isItemField": true,
+            "ui": {
+              "component": "input",
+              "placeholder": "http://example.com/${__value.raw}"
+            },
+            "required": true,
+            "description": "External URL or query for an internal data source link."
+          },
+          {
+            "id": "dataLinks.item.datasourceUid",
+            "key": "datasourceUid",
+            "label": "Internal link data source",
+            "description": "UID of a Grafana data source. When set, the derived data link is treated as an internal link to that data source and the URL field is interpreted as a Query.",
+            "valueType": "string",
+            "isItemField": true,
+            "ui": {
+              "component": "input"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "jsonData.incrementalQuerying",
+      "key": "incrementalQuerying",
+      "label": "Incremental querying (experimental)",
+      "description": "On auto-refresh, fetch new data and merge it with cached results for relative time ranges without aggregation functions.",
+      "valueType": "boolean",
+      "target": "jsonData",
+      "defaultValue": false,
+      "ui": {
+        "component": "switch"
+      }
+    },
+    {
+      "id": "jsonData.incrementalQueryOverlapWindow",
+      "key": "incrementalQueryOverlapWindow",
+      "label": "Query overlap window",
+      "description": "Time to re-fetch on each incremental query to include late events. Save and reload the data source to apply changes.",
+      "valueType": "string",
+      "target": "jsonData",
+      "defaultValue": "10m",
+      "dependsOn": "jsonData.incrementalQuerying == true",
+      "ui": {
+        "component": "input"
+      },
+      "examples": ["30s", "10m", "1h"]
+    },
+    {
+      "id": "jsonData.enableSecureSocksProxy",
+      "key": "enableSecureSocksProxy",
+      "label": "Secure Socks Proxy",
+      "description": "Use the secure SOCKS proxy when it is enabled on the Grafana server.",
+      "valueType": "boolean",
+      "target": "jsonData",
+      "defaultValue": false,
+      "ui": {
+        "component": "switch"
+      }
+    }
+  ],
+  "groups": [
+    {
+      "id": "connection",
+      "title": "Connection",
+      "fieldRefs": ["plugin_sdk_settings.url", "jsonData.mode"]
+    },
+    {
+      "id": "authentication",
+      "title": "Authentication",
+      "fieldRefs": [
+        "auth.method",
+        "secureJsonData.accessToken",
+        "plugin_sdk_settings.basicAuthUser",
+        "plugin_sdk_settings.basicAuthPassword",
+        "jsonData.oauth2ClientId",
+        "secureJsonData.oauth2ClientSecret",
+        "plugin_sdk_settings.httpHeaders"
+      ]
+    },
+    {
+      "id": "tls",
+      "title": "TLS settings",
+      "fieldRefs": [
+        "plugin_sdk_settings.tlsAuthWithCACert",
+        "plugin_sdk_settings.tlsCACert",
+        "plugin_sdk_settings.tlsAuth",
+        "plugin_sdk_settings.serverName",
+        "plugin_sdk_settings.tlsClientCert",
+        "plugin_sdk_settings.tlsClientKey",
+        "plugin_sdk_settings.tlsSkipVerify"
+      ],
+      "optional": true
+    },
+    {
+      "id": "advanced-http",
+      "title": "Advanced HTTP settings",
+      "fieldRefs": ["plugin_sdk_settings.keepCookies", "plugin_sdk_settings.timeout"],
+      "optional": true
+    },
+    {
+      "id": "additional-settings",
+      "title": "Additional settings",
+      "fieldRefs": [
+        "jsonData.defaultRepository",
+        "jsonData.dataLinks",
+        "jsonData.incrementalQuerying",
+        "jsonData.incrementalQueryOverlapWindow",
+        "jsonData.enableSecureSocksProxy"
+      ],
+      "optional": true
+    }
+  ],
+  "relationships": [
+    {
+      "type": "datasourceReference",
+      "fields": ["dataLinks.item.datasourceUid"],
+      "description": "Target data source for an internal data link."
+    }
+  ],
+  "instructions": [
+    {
+      "msg": "For a LogScale token, set jsonData.authenticateWithToken and supply secureJsonData.accessToken. For basic authentication, set basicAuth and supply basicAuthUser and secureJsonData.basicAuthPassword. To forward the signed-in user's identity, set jsonData.oauthPassThru. Select one method.",
+      "tags": ["auth"]
+    },
+    {
+      "msg": "For NGSIEM, set jsonData.mode to NGSIEM, enable jsonData.oauth2 and supply jsonData.oauth2ClientId and secureJsonData.oauth2ClientSecret. Set url to the CrowdStrike API base URL. The plugin adds the /humio path for queries.",
+      "tags": ["auth"]
+    }
+  ]
+}
