@@ -33,9 +33,9 @@ func setup(opts ...plugin.HandlerOption) (*plugin.Handler, testContext) {
 		},
 		callHandler: &fakeCallHandler{},
 		settings: plugin.Settings{
-			BaseURL:               "https://cloud.humio.com",
-			AccessToken:           "1234abcd",
-			AuthenticateWithToken: true,
+			JSONSettings: plugin.JSONSettings{AuthenticateWithToken: true},
+			BaseURL:      "https://cloud.humio.com",
+			AccessToken:  "1234abcd",
 		},
 	}
 	tc.queryRunner.ctx, tc.queryRunner.cancel = context.WithCancel(context.Background())

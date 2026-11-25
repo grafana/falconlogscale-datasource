@@ -1,0 +1,31 @@
+{
+  "examples": {
+    "logScaleToken": {
+      "summary": "LogScale with a personal token",
+      "value": {
+        "jsonData": {
+          "authenticateWithToken": true
+        },
+        "secureJsonData": {
+          "accessToken": "REPLACE_WITH_ACCESS_TOKEN"
+        },
+        "url": "https://cloud.us.humio.com"
+      }
+    },
+    "ngsiem": {
+      "summary": "NGSIEM with OAuth2 client credentials",
+      "value": {
+        "jsonData": {
+          "defaultRepository": "search-all",
+          "mode": "NGSIEM",
+          "oauth2": true,
+          "oauth2ClientId": "REPLACE_WITH_CLIENT_ID"
+        },
+        "secureJsonData": {
+          "oauth2ClientSecret": "REPLACE_WITH_CLIENT_SECRET"
+        },
+        "url": "https://api.crowdstrike.com"
+      }
+    }
+  }
+}
