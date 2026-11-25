@@ -60,7 +60,7 @@ func TestPlugin(t *testing.T) {
 				"ngsiem": {ExampleProps: spec3.ExampleProps{
 					Summary: "NGSIEM with OAuth2 client credentials",
 					Value: map[string]any{
-						"url": "https://api.crowdstrike.com",
+						"url": "https://your-ngsiem-instance.crowdstrike.com",
 						"jsonData": map[string]any{
 							"mode":              "NGSIEM",
 							"oauth2":            true,

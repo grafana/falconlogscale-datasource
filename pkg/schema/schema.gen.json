@@ -223,7 +223,7 @@
           "secureJsonData": {
             "oauth2ClientSecret": "REPLACE_WITH_CLIENT_SECRET"
           },
-          "url": "https://api.crowdstrike.com"
+          "url": "https://your-ngsiem-instance.crowdstrike.com"
         }
       }
     }

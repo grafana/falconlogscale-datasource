@@ -399,8 +399,7 @@
       "valueType": "string",
       "target": "jsonData",
       "ui": {
-        "component": "select",
-        "allowCustom": true
+        "component": "select"
       },
       "overrides": [
         {
@@ -551,7 +550,8 @@
         "plugin_sdk_settings.basicAuthUser",
         "plugin_sdk_settings.basicAuthPassword",
         "jsonData.oauth2ClientId",
-        "secureJsonData.oauth2ClientSecret"
+        "secureJsonData.oauth2ClientSecret",
+        "plugin_sdk_settings.httpHeaders"
       ]
     },
     {
@@ -571,11 +571,7 @@
     {
       "id": "advanced-http",
       "title": "Advanced HTTP settings",
-      "fieldRefs": [
-        "plugin_sdk_settings.httpHeaders",
-        "plugin_sdk_settings.keepCookies",
-        "plugin_sdk_settings.timeout"
-      ],
+      "fieldRefs": ["plugin_sdk_settings.keepCookies", "plugin_sdk_settings.timeout"],
       "optional": true
     },
     {
