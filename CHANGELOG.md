@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.10.8
+
+- Security: Fix security vulnerabilities in golang.org/x/net and fast-uri (CVE-2026-78661, CVE-2026-97045, CVE-2026-110306, CVE-2026-110180)
+- Update backend dependencies
+
 ## 1.10.7
 
 - Update backend dependencies
