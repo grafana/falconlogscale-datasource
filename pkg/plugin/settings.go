@@ -8,21 +8,25 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 )
 
-type Settings struct {
-	BaseURL               string   `json:"baseURL"`
-	AccessToken           string   `json:"accessToken,omitempty"`
+// JSONSettings contains the jsonData fields used by the backend.
+type JSONSettings struct {
 	AuthenticateWithToken bool     `json:"authenticateWithToken,omitempty"`
 	KeepCookies           []string `json:"keepCookies,omitempty"`
 	OAuthPassThru         bool     `json:"oauthPassThru,omitempty"`
 	OAuth2                bool     `json:"oauth2,omitempty"`
 	OAuth2ClientID        string   `json:"oauth2ClientId,omitempty"`
-	OAuth2ClientSecret    string   `json:"oauth2ClientSecret,omitempty"`
 	Mode                  string   `json:"mode,omitempty"`
-	//Timeout               uint     `json:"timeout,omitempty"`
-	GraphqlEndpoint string
-	RestEndpoint    string
-	BasicAuthUser   string
-	BasicAuthPass   string
+}
+
+type Settings struct {
+	JSONSettings
+	BaseURL            string `json:"baseURL"`
+	AccessToken        string `json:"accessToken,omitempty"`
+	OAuth2ClientSecret string `json:"oauth2ClientSecret,omitempty"`
+	GraphqlEndpoint    string
+	RestEndpoint       string
+	BasicAuthUser      string
+	BasicAuthPass      string
 }
 
 var (

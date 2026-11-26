@@ -1,0 +1,231 @@
+{
+  "targetApiVersion": "v0alpha1",
+  "settings": {
+    "spec": {
+      "type": "object",
+      "required": [
+        "url"
+      ],
+      "properties": {
+        "basicAuth": {
+          "description": "Enable HTTP basic authentication.",
+          "type": "boolean",
+          "default": false
+        },
+        "basicAuthUser": {
+          "description": "Username for HTTP basic authentication.",
+          "type": "string",
+          "x-dsconfig-depends-on": "auth.method == 'BasicAuth'",
+          "x-dsconfig-required-when": "plugin_sdk_settings.basicAuth == true"
+        },
+        "jsonData": {
+          "type": "object",
+          "properties": {
+            "authenticateWithToken": {
+              "description": "Enable LogScale personal token authentication.",
+              "type": "boolean",
+              "default": false
+            },
+            "baseUrl": {
+              "description": "Legacy editor value used to enable repository selection. Set the top-level URL for the connection.",
+              "type": "string"
+            },
+            "dataLinks": {
+              "description": "Add links to string fields in log row details.",
+              "type": "array",
+              "default": [],
+              "items": {
+                "type": "object",
+                "required": [
+                  "field",
+                  "label",
+                  "matcherRegex",
+                  "url"
+                ],
+                "properties": {
+                  "datasourceUid": {
+                    "description": "UID of a Grafana data source. When set, the derived data link is treated as an internal link to that data source and the URL field is interpreted as a Query.",
+                    "type": "string"
+                  },
+                  "field": {
+                    "description": "Exact name of a string field in the log result.",
+                    "type": "string"
+                  },
+                  "label": {
+                    "description": "Label for the linked field.",
+                    "type": "string"
+                  },
+                  "matcherRegex": {
+                    "description": "Regular expression applied to the field value. The first capture group supplies the link value.",
+                    "type": "string"
+                  },
+                  "url": {
+                    "description": "External URL or query for an internal data source link.",
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "defaultRepository": {
+              "description": "Repository to use when a query has no repository. In NGSIEM mode the editor selects search-all by default.",
+              "type": "string"
+            },
+            "enableSecureSocksProxy": {
+              "description": "Use the secure SOCKS proxy when it is enabled on the Grafana server.",
+              "type": "boolean",
+              "default": false
+            },
+            "httpHeaders": {
+              "description": "Additional headers for LogScale API requests. Store the first name in jsonData.httpHeaderName1 and its value in secureJsonData.httpHeaderValue1. Increment the index for each additional header.",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "incrementalQueryOverlapWindow": {
+              "description": "Time to re-fetch on each incremental query to include late events. Save and reload the data source to apply changes.",
+              "type": "string",
+              "default": "10m",
+              "x-dsconfig-depends-on": "jsonData.incrementalQuerying == true"
+            },
+            "incrementalQuerying": {
+              "description": "On auto-refresh, fetch new data and merge it with cached results for relative time ranges without aggregation functions.",
+              "type": "boolean",
+              "default": false
+            },
+            "keepCookies": {
+              "description": "Cookies, by name, that the Grafana proxy should forward to the datasource. The Grafana proxy strips all cookies by default.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "mode": {
+              "description": "Use LogScale for a LogScale instance or NGSIEM for Falcon Next-Gen SIEM.",
+              "type": "string",
+              "default": "LogScale",
+              "enum": [
+                "LogScale",
+                "NGSIEM"
+              ]
+            },
+            "oauth2": {
+              "description": "Enable OAuth2 client credentials for NGSIEM.",
+              "type": "boolean",
+              "default": false,
+              "x-dsconfig-required-when": "jsonData.mode == 'NGSIEM'"
+            },
+            "oauth2ClientId": {
+              "description": "Client ID for the CrowdStrike API.",
+              "type": "string",
+              "x-dsconfig-depends-on": "auth.method == 'custom-oauth-client-secret'",
+              "x-dsconfig-required-when": "jsonData.mode == 'NGSIEM' || jsonData.oauth2 == true"
+            },
+            "oauthPassThru": {
+              "description": "Forward the signed-in user's OAuth identity to LogScale.",
+              "type": "boolean",
+              "default": false
+            },
+            "serverName": {
+              "description": "Server name used for TLS SNI / certificate verification. Forwarded to the SDK as `TLSOptions.ServerName`.",
+              "type": "string",
+              "x-dsconfig-depends-on": "plugin_sdk_settings.tlsAuth == true"
+            },
+            "timeout": {
+              "description": "HTTP request timeout in seconds. The SDK defaults to 30 seconds. Streaming requests have no overall timeout.",
+              "type": "number",
+              "default": 30
+            },
+            "tlsAuth": {
+              "description": "Send a client certificate and private key for mutual TLS.",
+              "type": "boolean",
+              "default": false
+            },
+            "tlsAuthWithCACert": {
+              "description": "Trust a self-signed certificate or a private certificate authority.",
+              "type": "boolean",
+              "default": false
+            },
+            "tlsSkipVerify": {
+              "description": "Skip verification of the server certificate.",
+              "type": "boolean",
+              "default": false
+            }
+          }
+        },
+        "url": {
+          "description": "Complete HTTP URL of the datasource (e.g. https://your-server:8080).",
+          "type": "string"
+        }
+      }
+    },
+    "secureValues": [
+      {
+        "key": "tlsCACert",
+        "description": "Your self-signed certificate"
+      },
+      {
+        "key": "tlsClientCert",
+        "description": "PEM-encoded client certificate used for mTLS. Forwarded to the SDK as `TLSOptions.ClientCertificate`."
+      },
+      {
+        "key": "tlsClientKey",
+        "description": "PEM-encoded private key paired with `tlsClientCert`. Forwarded to the SDK as `TLSOptions.ClientKey`."
+      },
+      {
+        "key": "accessToken",
+        "description": "Personal token for the LogScale instance."
+      },
+      {
+        "key": "basicAuthPassword",
+        "description": "Password for HTTP basic authentication."
+      },
+      {
+        "key": "oauth2ClientSecret",
+        "description": "Client secret for the CrowdStrike API."
+      }
+    ]
+  },
+  "settingsExamples": {
+    "examples": {
+      "logScaleToken": {
+        "summary": "LogScale with a personal token",
+        "value": {
+          "jsonData": {
+            "authenticateWithToken": true
+          },
+          "secureJsonData": {
+            "accessToken": "REPLACE_WITH_ACCESS_TOKEN"
+          },
+          "url": "https://cloud.us.humio.com"
+        }
+      },
+      "ngsiem": {
+        "summary": "NGSIEM with OAuth2 client credentials",
+        "value": {
+          "jsonData": {
+            "defaultRepository": "search-all",
+            "mode": "NGSIEM",
+            "oauth2": true,
+            "oauth2ClientId": "REPLACE_WITH_CLIENT_ID"
+          },
+          "secureJsonData": {
+            "oauth2ClientSecret": "REPLACE_WITH_CLIENT_SECRET"
+          },
+          "url": "https://your-ngsiem-instance.crowdstrike.com"
+        }
+      }
+    }
+  }
+}

@@ -3,8 +3,8 @@
   "version": "1.10.8",
   "description": "Falcon LogScale data source plugin for Grafana",
   "scripts": {
-    "build": "webpack -c ./.config/webpack/webpack.config.ts --env production",
-    "dev": "webpack -w -c ./.config/webpack/webpack.config.ts --env development",
+    "build": "webpack -c ./webpack.config.ts --env production",
+    "dev": "webpack -w -c ./webpack.config.ts --env development",
     "e2e:playwright": "npx playwright test",
     "e2e:playwright:ui": "npx playwright test --ui",
     "e2e:playwright:report": "npx playwright show-report",
